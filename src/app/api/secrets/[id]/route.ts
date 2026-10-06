@@ -44,7 +44,7 @@ export async function PUT(
     next.name = body.name.trim();
   }
   if (typeof body.category === "string") {
-    next.category = body.category.trim() || "General";
+    next.category = body.category.trim() || "Other";
   }
   if (body.tags !== undefined) {
     next.tags = Array.isArray(body.tags)

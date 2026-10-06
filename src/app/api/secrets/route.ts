@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
   const record: SecretRecord = {
     id: uid("secret"),
     name,
-    category: String(body.category || "").trim() || "General",
+    category: String(body.category || "").trim() || "Other",
     tags,
     notes: String(body.notes || ""),
     valueCiphertext: ciphertext,

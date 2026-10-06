@@ -99,6 +99,14 @@ export interface SecretPublic {
   updatedAt: string;
 }
 
+/** Managed secret category (dropdown list). Secrets store category name as string. */
+export interface SecretCategory {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type AssetType = "Hardware" | "Software" | "Document" | "Media" | "Other";
 export type AssetStatus = "Active" | "In repair" | "Retired" | "Lost";
 
