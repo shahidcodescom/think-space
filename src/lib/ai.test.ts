@@ -246,7 +246,41 @@ const financeTx = [
   },
 ];
 
-const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs, recurrings, finance: financeTx };
+
+const belongingsSample = [
+  {
+    id: "bel-1",
+    name: "Passport",
+    category: "Documents",
+    location: "Bedroom · Top drawer (left)",
+    photoUrl: "",
+    photoNote: "Navy booklet",
+    tags: ["travel"],
+    quantity: 1,
+    status: "stored",
+    notes: "Expires 2031",
+    linkedAssetId: null,
+    createdAt: "2026-01-10T10:00:00.000Z",
+    updatedAt: "2026-09-01T10:00:00.000Z",
+  },
+  {
+    id: "bel-2",
+    name: "AirPods Pro",
+    category: "Electronics",
+    location: "With me · Everyday bag",
+    photoUrl: "",
+    photoNote: "",
+    tags: ["audio"],
+    quantity: 1,
+    status: "with_me",
+    notes: "",
+    linkedAssetId: null,
+    createdAt: "2026-02-01T10:00:00.000Z",
+    updatedAt: "2026-10-05T10:00:00.000Z",
+  },
+];
+
+const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs, recurrings, finance: financeTx, belongings: belongingsSample };
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);
@@ -361,6 +395,18 @@ assert(duesAns2.text.includes("Landlord"), "due counterparty");
 
 assert(glance.text.includes("Finance txns:** 4"), "glance finance");
 assert(help.text.toLowerCase().includes("finance"), "help finance");
+
+
+const belongingsAns = answerQuery("List my belongings", sample, extras);
+assert(belongingsAns.title === "Your belongings", "belongings title");
+assert(belongingsAns.text.includes("Passport"), "belonging name");
+
+const whereAns = answerQuery("Where is my passport", sample, extras);
+assert(whereAns.title === "Where it is", "where title");
+assert(whereAns.text.toLowerCase().includes("bedroom"), "where location");
+
+assert(glance.text.includes("Belongings:** 2"), "glance belongings");
+assert(help.text.toLowerCase().includes("belongings") || help.text.toLowerCase().includes("where is"), "help belongings");
 
 console.log("ai.test.ts: all assertions passed");
 

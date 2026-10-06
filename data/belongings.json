@@ -1,0 +1,79 @@
+{
+  "belongings": [
+    {
+      "id": "bel-1",
+      "name": "Passport",
+      "category": "Documents",
+      "location": "Bedroom · Top drawer (left)",
+      "photoUrl": "",
+      "photoNote": "Navy blue booklet in envelope",
+      "tags": ["travel", "important"],
+      "quantity": 1,
+      "status": "stored",
+      "notes": "Expires 2031. Keep with PAN xerox.",
+      "linkedAssetId": null,
+      "createdAt": "2026-01-10T10:00:00.000Z",
+      "updatedAt": "2026-09-01T10:00:00.000Z"
+    },
+    {
+      "id": "bel-2",
+      "name": "AirPods Pro",
+      "category": "Electronics",
+      "location": "With me · Everyday bag",
+      "photoUrl": "",
+      "photoNote": "White case with scratch on hinge",
+      "tags": ["audio", "daily"],
+      "quantity": 1,
+      "status": "with_me",
+      "notes": "Case in front pocket of backpack.",
+      "linkedAssetId": null,
+      "createdAt": "2026-02-01T10:00:00.000Z",
+      "updatedAt": "2026-10-05T10:00:00.000Z"
+    },
+    {
+      "id": "bel-3",
+      "name": "Winter jacket (Uniqlo)",
+      "category": "Clothing",
+      "location": "Hall closet · Left side",
+      "photoUrl": "",
+      "photoNote": "Black puffer, size M",
+      "tags": ["seasonal"],
+      "quantity": 1,
+      "status": "stored",
+      "notes": "Packed with moth balls for monsoon.",
+      "linkedAssetId": null,
+      "createdAt": "2025-11-01T10:00:00.000Z",
+      "updatedAt": "2026-04-15T10:00:00.000Z"
+    },
+    {
+      "id": "bel-4",
+      "name": "Kindle Paperwhite",
+      "category": "Electronics",
+      "location": "Rahul's place",
+      "photoUrl": "",
+      "photoNote": "Black cover, cracked corner",
+      "tags": ["books", "lent"],
+      "quantity": 1,
+      "status": "lent_out",
+      "notes": "Lent to Rahul in Sept — ask back after Diwali.",
+      "linkedAssetId": null,
+      "createdAt": "2026-03-12T10:00:00.000Z",
+      "updatedAt": "2026-09-20T10:00:00.000Z"
+    },
+    {
+      "id": "bel-5",
+      "name": "USB-C hub",
+      "category": "Electronics",
+      "location": "Desk drawer · Cable tray",
+      "photoUrl": "",
+      "photoNote": "Silver 7-in-1 hub",
+      "tags": ["desk", "cables"],
+      "quantity": 1,
+      "status": "stored",
+      "notes": "Used with Framework Laptop.",
+      "linkedAssetId": "asset-1",
+      "createdAt": "2026-01-20T10:00:00.000Z",
+      "updatedAt": "2026-08-01T10:00:00.000Z"
+    }
+  ]
+}

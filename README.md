@@ -176,3 +176,15 @@ Track monthly income, expenses, lends (money you lent), and dues (money you owe)
 - Persist: `data/finance.json`
 - Thinking space: “Finance summary”, “Outstanding lends”, “Outstanding dues”
 
+## Belongings
+
+Personal items and **where they are kept** — distinct from Assets (inventory/value).
+
+- Page: `/belongings` — filter by location/category/status, group by place, CRUD
+- API: `GET/POST /api/belongings`, `GET/PUT/DELETE /api/belongings/[id]`
+  - Filters: `?q=`, `?location=`, `?category=`, `?status=`
+  - `?group=location` — also returns `byLocation` map
+- Persist: `data/belongings.json`
+- Status: `with_me` | `stored` | `lent_out` | `missing`
+- Thinking space: “List my belongings”, “Where is my passport”
+

@@ -3,12 +3,13 @@ import { readAssetsFile } from "@/lib/assets-store";
 import { readClientsFile } from "@/lib/clients-store";
 import { readRecurringsFile } from "@/lib/recurrings-store";
 import { readFinanceFile, remainingAmount } from "@/lib/finance-store";
+import { readBelongingsFile } from "@/lib/belongings-store";
 import { readProjectsFile } from "@/lib/projects-store";
 import { readSecretsFile } from "@/lib/secrets-store";
 import { readStore } from "@/lib/store";
 
 export async function GET() {
-  const [store, assets, secrets, projects, billing, recurrings, finance] = await Promise.all([
+  const [store, assets, secrets, projects, billing, recurrings, finance, belongings] = await Promise.all([
     readStore(),
     readAssetsFile(),
     readSecretsFile(),
@@ -16,6 +17,7 @@ export async function GET() {
     readClientsFile(),
     readRecurringsFile(),
     readFinanceFile(),
+    readBelongingsFile(),
   ]);
   const list = projects.projects;
   const today = new Date();
@@ -60,5 +62,8 @@ export async function GET() {
     outstandingDues: finance.transactions
       .filter((t) => t.type === "due" && t.status !== "settled")
       .reduce((s, t) => s + remainingAmount(t), 0),
+    belongings: belongings.belongings.length,
+    belongingsMissing: belongings.belongings.filter((b) => b.status === "missing").length,
+    belongingsLent: belongings.belongings.filter((b) => b.status === "lent_out").length,
   });
 }

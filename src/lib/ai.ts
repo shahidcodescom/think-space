@@ -1,5 +1,5 @@
 import { stripHtml } from "./sanitize";
-import { Asset, Client, FinanceTransaction, Project, Recurring, SecretPublic, StoreData, Subscription } from "./types";
+import { Asset, Belonging, Client, FinanceTransaction, Project, Recurring, SecretPublic, StoreData, Subscription } from "./types";
 
 /** Extra workspace data for the rule-based assistant (secrets = metadata only). */
 export type AiExtras = {
@@ -11,6 +11,7 @@ export type AiExtras = {
   subscriptions?: Subscription[];
   recurrings?: Recurring[];
   finance?: FinanceTransaction[];
+  belongings?: Belonging[];
 };
 
 function formatDate(isoDate: string): string {
@@ -63,6 +64,7 @@ export function answerQuery(
   const subscriptions = extras.subscriptions || [];
   const recurrings = extras.recurrings || [];
   const finance = extras.finance || [];
+  const belongings = extras.belongings || [];
 
   if (/list.*notes|my notes|show.*notes|what.*notes/.test(q)) {
     if (store.notes.length === 0) {
@@ -299,6 +301,55 @@ export function answerQuery(
     return { text: lines.join("\n"), title: "Open dues" };
   }
 
+  if (/list.*belonging|my belonging|show.*belonging|what do i (own|have)|inventory of belongings/.test(q)) {
+    if (belongings.length === 0) {
+      return {
+        text: "You have no belongings tracked yet. Add one from Belongings.",
+        title: "Your belongings",
+      };
+    }
+    const lines = belongings.map((b) => {
+      const st =
+        b.status === "with_me"
+          ? "with me"
+          : b.status === "lent_out"
+            ? "lent out"
+            : b.status;
+      return `**${b.name}** · ${b.category} · ${b.location || "—"} · ${st}`;
+    });
+    return { text: lines.join("\n"), title: "Your belongings" };
+  }
+
+  {
+    const whereMatch = q.match(
+      /(?:where(?:'?s| is| are)?|locate|find)\s+(?:my\s+)?(.+?)\s*\??$/i
+    );
+    if (whereMatch || /where is|where are|where'?s/.test(q)) {
+      const needle = (whereMatch ? whereMatch[1] : q.replace(/where(?:'?s| is| are)?\s*(?:my\s+)?/i, ""))
+        .replace(/\?+$/, "")
+        .trim()
+        .toLowerCase();
+      if (needle && needle.length >= 2 && !/^(are you|you|i|we|they)$/.test(needle)) {
+        const hits = belongings.filter((b) =>
+          `${b.name} ${b.category} ${b.tags.join(" ")} ${b.photoNote}`.toLowerCase().includes(needle)
+        );
+        if (hits.length) {
+          const lines = hits.map((b) => {
+            const st =
+              b.status === "with_me"
+                ? "with me"
+                : b.status === "lent_out"
+                  ? "lent out"
+                  : b.status;
+            return `**${b.name}** is at **${b.location || "—"}** (${st})${b.notes ? ` — ${b.notes}` : ""}`;
+          });
+          return { text: lines.join("\n"), title: "Where it is" };
+        }
+        // fall through to keyword search if no belonging hit
+      }
+    }
+  }
+
     if (/product planning|meeting.*product/.test(q)) {
     const m = store.meetings.find((x) => /product planning/i.test(x.title));
     if (m) {
@@ -331,6 +382,7 @@ export function answerQuery(
         `**Subscriptions:** ${subscriptions.length}`,
         `**Recurrings:** ${recurrings.length}`,
         `**Finance txns:** ${finance.length}`,
+        `**Belongings:** ${belongings.length}`,
       ].join("\n"),
     };
   }
@@ -338,7 +390,7 @@ export function answerQuery(
   if (/hello|hi\b|hey|good morning|good evening/.test(q)) {
     return {
       title: "Hello",
-      text: `Hi ${store.profile.name.split(" ")[0]}. Ask me to list notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, or finance — or summarise your workspace.`,
+      text: `Hi ${store.profile.name.split(" ")[0]}. Ask me to list notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, finance, or belongings — or summarise your workspace.`,
     };
   }
 
@@ -361,6 +413,8 @@ export function answerQuery(
         "- Finance summary",
         "- Outstanding lends",
         "- Outstanding dues",
+        "- List my belongings",
+        "- Where is my passport",
         "- At a glance",
         "- Tell me about Product planning",
       ].join("\n"),
@@ -434,6 +488,12 @@ export function answerQuery(
       hits.push(`Finance · **${t.type}** · ${t.category} · ${t.amount} ${t.currency} (${t.date})`);
     }
   }
+  for (const b of belongings) {
+    const hay = `${b.name} ${b.category} ${b.location} ${b.notes} ${b.tags.join(" ")} ${b.photoNote}`.toLowerCase();
+    if (hay.includes(q)) {
+      hits.push(`Belonging · **${b.name}** · ${b.location || "—"}`);
+    }
+  }
 
   if (hits.length) {
     return { title: "I found this", text: hits.join("\n") };
@@ -441,7 +501,7 @@ export function answerQuery(
 
   return {
     title: "Thinking…",
-    text: `I searched your notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, and finance but did not find a match for “${query}”. Try “List my notes”, “List my assets”, or “At a glance”.`,
+    text: `I searched your notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, finance, and belongings but did not find a match for “${query}”. Try “List my notes”, “List my assets”, or “At a glance”.`,
   };
 }
 
@@ -452,7 +512,7 @@ export function renderAnswerMarkdown(title: string | undefined, text: string): s
       let withBold = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
       // Safe internal markdown links e.g. [Open in Secrets](/secrets?id=...)
       withBold = withBold.replace(
-        /\[([^\]]+)\]\((\/(?:secrets|notes|assets|tasks|meetings|thoughts|memories|projects|clients|recurrings|finance|thinking-space|profile)[^)]*)\)/g,
+        /\[([^\]]+)\]\((\/(?:secrets|notes|assets|tasks|meetings|thoughts|memories|projects|clients|recurrings|finance|belongings|thinking-space|profile)[^)]*)\)/g,
         '<a href="$2" class="text-forest font-medium underline decoration-sage-dark/50 hover:decoration-forest whitespace-nowrap">$1</a>'
       );
       if (withBold.startsWith("- ")) {

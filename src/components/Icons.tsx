@@ -335,3 +335,12 @@ export function FinanceIcon(props: IconProps) {
   );
 }
 
+export function BelongingIcon(props: IconProps) {
+  return (
+    <svg {...base(props)} viewBox="0 0 24 24">
+      <path d="M4 8h16v12H4z" />
+      <path d="M8 8V6a4 4 0 0 1 8 0v2" />
+    </svg>
+  );
+}
+

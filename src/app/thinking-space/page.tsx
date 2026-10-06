@@ -21,6 +21,7 @@ import {
   ClientsIcon,
   RecurringIcon,
   FinanceIcon,
+  BelongingIcon,
 } from "@/components/Icons";
 import { ChatMessage, Profile } from "@/lib/types";
 import { plainFromHtml } from "@/lib/format";
@@ -35,6 +36,7 @@ type Stats = {
   clients: number;
   recurrings?: number;
   financeTransactions?: number;
+  belongings?: number;
   openLends?: number;
   openDues?: number;
   upcomingRenewals?: number;
@@ -296,6 +298,12 @@ export default function ThinkingSpacePage() {
             icon={<FinanceIcon size={22} />}
             label={`${stats.financeTransactions ?? 0} Finance`}
             tone="bg-peach-soft/70"
+          />
+          <GlanceCard
+            href="/belongings"
+            icon={<BelongingIcon size={22} />}
+            label={`${stats.belongings ?? 0} Belongings`}
+            tone="bg-teal-soft/60"
           />
         </div>
       </aside>

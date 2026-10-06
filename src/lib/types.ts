@@ -229,3 +229,24 @@ export interface FinanceTransaction {
   updatedAt: string;
 }
 
+export type BelongingStatus = "with_me" | "stored" | "lent_out" | "missing";
+
+export interface Belonging {
+  id: string;
+  name: string;
+  category: string;
+  /** Room / place / container — where it is kept. */
+  location: string;
+  /** Optional photo URL. */
+  photoUrl: string;
+  /** Short visual note if no photo. */
+  photoNote: string;
+  tags: string[];
+  quantity: number;
+  status: BelongingStatus;
+  notes: string;
+  linkedAssetId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
