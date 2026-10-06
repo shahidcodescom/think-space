@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Modal } from "@/components/Modal";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { SafeHtml } from "@/components/SafeHtml";
+import { MobileBackButton } from "@/components/MobileBackButton";
 import { PencilIcon, PlusIcon, TrashIcon } from "@/components/Icons";
 import { stripHtml } from "@/lib/sanitize";
 import { Note } from "@/lib/types";
@@ -17,6 +18,7 @@ function NotesInner() {
   const [editing, setEditing] = useState<Note | null>(null);
   const [form, setForm] = useState({ title: "", content: "" });
   const [editorKey, setEditorKey] = useState(0);
+  const [mobileDetail, setMobileDetail] = useState(false);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/notes");
@@ -36,7 +38,10 @@ function NotesInner() {
 
   useEffect(() => {
     const qid = search.get("id");
-    if (qid) setSelectedId(qid);
+    if (qid) {
+      setSelectedId(qid);
+      setMobileDetail(true);
+    }
   }, [search]);
 
   const selected = notes.find((n) => n.id === selectedId) || null;
@@ -74,6 +79,7 @@ function NotesInner() {
       const created = await res.json();
       setNotes((prev) => [created, ...prev]);
       setSelectedId(created.id);
+      setMobileDetail(true);
     }
     setModalOpen(false);
   }
@@ -86,8 +92,8 @@ function NotesInner() {
   }
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] md:h-screen flex flex-col px-4 md:px-8 py-6">
-      <header className="flex items-start justify-between gap-4 mb-6">
+    <div className="page-shell h-[calc(100dvh-8rem)] md:h-[100dvh] flex flex-col">
+      <header className="page-header">
         <div>
           <h1 className="section-title">Notes.</h1>
           <p className="text-forest/55 mt-1 text-sm">
@@ -100,12 +106,15 @@ function NotesInner() {
       </header>
 
       <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4">
-        <div className="card p-3 overflow-y-auto scroll-thin space-y-2">
+        <div className={`card p-3 overflow-y-auto scroll-thin space-y-2 ${mobileDetail ? "hidden md:block" : ""}`}>
           {notes.map((n) => (
             <button
               key={n.id}
-              onClick={() => setSelectedId(n.id)}
-              className={`w-full text-left rounded-xl px-3 py-3 transition-colors ${
+              onClick={() => {
+                setSelectedId(n.id);
+                setMobileDetail(true);
+              }}
+              className={`w-full text-left rounded-xl px-3 py-3.5 min-h-[52px] transition-colors active:bg-sage-muted/70 ${
                 selectedId === n.id ? "bg-sage-muted" : "hover:bg-cream"
               }`}
             >
@@ -120,9 +129,10 @@ function NotesInner() {
           )}
         </div>
 
-        <div className="card p-5 overflow-y-auto scroll-thin">
+        <div className={`card p-5 overflow-y-auto scroll-thin ${!mobileDetail ? "hidden md:block" : ""}`}>
           {selected ? (
             <>
+              <MobileBackButton onClick={() => setMobileDetail(false)} label="All notes" />
               <div className="flex items-start justify-between gap-3 mb-4">
                 <h2 className="font-serif text-2xl text-forest">{selected.title}</h2>
                 <div className="flex gap-2">

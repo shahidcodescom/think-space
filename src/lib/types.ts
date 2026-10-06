@@ -119,3 +119,64 @@ export interface Asset {
   createdAt: string;
   updatedAt: string;
 }
+
+export type ProjectStatus = "in_progress" | "live";
+
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  status: ProjectStatus;
+  url: string;
+  tags: string[];
+  startedAt: string;
+  releasedAt: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SubscriptionStatus = "active" | "past_due" | "cancelled" | "trial";
+export type BillingPeriod = "monthly" | "yearly" | "custom";
+export type PaymentStatus = "paid" | "failed" | "pending" | "refunded";
+
+export interface Client {
+  id: string;
+  name: string;
+  email: string;
+  company: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Subscription {
+  id: string;
+  clientId: string;
+  projectId: string;
+  plan: string;
+  status: SubscriptionStatus;
+  startDate: string;
+  renewalDate: string;
+  amount: number;
+  currency: string;
+  billingPeriod: BillingPeriod;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Payment {
+  id: string;
+  clientId: string;
+  subscriptionId: string | null;
+  amount: number;
+  currency: string;
+  date: string;
+  method: string;
+  status: PaymentStatus;
+  reference: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}

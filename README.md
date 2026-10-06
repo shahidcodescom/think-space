@@ -68,6 +68,8 @@ src/
   components/           # Sidebar, AppShell, ActionItems, …
   lib/                  # types, store, ai, format
 data/store.json         # Local persistence + seed
+data/projects.json      # Projects / products
+data/clients.json       # Clients, subscriptions, payments
 data/assets.json        # Asset inventory
 data/secrets.json       # Encrypted secrets vault
 data/.secrets-master-key  # Auto key (gitignored)
@@ -130,3 +132,25 @@ Track hardware, software licenses, documents, and media.
 - API: `GET/POST /api/assets`, `GET/PUT/DELETE /api/assets/:id`
 - Query params on list: `type`, `status`, `q`
 - Data: `data/assets.json`
+
+## Projects / Products
+
+Track builds separately from shipped products.
+
+- UI: `/projects` — **In progress** and **Live / Released** sections, with mark-live / move-to-in-progress
+- Status model: `in_progress` | `live` (released)
+- API: `GET/POST /api/projects`, `GET/PUT/DELETE /api/projects/:id` (`?status=&q=` on list)
+- Data: `data/projects.json`
+- Thinking space: “List my projects” + glance count
+
+## Clients / Subscriptions
+
+Manage customers of **live** products: subscriptions, renewals, payments.
+
+- UI: `/clients` — clients CRUD, upcoming renewals (30d + overdue), subscriptions & payments, mark renewed
+- Data: `data/clients.json` (`clients`, `subscriptions`, `payments`)
+- API:
+  - `GET/POST /api/clients`, `GET/PUT/DELETE /api/clients/:id`
+  - `GET/POST /api/subscriptions`, `GET/PUT/DELETE /api/subscriptions/:id` (`PUT` with `{ action: "renew" }` bumps renewal + records payment)
+  - `GET/POST /api/payments`, `PUT/DELETE /api/payments/:id`
+- Thinking space: “List my clients”, “Upcoming renewals”

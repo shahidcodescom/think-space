@@ -13,6 +13,7 @@ import {
   PlusIcon,
   UsersIcon,
 } from "@/components/Icons";
+import { MobileBackButton } from "@/components/MobileBackButton";
 import { formatDisplayDate } from "@/lib/format";
 import { Meeting, Note, Task } from "@/lib/types";
 
@@ -21,6 +22,7 @@ export default function MeetingsPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Meeting | null>(null);
   const [noteModal, setNoteModal] = useState(false);
@@ -157,8 +159,8 @@ export default function MeetingsPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] md:min-h-screen px-4 md:px-8 py-6">
-      <header className="flex items-start justify-between gap-4 mb-6">
+    <div className="page-shell min-h-[calc(100dvh-8rem)] md:min-h-screen">
+      <header className="page-header">
         <div>
           <h1 className="section-title">Meetings with a next step.</h1>
         </div>
@@ -170,7 +172,7 @@ export default function MeetingsPage() {
       {/* Desktop 3-col / Mobile stack */}
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_260px] gap-4">
         {/* List */}
-        <div>
+        <div className={mobileDetail ? "hidden lg:block" : ""}>
           <h2 className="text-xs font-semibold uppercase tracking-wide text-forest/50 mb-2">
             Meetings
           </h2>
@@ -178,8 +180,8 @@ export default function MeetingsPage() {
             {meetings.map((m) => (
               <button
                 key={m.id}
-                onClick={() => setSelectedId(m.id)}
-                className={`w-full text-left card px-4 py-3 transition-colors ${
+                onClick={() => { setSelectedId(m.id); setMobileDetail(true); }}
+                className={`w-full text-left card px-4 py-3.5 min-h-[56px] transition-colors active:opacity-90 ${
                   selectedId === m.id
                     ? "bg-sage-muted border-sage"
                     : "hover:bg-white"
@@ -198,9 +200,10 @@ export default function MeetingsPage() {
         </div>
 
         {/* Detail */}
-        <div className="card p-5">
+        <div className={`card p-5 ${!mobileDetail ? "hidden lg:block" : ""}`}>
           {selected ? (
             <>
+              <MobileBackButton onClick={() => setMobileDetail(false)} label="All meetings" />
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
                   <h2 className="font-serif text-2xl md:text-3xl text-forest">

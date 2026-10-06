@@ -1,10 +1,30 @@
 import { NextResponse } from "next/server";
 import { readAssetsFile } from "@/lib/assets-store";
+import { readClientsFile } from "@/lib/clients-store";
+import { readProjectsFile } from "@/lib/projects-store";
+import { readSecretsFile } from "@/lib/secrets-store";
 import { readStore } from "@/lib/store";
 
 export async function GET() {
-  const store = await readStore();
-  const assets = await readAssetsFile();
+  const [store, assets, secrets, projects, billing] = await Promise.all([
+    readStore(),
+    readAssetsFile(),
+    readSecretsFile(),
+    readProjectsFile(),
+    readClientsFile(),
+  ]);
+  const list = projects.projects;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const end = new Date(today);
+  end.setDate(end.getDate() + 30);
+  const upcomingRenewals = billing.subscriptions.filter((s) => {
+    if (s.status === "cancelled" || !s.renewalDate) return false;
+    const d = new Date(`${s.renewalDate}T12:00:00`);
+    if (s.status === "past_due") return true;
+    return d >= today && d <= end;
+  }).length;
+
   return NextResponse.json({
     notes: store.notes.length,
     tasks: store.tasks.length,
@@ -13,5 +33,12 @@ export async function GET() {
     thoughts: store.thoughts.length,
     memories: store.memories.length,
     assets: assets.assets.length,
+    secrets: secrets.secrets.length,
+    projects: list.length,
+    projectsInProgress: list.filter((p) => p.status === "in_progress").length,
+    projectsLive: list.filter((p) => p.status === "live").length,
+    clients: billing.clients.length,
+    subscriptions: billing.subscriptions.length,
+    upcomingRenewals,
   });
 }

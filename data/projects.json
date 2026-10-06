@@ -1,0 +1,54 @@
+{
+  "projects": [
+    {
+      "id": "project-1",
+      "name": "Second Brain AI",
+      "description": "Calm personal workspace — notes, meetings, secrets, and assets in one botanical UI.",
+      "status": "in_progress",
+      "url": "http://localhost:3000",
+      "tags": [
+        "product",
+        "nextjs",
+        "personal"
+      ],
+      "startedAt": "2026-09-01",
+      "releasedAt": "2026-10-06",
+      "notes": "Ship Thinking space + vault + assets this sprint.",
+      "createdAt": "2026-09-01T10:00:00.000Z",
+      "updatedAt": "2026-10-06T05:43:41.911Z"
+    },
+    {
+      "id": "project-2",
+      "name": "RuneRail",
+      "description": "Live product for routing creative workflows — released and maintained.",
+      "status": "live",
+      "url": "https://runerail.example",
+      "tags": [
+        "product",
+        "live",
+        "saas"
+      ],
+      "startedAt": "2025-04-10",
+      "releasedAt": "2026-02-18",
+      "notes": "Public launch Feb 2026. Focus on retention and voice pipeline.",
+      "createdAt": "2025-04-10T10:00:00.000Z",
+      "updatedAt": "2026-02-18T10:00:00.000Z"
+    },
+    {
+      "id": "project-3",
+      "name": "Calmer Notes kit",
+      "description": "Open template pack for botanical productivity docs.",
+      "status": "live",
+      "url": "",
+      "tags": [
+        "docs",
+        "template"
+      ],
+      "startedAt": "2025-11-01",
+      "releasedAt": "2026-01-05",
+      "notes": "Shared with the team after the first offsite.",
+      "createdAt": "2025-11-01T10:00:00.000Z",
+      "updatedAt": "2026-01-05T10:00:00.000Z"
+    }
+  ]
+}

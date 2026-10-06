@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { MobileBackButton } from "@/components/MobileBackButton";
 import { PencilIcon, PlusIcon, TrashIcon } from "@/components/Icons";
 import { formatDisplayDate } from "@/lib/format";
 import { Memory } from "@/lib/types";
@@ -9,6 +10,7 @@ import { Memory } from "@/lib/types";
 export default function MemoriesPage() {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Memory | null>(null);
   const [form, setForm] = useState({ title: "", content: "", tags: "" });
@@ -69,8 +71,8 @@ export default function MemoriesPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] md:min-h-screen px-4 md:px-8 py-6">
-      <header className="flex items-start justify-between gap-4 mb-6">
+    <div className="page-shell min-h-[calc(100dvh-8rem)] md:min-h-screen">
+      <header className="page-header">
         <div>
           <h1 className="section-title">Memories.</h1>
           <p className="text-forest/55 mt-1 text-sm">Archive moments. Revisit what mattered.</p>
@@ -81,12 +83,12 @@ export default function MemoriesPage() {
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4">
-        <div className="space-y-2 max-h-[70vh] overflow-y-auto scroll-thin">
+        <div className={`space-y-2 max-h-[70vh] overflow-y-auto scroll-thin ${mobileDetail ? "hidden md:block" : ""}`}>
           {memories.map((m) => (
             <button
               key={m.id}
-              onClick={() => setSelectedId(m.id)}
-              className={`w-full text-left card px-4 py-3 ${
+              onClick={() => { setSelectedId(m.id); setMobileDetail(true); }}
+              className={`w-full text-left card px-4 py-3.5 min-h-[52px] active:opacity-90 ${
                 selectedId === m.id ? "bg-teal-soft" : "hover:bg-white"
               }`}
             >
@@ -110,9 +112,10 @@ export default function MemoriesPage() {
           ))}
         </div>
 
-        <div className="card p-5">
+        <div className={`card p-5 ${!mobileDetail ? "hidden md:block" : ""}`}>
           {selected ? (
             <>
+              <MobileBackButton onClick={() => setMobileDetail(false)} label="All memories" />
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
                   <h2 className="font-serif text-2xl text-forest">{selected.title}</h2>

@@ -16,6 +16,9 @@ import {
   TaskIcon,
   WaveIcon,
   AssetIcon,
+  LockIcon,
+  ProjectIcon,
+  ClientsIcon,
 } from "@/components/Icons";
 import { ChatMessage, Profile } from "@/lib/types";
 import { plainFromHtml } from "@/lib/format";
@@ -25,13 +28,17 @@ type Stats = {
   tasks: number;
   memories: number;
   assets: number;
+  secrets: number;
+  projects: number;
+  clients: number;
+  upcomingRenewals?: number;
 };
 
 export default function ThinkingSpacePage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [stats, setStats] = useState<Stats>({ notes: 0, tasks: 0, memories: 0, assets: 0 });
+  const [stats, setStats] = useState<Stats>({ notes: 0, tasks: 0, memories: 0, assets: 0, secrets: 0, projects: 0, clients: 0 });
   const [profile, setProfile] = useState<Profile | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -97,10 +104,10 @@ export default function ThinkingSpacePage() {
   }
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] md:h-screen flex">
+    <div className="h-[calc(100dvh-8rem)] md:h-[100dvh] flex overflow-hidden">
       {/* Center chat */}
-      <div className="flex-1 flex flex-col min-w-0 px-4 md:px-8 py-6">
-        <header className="mb-6">
+      <div className="flex-1 flex flex-col min-w-0 px-3 sm:px-4 md:px-8 py-3 sm:py-6">
+        <header className="mb-3 sm:mb-6 shrink-0">
           <h1 className="section-title">Your thinking space.</h1>
           <p className="text-forest/55 mt-1 text-sm md:text-base">
             Ask. Find. Organise. Get things done.
@@ -117,7 +124,7 @@ export default function ThinkingSpacePage() {
                 <div>
                   <h3 className="font-semibold text-forest mb-1">Welcome</h3>
                   <p className="text-sm text-forest/70">
-                    Try asking <em>“List my notes”</em> or <em>“At a glance”</em>.
+                    Try asking <em>“List my notes”</em>, <em>“List my projects”</em>, <em>“List my secrets”</em>, or <em>“At a glance”</em>.
                     I answer from your local Second Brain data.
                   </p>
                 </div>
@@ -170,7 +177,7 @@ export default function ThinkingSpacePage() {
           <div ref={bottomRef} />
         </div>
 
-        <form onSubmit={send} className="mt-2">
+        <form onSubmit={send} className="mt-2 shrink-0 sticky bottom-0 pt-2 pb-1 bg-gradient-to-t from-cream via-cream to-cream/80">
           <div className="flex items-center gap-2 bg-white/80 border border-forest/10 rounded-2xl px-3 py-2 shadow-soft">
             <input
               ref={inputRef}
@@ -183,7 +190,7 @@ export default function ThinkingSpacePage() {
             <button
               type="submit"
               disabled={busy || !input.trim()}
-              className="w-11 h-11 rounded-full bg-forest text-white flex items-center justify-center hover:bg-forest-soft disabled:opacity-40 transition-colors"
+              className="w-12 h-12 sm:w-11 sm:h-11 rounded-full bg-forest text-white flex items-center justify-center hover:bg-forest-soft active:bg-forest-deep disabled:opacity-40 transition-colors shrink-0"
               aria-label="Send"
             >
               <SendIcon size={18} />
@@ -251,8 +258,26 @@ export default function ThinkingSpacePage() {
           <GlanceCard
             href="/assets"
             icon={<AssetIcon size={22} />}
-            label={`${stats.assets} Assets`}
+            label={`${stats.assets ?? 0} Assets`}
             tone="bg-white"
+          />
+          <GlanceCard
+            href="/secrets"
+            icon={<LockIcon size={22} />}
+            label={`${stats.secrets ?? 0} Secrets`}
+            tone="bg-sage-muted/70"
+          />
+          <GlanceCard
+            href="/projects"
+            icon={<ProjectIcon size={22} />}
+            label={`${stats.projects ?? 0} Projects`}
+            tone="bg-peach-soft"
+          />
+          <GlanceCard
+            href="/clients"
+            icon={<ClientsIcon size={22} />}
+            label={`${stats.clients ?? 0} Clients`}
+            tone="bg-teal-soft"
           />
         </div>
       </aside>

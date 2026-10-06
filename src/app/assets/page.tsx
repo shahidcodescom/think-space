@@ -9,6 +9,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@/components/Icons";
+import { MobileBackButton } from "@/components/MobileBackButton";
 import { formatDisplayDate } from "@/lib/format";
 import { Asset, AssetStatus, AssetType } from "@/lib/types";
 
@@ -72,6 +73,7 @@ function formatMoney(value: number | null): string {
 export default function AssetsPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [query, setQuery] = useState("");
@@ -180,8 +182,8 @@ export default function AssetsPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] md:min-h-screen px-4 md:px-8 py-6">
-      <header className="flex items-start justify-between gap-4 mb-5">
+    <div className="page-shell min-h-[calc(100dvh-8rem)] md:min-h-screen">
+      <header className="page-header">
         <div>
           <h1 className="section-title">Assets.</h1>
           <p className="text-forest/55 mt-1 text-sm">
@@ -230,12 +232,12 @@ export default function AssetsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4">
-        <div className="card p-3 overflow-y-auto scroll-thin space-y-2 max-h-[70vh]">
+        <div className={`card p-3 overflow-y-auto scroll-thin space-y-2 max-h-[70vh] ${mobileDetail ? "hidden md:block" : ""}`}>
           {assets.map((a) => (
             <button
               key={a.id}
-              onClick={() => setSelectedId(a.id)}
-              className={`w-full text-left rounded-xl px-3 py-3 transition-colors ${
+              onClick={() => { setSelectedId(a.id); setMobileDetail(true); }}
+              className={`w-full text-left rounded-xl px-3 py-3.5 min-h-[52px] transition-colors active:bg-sage-muted/70 ${
                 selectedId === a.id ? "bg-sage-muted" : "hover:bg-cream"
               }`}
             >
@@ -267,9 +269,10 @@ export default function AssetsPage() {
           )}
         </div>
 
-        <div className="card p-5 overflow-y-auto scroll-thin">
+        <div className={`card p-5 overflow-y-auto scroll-thin ${!mobileDetail ? "hidden md:block" : ""}`}>
           {selected ? (
             <>
+              <MobileBackButton onClick={() => setMobileDetail(false)} label="All assets" />
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
                   <h2 className="font-serif text-2xl text-forest">{selected.name}</h2>

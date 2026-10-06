@@ -5,6 +5,7 @@ import { ActionItems } from "@/components/ActionItems";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { LinkedNotes } from "@/components/LinkedNotes";
 import { Modal } from "@/components/Modal";
+import { MobileBackButton } from "@/components/MobileBackButton";
 import { PencilIcon, PlusIcon, TrashIcon } from "@/components/Icons";
 import { Note, Task, Thought } from "@/lib/types";
 
@@ -13,6 +14,7 @@ export default function ThoughtsPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Thought | null>(null);
   const [noteModal, setNoteModal] = useState(false);
@@ -135,8 +137,8 @@ export default function ThoughtsPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] md:min-h-screen px-4 md:px-8 py-6">
-      <header className="flex items-start justify-between gap-4 mb-6">
+    <div className="page-shell min-h-[calc(100dvh-8rem)] md:min-h-screen">
+      <header className="page-header">
         <div>
           <h1 className="section-title">Thoughts, organized.</h1>
           <p className="text-forest/55 mt-1 text-sm">Capture thoughts, act on them.</p>
@@ -147,12 +149,12 @@ export default function ThoughtsPage() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_260px] gap-4">
-        <div className="space-y-2">
+        <div className={`space-y-2 ${mobileDetail ? "hidden lg:block" : ""}`}>
           {thoughts.map((t) => (
             <button
               key={t.id}
-              onClick={() => setSelectedId(t.id)}
-              className={`w-full text-left card px-4 py-3 ${
+              onClick={() => { setSelectedId(t.id); setMobileDetail(true); }}
+              className={`w-full text-left card px-4 py-3.5 min-h-[56px] active:opacity-90 ${
                 selectedId === t.id ? "bg-sage-muted" : "hover:bg-white"
               }`}
             >
@@ -165,9 +167,10 @@ export default function ThoughtsPage() {
           )}
         </div>
 
-        <div className="card p-5">
+        <div className={`card p-5 ${!mobileDetail ? "hidden lg:block" : ""}`}>
           {selected ? (
             <>
+              <MobileBackButton onClick={() => setMobileDetail(false)} label="All thoughts" />
               <div className="flex items-start justify-between gap-3 mb-4">
                 <h2 className="font-serif text-2xl text-forest">{selected.title}</h2>
                 <div className="flex gap-2">

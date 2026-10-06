@@ -52,7 +52,7 @@ export default function TasksPage() {
   const done = tasks.filter((t) => t.done);
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] md:min-h-screen px-4 md:px-8 py-6 max-w-3xl">
+    <div className="page-shell min-h-[calc(100dvh-8rem)] md:min-h-screen max-w-3xl">
       <header className="mb-6">
         <h1 className="section-title">Tasks.</h1>
         <p className="text-forest/55 mt-1 text-sm">Check things off. Keep momentum calm.</p>
@@ -123,7 +123,7 @@ function TaskRow({
       </span>
       <button
         onClick={() => onDelete(task)}
-        className="opacity-0 group-hover:opacity-100 p-1 text-forest/40 hover:text-red-600"
+        className="touch-row-action p-1 text-forest/40 hover:text-red-600"
       >
         <TrashIcon size={14} />
       </button>

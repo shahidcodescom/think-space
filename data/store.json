@@ -186,17 +186,17 @@
   },
   "chatHistory": [
     {
-      "id": "msg-1791263705720-qtzpr2",
+      "id": "msg-1791265629755-v5guok",
       "role": "user",
-      "content": "List my notes",
-      "createdAt": "2026-10-06T05:15:05.720Z"
+      "content": "upcoming renewals",
+      "createdAt": "2026-10-06T05:47:09.755Z"
     },
     {
-      "id": "msg-1791263705721-fkp81m",
+      "id": "msg-1791265629756-k3admv",
       "role": "assistant",
-      "content": "Your active notes\n**Database backup**: Take a snapshot every 5 days.\n**Server renewal**: Renew the server on 11 October.\n**Release notes**: Draft release notes for the voice workflow launch. Highlight listen & copy Ship voice workflow first",
-      "html": "<h3 class=\"font-semibold text-forest mb-2\">Your active notes</h3><ul class=\"list-disc pl-5 space-y-1\"><li><strong>Database backup</strong>: Take a snapshot every 5 days.</li><li><strong>Server renewal</strong>: Renew the server on 11 October.</li><li><strong>Release notes</strong>: Draft release notes for the voice workflow launch. Highlight listen & copy Ship voice workflow first</li></ul>",
-      "createdAt": "2026-10-06T05:15:05.721Z"
+      "content": "Upcoming renewals\n**Leo Chen** · RuneRail Starter · Monthly · RuneRail · overdue (2026-09-28) · 49 USD\n**Aisha Rahman** · RuneRail Pro · Yearly · RuneRail · in 15d (2026-10-20) · 960 USD",
+      "html": "<h3 class=\"font-semibold text-forest mb-2\">Upcoming renewals</h3><p><strong>Leo Chen</strong> · RuneRail Starter · Monthly · RuneRail · overdue (2026-09-28) · 49 USD</p><p><strong>Aisha Rahman</strong> · RuneRail Pro · Yearly · RuneRail · in 15d (2026-10-20) · 960 USD</p>",
+      "createdAt": "2026-10-06T05:47:09.756Z"
     }
   ]
 }

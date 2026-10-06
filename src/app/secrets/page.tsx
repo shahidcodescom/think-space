@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Modal } from "@/components/Modal";
 import {
   CopyIcon,
@@ -11,6 +12,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@/components/Icons";
+import { MobileBackButton } from "@/components/MobileBackButton";
 import { SecretPublic } from "@/lib/types";
 
 type VaultStatus = {
@@ -35,10 +37,12 @@ const emptyForm: FormState = {
   value: "",
 };
 
-export default function SecretsPage() {
+function SecretsInner() {
+  const search = useSearchParams();
   const [secrets, setSecrets] = useState<SecretPublic[]>([]);
   const [status, setStatus] = useState<VaultStatus | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<SecretPublic | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -56,12 +60,25 @@ export default function SecretsPage() {
     const list: SecretPublic[] = await listRes.json();
     setSecrets(list);
     setStatus(await statusRes.json());
-    setSelectedId((prev) => prev || list[0]?.id || null);
-  }, []);
+    const qid = search.get("id");
+    setSelectedId((prev) => {
+      if (qid && list.some((s) => s.id === qid)) return qid;
+      if (prev && list.some((s) => s.id === prev)) return prev;
+      return list[0]?.id || null;
+    });
+  }, [search]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const qid = search.get("id");
+    if (qid) {
+      setSelectedId(qid);
+      setMobileDetail(true);
+    }
+  }, [search]);
 
   useEffect(() => {
     setRevealed(null);
@@ -180,8 +197,8 @@ export default function SecretsPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] md:min-h-screen px-4 md:px-8 py-6">
-      <header className="flex items-start justify-between gap-4 mb-6">
+    <div className="page-shell min-h-[calc(100dvh-8rem)] md:min-h-screen">
+      <header className="page-header">
         <div>
           <h1 className="section-title">Secrets.</h1>
           <p className="text-forest/55 mt-1 text-sm">
@@ -206,12 +223,12 @@ export default function SecretsPage() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4">
-        <div className="card p-3 overflow-y-auto scroll-thin space-y-2 max-h-[70vh]">
+        <div className={`card p-3 overflow-y-auto scroll-thin space-y-2 max-h-[70vh] ${mobileDetail ? "hidden md:block" : ""}`}>
           {secrets.map((s) => (
             <button
               key={s.id}
-              onClick={() => setSelectedId(s.id)}
-              className={`w-full text-left rounded-xl px-3 py-3 transition-colors ${
+              onClick={() => { setSelectedId(s.id); setMobileDetail(true); }}
+              className={`w-full text-left rounded-xl px-3 py-3.5 min-h-[52px] transition-colors active:bg-sage-muted/70 ${
                 selectedId === s.id ? "bg-sage-muted" : "hover:bg-cream"
               }`}
             >
@@ -232,9 +249,10 @@ export default function SecretsPage() {
           )}
         </div>
 
-        <div className="card p-5">
+        <div className={`card p-5 ${!mobileDetail ? "hidden md:block" : ""}`}>
           {selected ? (
             <>
+              <MobileBackButton onClick={() => setMobileDetail(false)} label="All secrets" />
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
                   <h2 className="font-serif text-2xl text-forest">{selected.name}</h2>
@@ -393,5 +411,17 @@ export default function SecretsPage() {
         </form>
       </Modal>
     </div>
+  );
+}
+
+export default function SecretsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="px-8 py-6 text-sm text-forest/50">Loading secrets…</div>
+      }
+    >
+      <SecretsInner />
+    </Suspense>
   );
 }

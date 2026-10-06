@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/AppShell";
@@ -16,6 +16,18 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Second Brain AI — Think. Capture. Act.",
   description: "A calmer mind & brighter tomorrow.",
+  appleWebApp: {
+    capable: true,
+    title: "Second Brain",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#F7F4EF",
 };
 
 export default function RootLayout({

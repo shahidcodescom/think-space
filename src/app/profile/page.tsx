@@ -39,14 +39,14 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="px-4 md:px-8 py-6">
+      <div className="page-shell">
         <p className="text-sm text-forest/50">Loading profile…</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] md:min-h-screen px-4 md:px-8 py-6 max-w-xl">
+    <div className="page-shell min-h-[calc(100dvh-8rem)] md:min-h-screen max-w-xl">
       <header className="mb-6">
         <h1 className="section-title">Profile.</h1>
         <p className="text-forest/55 mt-1 text-sm">

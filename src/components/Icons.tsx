@@ -275,3 +275,41 @@ export function AssetIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function ProjectIcon(props: IconProps) {
+  return (
+    <svg {...base(props)} viewBox="0 0 24 24">
+      <path d="M4 7h16v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7Z" />
+      <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M8 12h8M8 16h5" />
+    </svg>
+  );
+}
+
+export function ClientsIcon(props: IconProps) {
+  return (
+    <svg {...base(props)} viewBox="0 0 24 24">
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3 19c1-3.2 3.2-5 6-5s5 1.8 6 5" />
+      <circle cx="17" cy="9" r="2.5" />
+      <path d="M17 14.5c1.8.3 3.2 1.5 4 4.5" />
+    </svg>
+  );
+}
+
+export function MoreIcon(props: IconProps) {
+  return (
+    <svg {...base(props)} viewBox="0 0 24 24">
+      <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function BackIcon(props: IconProps) {
+  return (
+    <svg {...base(props)} viewBox="0 0 24 24">
+      <path d="M15 6 9 12l6 6" />
+    </svg>
+  );
+}
