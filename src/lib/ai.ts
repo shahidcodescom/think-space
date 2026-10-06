@@ -186,6 +186,21 @@ export function answerQuery(
     return { text: lines.join("\n"), title: "Your clients" };
   }
 
+  if (/list.*subscriptions|my subscriptions|client subscriptions|show.*subscriptions/.test(q)) {
+    if (subscriptions.length === 0) {
+      return {
+        text: "No client subscriptions yet. Add them under Clients.",
+        title: "Client subscriptions",
+      };
+    }
+    const clientName = (id: string) =>
+      clients.find((c) => c.id === id)?.name || id;
+    const lines = subscriptions.map((s) => {
+      return `**${s.plan}** · ${clientName(s.clientId)} · ${s.status} · renews ${s.renewalDate || "—"} · ${s.amount} ${s.currency}/${s.billingPeriod}`;
+    });
+    return { text: lines.join("\n"), title: "Client subscriptions" };
+  }
+
   if (/upcoming renewals|renewals|renewal/.test(q)) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -309,7 +324,7 @@ export function answerQuery(
     return { text: lines.join("\n"), title: "Open dues" };
   }
 
-  if (/list.*belonging|my belonging|show.*belonging|what do i (own|have)|inventory of belongings/.test(q)) {
+  if (/list.*belonging|my belonging|show.*belonging|inventory of belongings|where.*(kept|stored)/.test(q)) {
     if (belongings.length === 0) {
       return {
         text: "You have no belongings tracked yet. Add one from Belongings.",
@@ -358,7 +373,7 @@ export function answerQuery(
     }
   }
 
-  if (/upcoming appointments|list.*appointments|my calendar|upcoming (events|interviews)|show.*calendar/.test(q)) {
+  if (/upcoming appointments|list.*appointments|my calendar|upcoming events|show.*calendar/.test(q)) {
     const now = Date.now();
     const end = now + 21 * 86400000;
     const rows = calendarEvents
@@ -397,6 +412,32 @@ export function answerQuery(
       return `**${j.company}** · ${j.role} · ${j.status.replace(/_/g, " ")} · ${loc}`;
     });
     return { text: lines.join("\n"), title: "Job applications" };
+  }
+
+  if (/upcoming interviews|next interviews|scheduled interviews/.test(q)) {
+    const rows = jobs
+      .filter((j) => j.nextInterviewAt && !["abandoned", "rejected", "failed", "accepted"].includes(j.status))
+      .map((j) => ({
+        j,
+        t: new Date(j.nextInterviewAt).getTime(),
+      }))
+      .filter(({ t }) => Number.isFinite(t))
+      .sort((a, b) => a.t - b.t);
+    if (!rows.length) {
+      return {
+        text: "No upcoming interviews scheduled on your job applications.",
+        title: "Upcoming interviews",
+      };
+    }
+    const lines = rows.map(({ j }) => {
+      const when = formatDate(j.nextInterviewAt);
+      const time = new Date(j.nextInterviewAt).toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return `**${j.company}** · ${j.role} · ${when} ${time} · ${j.status.replace(/_/g, " ")}`;
+    });
+    return { text: lines.join("\n"), title: "Upcoming interviews" };
   }
 
   if (/list.*skills|my skills|skills i have|skills to learn|show.*skills/.test(q)) {
@@ -440,7 +481,7 @@ export function answerQuery(
     return { text: lines.join("\n"), title: "Your library" };
   }
 
-    if (/product planning|meeting.*product/.test(q)) {
+  if (/product planning|meeting.*product/.test(q)) {
     const m = store.meetings.find((x) => /product planning/i.test(x.title));
     if (m) {
       return {
@@ -456,12 +497,25 @@ export function answerQuery(
     }
   }
 
-  if (/at a glance|summary|overview|status/.test(q)) {
+  if (/at a glance|workspace (summary|overview)|summarise( my)? workspace|summarize( my)? workspace|\boverview\b/.test(q)) {
+    const openTasks = store.tasks.filter((t) => !t.done).length;
+    const openLends = finance.filter((t) => t.type === "lend" && t.status !== "settled").length;
+    const openDues = finance.filter((t) => t.type === "due" && t.status !== "settled").length;
+    const upcomingAppts = calendarEvents.filter((e) => {
+      if (e.status === "cancelled") return false;
+      const t = new Date(e.start).getTime();
+      return t >= Date.now() && t <= Date.now() + 14 * 86400000;
+    }).length;
+    const activeJobs = jobs.filter(
+      (j) => !["abandoned", "rejected", "failed", "accepted"].includes(j.status)
+    ).length;
+    const skillsHave = skills.filter((s) => s.status === "have").length;
+    const skillsLearn = skills.filter((s) => s.status !== "have").length;
     return {
       title: "At a glance",
       text: [
         `**Notes:** ${store.notes.length}`,
-        `**Tasks:** ${store.tasks.length} (${store.tasks.filter((t) => !t.done).length} open)`,
+        `**Tasks:** ${store.tasks.length} (${openTasks} open)`,
         `**Meetings:** ${store.meetings.length}`,
         `**Thoughts:** ${store.thoughts.length}`,
         `**Memories:** ${store.memories.length}`,
@@ -471,11 +525,11 @@ export function answerQuery(
         `**Clients:** ${clients.length}`,
         `**Subscriptions:** ${subscriptions.length}`,
         `**Recurrings:** ${recurrings.length}`,
-        `**Finance txns:** ${finance.length}`,
+        `**Finance txns:** ${finance.length} (${openLends} open lends · ${openDues} open dues)`,
         `**Belongings:** ${belongings.length}`,
-        `**Calendar:** ${calendarEvents.filter((e) => e.status !== "cancelled").length}`,
-        `**Jobs:** ${jobs.length}`,
-        `**Skills:** ${skills.length}`,
+        `**Calendar:** ${calendarEvents.filter((e) => e.status !== "cancelled").length} (${upcomingAppts} upcoming)`,
+        `**Jobs:** ${jobs.length} (${activeJobs} active)`,
+        `**Skills:** ${skills.length} (${skillsHave} have · ${skillsLearn} to learn)`,
         `**Library:** ${library.length}`,
       ].join("\n"),
     };
@@ -484,7 +538,7 @@ export function answerQuery(
   if (/hello|hi\b|hey|good morning|good evening/.test(q)) {
     return {
       title: "Hello",
-      text: `Hi ${store.profile.name.split(" ")[0]}. Ask me to list notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, finance, belongings, calendar, jobs, skills, or library — or summarise your workspace.`,
+      text: `Hi ${store.profile.name.split(" ")[0]}. Ask me to list notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, subscriptions, recurrings, finance, belongings, calendar, jobs, skills, or library — or summarise your workspace.`,
     };
   }
 
@@ -496,11 +550,13 @@ export function answerQuery(
         "- List my notes",
         "- List my tasks",
         "- Show my meetings",
+        "- List my thoughts",
         "- List my memories",
-        "- List my assets",
         "- List my secrets (names only — never values)",
+        "- List my assets",
         "- List my projects",
         "- List my clients",
+        "- List my subscriptions",
         "- Upcoming renewals",
         "- List my recurrings",
         "- Upcoming dues",
@@ -511,10 +567,12 @@ export function answerQuery(
         "- Where is my passport",
         "- Upcoming appointments",
         "- Job applications",
+        "- Upcoming interviews",
         "- List my skills",
         "- List my library",
         "- At a glance",
         "- Tell me about Product planning",
+        "I can also search by keyword across every module.",
       ].join("\n"),
     };
   }
@@ -574,6 +632,12 @@ export function answerQuery(
       hits.push(`Client · **${c.name}**${company}`);
     }
   }
+  for (const sub of subscriptions) {
+    const hay = `${sub.plan} ${sub.status} ${sub.notes} ${sub.billingPeriod}`.toLowerCase();
+    if (hay.includes(q)) {
+      hits.push(`Subscription · **${sub.plan}** · ${sub.status} · renews ${sub.renewalDate || "—"}`);
+    }
+  }
   for (const r of recurrings) {
     const hay = `${r.name} ${r.category} ${r.notes} ${r.paymentMethod}`.toLowerCase();
     if (hay.includes(q)) {
@@ -623,7 +687,7 @@ export function answerQuery(
 
   return {
     title: "Thinking…",
-    text: `I searched your notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, finance, belongings, calendar, jobs, skills, and library but did not find a match for “${query}”. Try “List my notes”, “List my assets”, or “At a glance”.`,
+    text: `I searched your notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, subscriptions, recurrings, finance, belongings, calendar, jobs, skills, and library but did not find a match for “${query}”. Try “List my notes”, “List my assets”, or “At a glance”.`,
   };
 }
 

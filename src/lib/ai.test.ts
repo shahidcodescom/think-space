@@ -568,6 +568,36 @@ assert(libAns.text.includes("Grokking"), "library item");
 assert(glance.text.includes("Library:** 1"), "glance library");
 assert(help.text.toLowerCase().includes("library"), "help library");
 
+
+const thoughtsAns = answerQuery("List my thoughts", sample, extras);
+assert(thoughtsAns.title === "Your thoughts", "thoughts title");
+
+const memoriesAns = answerQuery("List my memories", sample, extras);
+assert(memoriesAns.title === "Your memories", "memories title");
+
+const subsAns = answerQuery("List my subscriptions", sample, extras);
+assert(subsAns.title === "Client subscriptions", "subscriptions title");
+assert(subsAns.text.includes("RuneRail Pro"), "subscription plan");
+
+const interviewsAns = answerQuery("upcoming interviews", sample, extras);
+assert(interviewsAns.title === "Upcoming interviews", "interviews title");
+assert(interviewsAns.text.includes("RuneRail"), "interview company");
+
+assert(help.text.toLowerCase().includes("thoughts"), "help thoughts");
+assert(help.text.toLowerCase().includes("subscriptions"), "help subscriptions");
+assert(help.text.toLowerCase().includes("interviews"), "help interviews");
+assert(help.text.toLowerCase().includes("belongings"), "help belongings full");
+assert(help.text.toLowerCase().includes("library"), "help library full");
+assert(help.text.toLowerCase().includes("skills"), "help skills full");
+assert(help.text.toLowerCase().includes("never values") || help.text.toLowerCase().includes("names only"), "help secrets safety");
+
+assert(glance.text.includes("Subscriptions:** 1"), "glance subscriptions");
+assert(glance.text.includes("open"), "glance has open counts");
+
+// Keyword search still finds across modules without leaking secrets
+const kwJob = answerQuery("greenfield", sample, extras);
+assert(kwJob.text.toLowerCase().includes("greenfield") || kwJob.text.includes("Product Engineer"), "keyword job");
+
 console.log("ai.test.ts: all assertions passed");
 
 

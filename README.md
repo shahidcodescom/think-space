@@ -230,3 +230,7 @@ Save links, screenshots, PDFs, and documents to study later.
 - Persist: `data/library.json` · `/api/library`
 - Thinking space: “List my library”
 
+## Thinking space AI
+
+Rule-based assistant covering all modules: notes, tasks, meetings, thoughts, memories, secrets (metadata + Open link only), assets, projects, clients/subscriptions/renewals, recurrings, finance, belongings, calendar, jobs, skills, library. List / summary / upcoming intents, keyword search, and at-a-glance counts. Never returns secret values.
+
