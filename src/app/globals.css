@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f7f4ef;
+  --foreground: #1b3022;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl shadow-card border border-black/5;
+  }
+  .btn-primary {
+    @apply inline-flex items-center gap-2 rounded-xl bg-forest text-white px-4 py-2.5 text-sm font-medium hover:bg-forest-soft transition-colors;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 rounded-xl border border-forest/15 text-forest/70 px-3 py-1.5 text-sm hover:bg-sage-muted transition-colors;
+  }
+  .input-field {
+    @apply w-full rounded-xl border border-forest/10 bg-white px-4 py-2.5 text-sm outline-none focus:border-sage focus:ring-2 focus:ring-sage/30;
+  }
+  .section-title {
+    @apply font-serif text-3xl md:text-4xl text-forest tracking-tight;
+  }
+}
+
+/* Custom scrollbar */
+.scroll-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: rgba(27, 48, 34, 0.2);
+  border-radius: 999px;
+}
+
+/* TipTap / note rich text */
+.prose-note {
+  @apply text-sm text-forest/80 leading-relaxed;
+}
+.prose-note p {
+  @apply mb-2 last:mb-0;
+}
+.prose-note h1 {
+  @apply font-serif text-2xl text-forest mb-2 mt-3 first:mt-0;
+}
+.prose-note h2 {
+  @apply font-serif text-xl text-forest mb-2 mt-3 first:mt-0;
+}
+.prose-note h3 {
+  @apply font-serif text-lg text-forest mb-1.5 mt-2 first:mt-0;
+}
+.prose-note ul {
+  @apply list-disc pl-5 mb-2 space-y-0.5;
+}
+.prose-note ol {
+  @apply list-decimal pl-5 mb-2 space-y-0.5;
+}
+.prose-note a {
+  @apply text-forest underline decoration-sage-dark/50 hover:decoration-forest;
+}
+.prose-note blockquote {
+  @apply border-l-2 border-sage pl-3 italic text-forest/60 my-2;
+}
+.prose-note code {
+  @apply bg-sage-muted/60 px-1 py-0.5 rounded text-[0.85em];
+}
+.prose-note pre {
+  @apply bg-forest/5 rounded-lg p-3 overflow-x-auto mb-2 text-[0.85em];
+}
+.prose-note strong {
+  @apply font-semibold text-forest;
+}
+.tiptap p.is-editor-empty:first-child::before {
+  color: rgb(27 48 34 / 0.35);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
