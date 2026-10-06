@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { answerQuery, renderAnswerMarkdown } from "@/lib/ai";
+import { answerQuery, AiExtras, renderAnswerMarkdown } from "@/lib/ai";
 import { readAssetsFile } from "@/lib/assets-store";
 import { readClientsFile } from "@/lib/clients-store";
 import { readProjectsFile } from "@/lib/projects-store";
@@ -11,6 +11,11 @@ import { readJobsFile } from "@/lib/jobs-store";
 import { readSkillsFile } from "@/lib/skills-store";
 import { readLibraryFile } from "@/lib/library-store";
 import { readSecretsFile } from "@/lib/secrets-store";
+import {
+  buildCompactContext,
+  callLlm,
+  resolveLlmConfig,
+} from "@/lib/llm";
 import { nowIso, readStore, uid, writeStore } from "@/lib/store";
 import { SecretPublic } from "@/lib/types";
 
@@ -48,7 +53,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Empty message" }, { status: 400 });
   }
 
-  const [store, assetsFile, secretsFile, projectsFile, clientsFile, recurringsFile, financeFile, belongingsFile, calendarFile, jobsFile, skillsFile, libraryFile] = await Promise.all([
+  const [
+    store,
+    assetsFile,
+    secretsFile,
+    projectsFile,
+    clientsFile,
+    recurringsFile,
+    financeFile,
+    belongingsFile,
+    calendarFile,
+    jobsFile,
+    skillsFile,
+    libraryFile,
+  ] = await Promise.all([
     readStore(),
     readAssetsFile(),
     readSecretsFile(),
@@ -63,15 +81,7 @@ export async function POST(req: NextRequest) {
     readLibraryFile(),
   ]);
 
-  const userMsg = {
-    id: uid("msg"),
-    role: "user" as const,
-    content: message,
-    createdAt: nowIso(),
-  };
-
-  // Pass metadata-only secrets — never ciphertext or plaintext
-  const answer = answerQuery(message, store, {
+  const extras: AiExtras = {
     assets: assetsFile.assets,
     secrets: secretsFile.secrets.map(toSecretPublic),
     projects: projectsFile.projects,
@@ -84,12 +94,47 @@ export async function POST(req: NextRequest) {
     jobs: jobsFile.jobs,
     skills: skillsFile.skills,
     library: libraryFile.items,
-  });
-  const html = renderAnswerMarkdown(answer.title, answer.text);
+  };
+
+  const userMsg = {
+    id: uid("msg"),
+    role: "user" as const,
+    content: message,
+    createdAt: nowIso(),
+  };
+
+  let title: string | undefined;
+  let text: string;
+  let mode: "llm" | "rules" = "rules";
+
+  const llmConfig = await resolveLlmConfig();
+  if (llmConfig.enabled) {
+    const context = buildCompactContext(store, extras);
+    const llm = await callLlm({ message, context, config: llmConfig });
+    if (llm.ok && llm.text.trim()) {
+      title = undefined;
+      text = llm.text.trim();
+      mode = "llm";
+    } else {
+      const fallback = answerQuery(message, store, extras);
+      title = fallback.title;
+      text = fallback.text;
+      const err = !llm.ok ? llm.error : "Empty model response";
+      if (err && err !== "LLM disabled") {
+        text = `${fallback.text}\n\n_(LLM unavailable — used built-in answers.)_`;
+      }
+    }
+  } else {
+    const answer = answerQuery(message, store, extras);
+    title = answer.title;
+    text = answer.text;
+  }
+
+  const html = renderAnswerMarkdown(title, text);
   const assistantMsg = {
     id: uid("msg"),
     role: "assistant" as const,
-    content: answer.title ? `${answer.title}\n${answer.text}` : answer.text,
+    content: title ? `${title}\n${text}` : text,
     html,
     createdAt: nowIso(),
   };
@@ -100,7 +145,7 @@ export async function POST(req: NextRequest) {
   }
   await writeStore(store);
 
-  return NextResponse.json({ user: userMsg, assistant: assistantMsg });
+  return NextResponse.json({ user: userMsg, assistant: assistantMsg, mode });
 }
 
 export async function DELETE() {

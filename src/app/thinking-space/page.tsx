@@ -27,7 +27,7 @@ import {
   SkillsIcon,
   LibraryIcon,
 } from "@/components/Icons";
-import { ChatMessage, Profile } from "@/lib/types";
+import { ChatMessage, LlmSettingsPublic, Profile } from "@/lib/types";
 import { plainFromHtml } from "@/lib/format";
 
 type Stats = {
@@ -60,18 +60,21 @@ export default function ThinkingSpacePage() {
   const [stats, setStats] = useState<Stats>({ notes: 0, tasks: 0, memories: 0, assets: 0, secrets: 0, projects: 0, clients: 0 });
   const [profile, setProfile] = useState<Profile | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [llmInfo, setLlmInfo] = useState<LlmSettingsPublic | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
-    const [chatRes, statsRes, profileRes] = await Promise.all([
+    const [chatRes, statsRes, profileRes, llmRes] = await Promise.all([
       fetch("/api/chat"),
       fetch("/api/stats"),
       fetch("/api/profile"),
+      fetch("/api/llm/settings"),
     ]);
     setMessages(await chatRes.json());
     setStats(await statsRes.json());
     setProfile(await profileRes.json());
+    if (llmRes.ok) setLlmInfo(await llmRes.json());
   }, []);
 
   useEffect(() => {
@@ -131,6 +134,21 @@ export default function ThinkingSpacePage() {
           <p className="text-forest/55 mt-1 text-sm md:text-base">
             Ask. Find. Organise. Get things done.
           </p>
+          {llmInfo && (
+            <p className="mt-2 text-xs text-forest/45">
+              {llmInfo.enabled ? (
+                <>
+                  LLM on · {llmInfo.provider}
+                  {llmInfo.model ? ` · ${llmInfo.model}` : ""} ·{" "}
+                </>
+              ) : (
+                <>Rule-based answers · </>
+              )}
+              <Link href="/profile" className="underline hover:text-forest">
+                Configure in Profile
+              </Link>
+            </p>
+          )}
         </header>
 
         <div className="flex-1 overflow-y-auto scroll-thin space-y-4 pb-4">

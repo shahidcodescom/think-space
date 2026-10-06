@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "npx tsx src/lib/ai.test.ts && npx tsx src/lib/crypto.test.ts"
+    "test": "npx tsx src/lib/ai.test.ts && npx tsx src/lib/crypto.test.ts && npx tsx src/lib/llm.test.ts"
   },
   "dependencies": {
     "@tiptap/extension-link": "^3.31.4",

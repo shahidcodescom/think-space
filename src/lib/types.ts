@@ -423,3 +423,33 @@ export interface LibraryItem {
   updatedAt: string;
 }
 
+export type LlmProvider =
+  | "openai"
+  | "gemini"
+  | "claude"
+  | "openrouter"
+  | "ollama";
+
+/** Stored on disk — API key is ciphertext only. */
+export interface LlmSettingsStored {
+  enabled: boolean;
+  provider: LlmProvider;
+  model: string;
+  /** Base URL for ollama / custom openrouter / openai-compatible. */
+  baseUrl: string;
+  apiKeyCiphertext: string | null;
+  updatedAt: string;
+}
+
+/** Safe for the client — never includes raw API key. */
+export interface LlmSettingsPublic {
+  enabled: boolean;
+  provider: LlmProvider;
+  model: string;
+  baseUrl: string;
+  hasApiKey: boolean;
+  /** True when env provides a key for the selected provider. */
+  envKeyAvailable: boolean;
+  source: "settings" | "env" | "off";
+}
+

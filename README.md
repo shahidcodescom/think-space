@@ -8,7 +8,7 @@ A calm productivity workspace matching the botanical mockups: Thinking space (ru
 
 - **Next.js 14** (App Router) + TypeScript + Tailwind CSS
 - **Local JSON persistence** at `data/store.json` (no paid APIs / no cloud DB)
-- Rule-based Thinking-space assistant (structured for a later LLM swap)
+- Thinking-space assistant: rule-based by default; optional LLM (OpenAI, Gemini, Claude, OpenRouter, Ollama)
 - **TipTap** rich-text notes (HTML persisted, sanitized on save/render)
 
 ## Quick start
@@ -34,7 +34,7 @@ npm start
 2. **Meetings / MOM** — Open **Product planning** (12 October 2026 · Alex, Maya, Jordan). Check Agenda / Minutes / Decisions, linked **Release notes**, and action items (*Review voice flow* done, *Update documentation* open). Try **+ Add meeting**, **+ Add note**, **+ Add task**.
 3. **Notes / Tasks / Thoughts / Memories** — Full CRUD. Linked notes and action items embed on meeting & thought detail.
 4. **Secrets** — Reveal/copy the Demo API key (encrypted at rest).
-5. **Profile** — Preferences + vault master-key status.
+5. **Profile** — Preferences, optional Thinking-space LLM, vault master-key status.
 
 ## Seed data
 
@@ -55,7 +55,7 @@ Stored in `data/store.json`:
 | `npm run dev` | Dev server on port 3000 |
 | `npm run build` | Production build |
 | `npm start` | Serve production build |
-| `npm test` | Run unit checks for the rule-based AI |
+| `npm test` | Run unit checks (AI rules, crypto, LLM helpers) |
 
 ## Project layout
 
@@ -73,6 +73,7 @@ data/clients.json, data/recurrings.json       # Clients, subscriptions, payments
 data/assets.json        # Asset inventory
 data/secrets.json       # Encrypted secrets vault
 data/.secrets-master-key  # Auto key (gitignored)
+data/llm-settings.json   # Optional LLM provider settings (encrypted key)
 mock-*.jpg              # Design mockups (do not delete)
 ```
 
@@ -232,5 +233,36 @@ Save links, screenshots, PDFs, and documents to study later.
 
 ## Thinking space AI
 
-Rule-based assistant covering all modules: notes, tasks, meetings, thoughts, memories, secrets (metadata + Open link only), assets, projects, clients/subscriptions/renewals, recurrings, finance, belongings, calendar, jobs, skills, library. List / summary / upcoming intents, keyword search, and at-a-glance counts. Never returns secret values.
+**Default:** rule-based assistant covering all modules (notes, tasks, meetings, thoughts, memories, secrets metadata only, assets, projects, clients/subscriptions/renewals, recurrings, finance, belongings, calendar, jobs, skills, library). List / summary / upcoming intents, keyword search, and at-a-glance counts. Never returns secret values.
+
+**Optional LLM:** enable in **Profile → Thinking space LLM** (or via env). When on, chat sends the user message plus a compact workspace context (names/titles/counts — **never secret values**) to the chosen provider. On missing key, provider error, or empty reply, the app falls back to the rule-based engine. API keys are AES-256-GCM encrypted with the same vault master key as Secrets and are never logged or returned by the settings API.
+
+### LLM environment variables
+
+| Variable | Purpose |
+|----------|---------|
+| `LLM_ENABLED` | `true` / `1` forces LLM on (still needs a key except Ollama) |
+| `LLM_PROVIDER` | `openai` \| `gemini` \| `claude` \| `openrouter` \| `ollama` |
+| `LLM_MODEL` | Override model id (else Profile setting / provider default) |
+| `LLM_BASE_URL` | Override base URL (useful for Ollama / OpenRouter / proxies) |
+| `LLM_API_KEY` | Generic key used when provider-specific env is unset |
+| `OPENAI_API_KEY` | OpenAI |
+| `GEMINI_API_KEY` / `GOOGLE_API_KEY` | Google Gemini |
+| `ANTHROPIC_API_KEY` / `CLAUDE_API_KEY` | Anthropic Claude |
+| `OPENROUTER_API_KEY` | OpenRouter |
+| `OLLAMA_API_KEY` | Rarely needed for local Ollama |
+| `SECRETS_MASTER_KEY` | Same master key encrypts stored LLM keys (see Secret manager) |
+
+Example `.env.local`:
+
+```bash
+LLM_ENABLED=false
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o-mini
+# OPENAI_API_KEY=sk-...
+# LLM_BASE_URL=http://127.0.0.1:11434   # Ollama
+# OPENROUTER_API_KEY=...
+```
+
+Settings persist in `data/llm-settings.json` (`apiKeyCiphertext` only — never plaintext). UI: `/profile`. API: `GET/PUT /api/llm/settings` (public fields only; PUT may send `apiKey` once to encrypt, or `clearApiKey: true`).
 
