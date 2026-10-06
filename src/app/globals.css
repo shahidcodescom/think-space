@@ -4,7 +4,7 @@
 
 :root {
   --background: #f7f4ef;
-  --foreground: #7c2430;
+  --foreground: #1e3a5f;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
 }
@@ -84,7 +84,7 @@ body {
   height: 6px;
 }
 .scroll-thin::-webkit-scrollbar-thumb {
-  background: rgba(124, 36, 48, 0.2);
+  background: rgba(30, 58, 95, 0.2);
   border-radius: 999px;
 }
 

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 type BiPolarMarkProps = {
   size?: number;
-  /** onDark = sidebar (primary red bg); onLight = cream headers */
+  /** onDark = sidebar (primary blue bg); onLight = cream headers */
   variant?: "onDark" | "onLight";
   showWordmark?: boolean;
   href?: string | null;
@@ -19,8 +19,8 @@ export function BiPolarIcon({
   variant?: "onDark" | "onLight";
   className?: string;
 }) {
-  const fill = variant === "onDark" ? "#D4A0A6" : "#7C2430";
-  const accent = variant === "onDark" ? "#F7F4EF" : "#D4A0A6";
+  const fill = variant === "onDark" ? "#A3B8D4" : "#1E3A5F";
+  const accent = variant === "onDark" ? "#F7F4EF" : "#A3B8D4";
 
   return (
     <svg

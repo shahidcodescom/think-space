@@ -11,7 +11,7 @@ type ToggleSwitchProps = {
   className?: string;
 };
 
-/** Accessible red-themed toggle switch (replaces checkbox for on/off prefs). */
+/** Accessible blue-themed toggle switch (replaces checkbox for on/off prefs). */
 export function ToggleSwitch({
   checked,
   onChange,
