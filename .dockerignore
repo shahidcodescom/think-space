@@ -1,0 +1,34 @@
+# dependencies & build
+node_modules
+.next
+out
+build
+coverage
+*.tsbuildinfo
+
+# git / IDE
+.git
+.gitignore
+.github
+.vscode
+.idea
+*.md
+!README.md
+
+# local secrets & env
+.env
+.env.*
+!.env.example
+data/.secrets-master-key
+
+# large / unused in image
+mock-*.jpg
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+*.pem
+.vercel
+
+# tests (not needed at runtime)
+src/**/*.test.ts

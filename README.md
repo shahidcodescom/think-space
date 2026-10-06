@@ -28,6 +28,68 @@ npm run build
 npm start
 ```
 
+
+## Docker
+
+Production image uses Next.js **standalone** output (multi-stage Alpine build).
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `Dockerfile` | Multi-stage build → `node server.js` |
+| `docker-compose.yml` | App + optional `pgvector` Postgres |
+| `.dockerignore` | Keeps build context lean / excludes secrets |
+| `.env.example` | Env template for compose / runtime |
+| `docker-entrypoint.sh` | Seeds empty `data/` volume on first boot |
+
+### Build & run (image only)
+
+```bash
+cp .env.example .env
+# set SECRETS_MASTER_KEY (and optional LLM_* keys)
+docker build -t bipolar:local .
+docker run --rm -p 3000:3000 \
+  --env-file .env \
+  -v bipolar-data:/app/data \
+  bipolar:local
+```
+
+Open **http://localhost:3000**.
+
+### Compose (app only)
+
+```bash
+cp .env.example .env
+# edit SECRETS_MASTER_KEY / LLM keys
+docker compose up -d --build
+```
+
+JSON store, uploads, and the vault key file live in the **`bipolar-data`** volume (`/app/data` in the container).
+
+### Compose + Postgres (pgvector)
+
+```bash
+docker compose --profile pgvector up -d --build
+```
+
+This starts `app` and `db` (`pgvector/pgvector:pg16`). Default URL:
+
+`postgresql://bipolar:bipolar@db:5432/bipolar`
+
+Then in **Profile → Thinking space LLM**, enable Postgres RAG → Test → Migrate → Reindex. If Postgres is down, Thinking space falls back to in-memory/JSON RAG.
+
+### Important env vars
+
+| Variable | Notes |
+|----------|--------|
+| `SECRETS_MASTER_KEY` | **Set in production** so vault keys survive container rebuilds |
+| `LLM_*` / provider API keys | Optional; see table under LLM / RAG |
+| `DATABASE_URL` | Used when pgvector profile (or external Postgres) is available |
+
+Do **not** bake `data/.secrets-master-key` into the image (excluded by `.dockerignore`). Prefer `SECRETS_MASTER_KEY` in `.env`.
+
+
 ## Demo walkthrough
 
 1. **Thinking space** — Ask `List my notes`. You should see *Database backup* and *Server renewal* (seed data). Use **Listen** / **Copy** on AI cards. Glance counts update on the right.

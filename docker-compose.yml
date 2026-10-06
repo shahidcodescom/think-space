@@ -1,0 +1,57 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bipolar:local
+    container_name: bipolar-app
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      SECRETS_MASTER_KEY: ${SECRETS_MASTER_KEY:-}
+      LLM_ENABLED: ${LLM_ENABLED:-false}
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://bipolar:bipolar@db:5432/bipolar}
+      DATABASE_HOST: ${DATABASE_HOST:-db}
+      DATABASE_PORT: ${DATABASE_PORT:-5432}
+      DATABASE_NAME: ${DATABASE_NAME:-bipolar}
+      DATABASE_USER: ${DATABASE_USER:-bipolar}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-bipolar}
+      DATABASE_SSL: ${DATABASE_SSL:-false}
+    volumes:
+      - bipolar-data:/app/data
+    restart: unless-stopped
+
+  # Optional — start with: docker compose --profile pgvector up -d
+  db:
+    profiles: ["pgvector"]
+    image: pgvector/pgvector:pg16
+    container_name: bipolar-db
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-bipolar}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-bipolar}
+      POSTGRES_DB: ${DATABASE_NAME:-bipolar}
+    ports:
+      - "${DATABASE_PUBLISH_PORT:-5432}:5432"
+    volumes:
+      - bipolar-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  bipolar-data:
+  bipolar-pg:
