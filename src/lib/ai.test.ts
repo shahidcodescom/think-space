@@ -182,7 +182,71 @@ const recurrings = [
   },
 ];
 
-const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs, recurrings };
+
+const financeTx = [
+  {
+    id: "fin-1",
+    type: "income",
+    amount: 120000,
+    currency: "INR",
+    date: "2026-10-01",
+    category: "Salary",
+    counterparty: "Acme",
+    status: null,
+    amountSettled: 0,
+    notes: "",
+    linkedRecurringId: null,
+    createdAt: "2026-10-01T09:00:00.000Z",
+    updatedAt: "2026-10-01T09:00:00.000Z",
+  },
+  {
+    id: "fin-2",
+    type: "expense",
+    amount: 4200,
+    currency: "INR",
+    date: "2026-10-03",
+    category: "Groceries",
+    counterparty: "",
+    status: null,
+    amountSettled: 0,
+    notes: "",
+    linkedRecurringId: null,
+    createdAt: "2026-10-03T18:00:00.000Z",
+    updatedAt: "2026-10-03T18:00:00.000Z",
+  },
+  {
+    id: "fin-3",
+    type: "lend",
+    amount: 5000,
+    currency: "INR",
+    date: "2026-10-02",
+    category: "Personal",
+    counterparty: "Rahul",
+    status: "open",
+    amountSettled: 0,
+    notes: "",
+    linkedRecurringId: null,
+    createdAt: "2026-10-02T14:00:00.000Z",
+    updatedAt: "2026-10-02T14:00:00.000Z",
+  },
+  {
+    id: "fin-4",
+    type: "due",
+    amount: 15000,
+    currency: "INR",
+    date: "2026-09-15",
+    category: "Rent",
+    counterparty: "Landlord",
+    status: "partial",
+    amountSettled: 5000,
+    notes: "",
+    linkedRecurringId: null,
+    createdAt: "2026-09-15T10:00:00.000Z",
+    updatedAt: "2026-10-01T10:00:00.000Z",
+  },
+];
+
+const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs, recurrings, finance: financeTx };
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);
@@ -280,6 +344,23 @@ assert(duesAns.text.includes("Netflix") || duesAns.text.includes("domain"), "due
 
 assert(glance.text.includes("Recurrings:** 2"), "glance recurrings");
 assert(help.text.toLowerCase().includes("recurrings") || help.text.toLowerCase().includes("dues"), "help recurrings");
+
+
+const financeAns = answerQuery("Finance summary", sample, extras);
+assert(financeAns.title === "Finance summary", "finance title");
+assert(financeAns.text.includes("Income:** 120000"), "finance income");
+assert(financeAns.text.includes("Expenses:** 4200"), "finance expenses");
+
+const lendsAns = answerQuery("outstanding lends", sample, extras);
+assert(lendsAns.title === "Open lends", "lends title");
+assert(lendsAns.text.includes("Rahul"), "lend counterparty");
+
+const duesAns2 = answerQuery("outstanding dues", sample, extras);
+assert(duesAns2.title === "Open dues", "open dues title");
+assert(duesAns2.text.includes("Landlord"), "due counterparty");
+
+assert(glance.text.includes("Finance txns:** 4"), "glance finance");
+assert(help.text.toLowerCase().includes("finance"), "help finance");
 
 console.log("ai.test.ts: all assertions passed");
 

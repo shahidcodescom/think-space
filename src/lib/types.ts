@@ -207,3 +207,25 @@ export interface Recurring {
   createdAt: string;
   updatedAt: string;
 }
+
+export type FinanceTxType = "income" | "expense" | "lend" | "due";
+export type FinanceSettleStatus = "open" | "partial" | "settled";
+
+export interface FinanceTransaction {
+  id: string;
+  type: FinanceTxType;
+  amount: number;
+  currency: string;
+  date: string;
+  category: string;
+  counterparty: string;
+  /** Only meaningful for lend/due; null for income/expense. */
+  status: FinanceSettleStatus | null;
+  /** Cumulative repayments against lend/due. */
+  amountSettled: number;
+  notes: string;
+  linkedRecurringId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+

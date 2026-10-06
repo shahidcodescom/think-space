@@ -164,3 +164,15 @@ Personal subscriptions and recurring expenses (Netflix, domains, SaaS tools) —
 - Persist: `data/recurrings.json`
 - Thinking space: “List my recurrings”, “Upcoming dues”
 
+## Finance
+
+Track monthly income, expenses, lends (money you lent), and dues (money you owe).
+
+- Page: `/finance` — month selector, totals, outstanding lends/dues, CRUD
+- API: `GET/POST /api/finance`, `GET/PUT/DELETE /api/finance/[id]`
+  - `PUT` `{ "action": "settle" }` — mark lend/due fully settled
+  - `PUT` `{ "action": "repay", "amount": N }` — partial repayment
+  - `GET ?summary=1&month=YYYY-MM` — month summary + filtered list
+- Persist: `data/finance.json`
+- Thinking space: “Finance summary”, “Outstanding lends”, “Outstanding dues”
+

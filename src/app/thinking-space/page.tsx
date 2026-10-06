@@ -20,6 +20,7 @@ import {
   ProjectIcon,
   ClientsIcon,
   RecurringIcon,
+  FinanceIcon,
 } from "@/components/Icons";
 import { ChatMessage, Profile } from "@/lib/types";
 import { plainFromHtml } from "@/lib/format";
@@ -33,6 +34,9 @@ type Stats = {
   projects: number;
   clients: number;
   recurrings?: number;
+  financeTransactions?: number;
+  openLends?: number;
+  openDues?: number;
   upcomingRenewals?: number;
 };
 
@@ -286,6 +290,12 @@ export default function ThinkingSpacePage() {
             icon={<RecurringIcon size={22} />}
             label={`${stats.recurrings ?? 0} Recurrings`}
             tone="bg-white"
+          />
+          <GlanceCard
+            href="/finance"
+            icon={<FinanceIcon size={22} />}
+            label={`${stats.financeTransactions ?? 0} Finance`}
+            tone="bg-peach-soft/70"
           />
         </div>
       </aside>

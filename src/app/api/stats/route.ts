@@ -2,18 +2,20 @@ import { NextResponse } from "next/server";
 import { readAssetsFile } from "@/lib/assets-store";
 import { readClientsFile } from "@/lib/clients-store";
 import { readRecurringsFile } from "@/lib/recurrings-store";
+import { readFinanceFile, remainingAmount } from "@/lib/finance-store";
 import { readProjectsFile } from "@/lib/projects-store";
 import { readSecretsFile } from "@/lib/secrets-store";
 import { readStore } from "@/lib/store";
 
 export async function GET() {
-  const [store, assets, secrets, projects, billing, recurrings] = await Promise.all([
+  const [store, assets, secrets, projects, billing, recurrings, finance] = await Promise.all([
     readStore(),
     readAssetsFile(),
     readSecretsFile(),
     readProjectsFile(),
     readClientsFile(),
     readRecurringsFile(),
+    readFinanceFile(),
   ]);
   const list = projects.projects;
   const today = new Date();
@@ -49,5 +51,14 @@ export async function GET() {
       if (d < today) return r.status === "active";
       return r.status === "active" && d >= today && d <= end;
     }).length,
+    financeTransactions: finance.transactions.length,
+    openLends: finance.transactions.filter((t) => t.type === "lend" && t.status !== "settled").length,
+    openDues: finance.transactions.filter((t) => t.type === "due" && t.status !== "settled").length,
+    outstandingLends: finance.transactions
+      .filter((t) => t.type === "lend" && t.status !== "settled")
+      .reduce((s, t) => s + remainingAmount(t), 0),
+    outstandingDues: finance.transactions
+      .filter((t) => t.type === "due" && t.status !== "settled")
+      .reduce((s, t) => s + remainingAmount(t), 0),
   });
 }

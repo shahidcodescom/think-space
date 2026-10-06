@@ -1,5 +1,5 @@
 import { stripHtml } from "./sanitize";
-import { Asset, Client, Project, Recurring, SecretPublic, StoreData, Subscription } from "./types";
+import { Asset, Client, FinanceTransaction, Project, Recurring, SecretPublic, StoreData, Subscription } from "./types";
 
 /** Extra workspace data for the rule-based assistant (secrets = metadata only). */
 export type AiExtras = {
@@ -10,6 +10,7 @@ export type AiExtras = {
   clients?: Client[];
   subscriptions?: Subscription[];
   recurrings?: Recurring[];
+  finance?: FinanceTransaction[];
 };
 
 function formatDate(isoDate: string): string {
@@ -61,6 +62,7 @@ export function answerQuery(
   const clients = extras.clients || [];
   const subscriptions = extras.subscriptions || [];
   const recurrings = extras.recurrings || [];
+  const finance = extras.finance || [];
 
   if (/list.*notes|my notes|show.*notes|what.*notes/.test(q)) {
     if (store.notes.length === 0) {
@@ -208,7 +210,7 @@ export function answerQuery(
     return { text: lines.join("\n"), title: "Upcoming renewals" };
   }
 
-  if (/list.*recurring|my recurring|show.*recurring|my subs\b|personal subs|list.*dues/.test(q)) {
+  if (/list.*recurring|my recurring|show.*recurring|my subs\b|personal subs/.test(q)) {
     if (recurrings.length === 0) {
       return {
         text: "You have no personal recurrings yet. Add one from Recurrings.",
@@ -248,6 +250,54 @@ export function answerQuery(
     return { text: lines.join("\n"), title: "Upcoming dues" };
   }
 
+  if (/finance summary|this month.?s? finance|finance overview|my finance|list.*expenses|list.*income|money summary/.test(q)) {
+    const month = new Date().toISOString().slice(0, 7);
+    const inMonth = finance.filter((t) => t.date.startsWith(month));
+    let income = 0;
+    let expenses = 0;
+    for (const t of inMonth) {
+      if (t.type === "income") income += t.amount;
+      if (t.type === "expense") expenses += t.amount;
+    }
+    const openLends = finance.filter((t) => t.type === "lend" && t.status !== "settled");
+    const openDues = finance.filter((t) => t.type === "due" && t.status !== "settled");
+    const lendLeft = openLends.reduce((s, t) => s + Math.max(0, t.amount - (t.amountSettled || 0)), 0);
+    const dueLeft = openDues.reduce((s, t) => s + Math.max(0, t.amount - (t.amountSettled || 0)), 0);
+    const lines = [
+      `**Month:** ${month}`,
+      `**Income:** ${income}`,
+      `**Expenses:** ${expenses}`,
+      `**Net:** ${income - expenses}`,
+      `**Open lends:** ${openLends.length} (outstanding ${lendLeft})`,
+      `**Open dues:** ${openDues.length} (outstanding ${dueLeft})`,
+      `**Transactions this month:** ${inMonth.length}`,
+    ];
+    return { text: lines.join("\n"), title: "Finance summary" };
+  }
+
+  if (/outstanding lends|my lends|money i lent|open lends/.test(q)) {
+    const rows = finance.filter((t) => t.type === "lend" && t.status !== "settled");
+    if (!rows.length) {
+      return { text: "No open lends — everyone has repaid you.", title: "Open lends" };
+    }
+    const lines = rows.map((t) => {
+      const left = Math.max(0, t.amount - (t.amountSettled || 0));
+      return `**${t.counterparty || t.category}** · ${left} ${t.currency} left of ${t.amount} · ${t.status}`;
+    });
+    return { text: lines.join("\n"), title: "Open lends" };
+  }
+
+  if (/outstanding dues|money i owe|open dues|what do i owe/.test(q)) {
+    const rows = finance.filter((t) => t.type === "due" && t.status !== "settled");
+    if (!rows.length) {
+      return { text: "No open dues — you are all clear.", title: "Open dues" };
+    }
+    const lines = rows.map((t) => {
+      const left = Math.max(0, t.amount - (t.amountSettled || 0));
+      return `**${t.counterparty || t.category}** · ${left} ${t.currency} left of ${t.amount} · ${t.status}`;
+    });
+    return { text: lines.join("\n"), title: "Open dues" };
+  }
 
     if (/product planning|meeting.*product/.test(q)) {
     const m = store.meetings.find((x) => /product planning/i.test(x.title));
@@ -280,6 +330,7 @@ export function answerQuery(
         `**Clients:** ${clients.length}`,
         `**Subscriptions:** ${subscriptions.length}`,
         `**Recurrings:** ${recurrings.length}`,
+        `**Finance txns:** ${finance.length}`,
       ].join("\n"),
     };
   }
@@ -287,7 +338,7 @@ export function answerQuery(
   if (/hello|hi\b|hey|good morning|good evening/.test(q)) {
     return {
       title: "Hello",
-      text: `Hi ${store.profile.name.split(" ")[0]}. Ask me to list notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, or recurrings — or summarise your workspace.`,
+      text: `Hi ${store.profile.name.split(" ")[0]}. Ask me to list notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, or finance — or summarise your workspace.`,
     };
   }
 
@@ -307,6 +358,9 @@ export function answerQuery(
         "- Upcoming renewals",
         "- List my recurrings",
         "- Upcoming dues",
+        "- Finance summary",
+        "- Outstanding lends",
+        "- Outstanding dues",
         "- At a glance",
         "- Tell me about Product planning",
       ].join("\n"),
@@ -374,6 +428,12 @@ export function answerQuery(
       hits.push(`Recurring · **${r.name}** · ${r.amount} ${r.currency} due ${r.nextDueDate || "—"}`);
     }
   }
+  for (const t of finance) {
+    const hay = `${t.type} ${t.category} ${t.counterparty} ${t.notes}`.toLowerCase();
+    if (hay.includes(q)) {
+      hits.push(`Finance · **${t.type}** · ${t.category} · ${t.amount} ${t.currency} (${t.date})`);
+    }
+  }
 
   if (hits.length) {
     return { title: "I found this", text: hits.join("\n") };
@@ -381,7 +441,7 @@ export function answerQuery(
 
   return {
     title: "Thinking…",
-    text: `I searched your notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, and recurrings but did not find a match for “${query}”. Try “List my notes”, “List my assets”, or “At a glance”.`,
+    text: `I searched your notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, and finance but did not find a match for “${query}”. Try “List my notes”, “List my assets”, or “At a glance”.`,
   };
 }
 
@@ -392,7 +452,7 @@ export function renderAnswerMarkdown(title: string | undefined, text: string): s
       let withBold = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
       // Safe internal markdown links e.g. [Open in Secrets](/secrets?id=...)
       withBold = withBold.replace(
-        /\[([^\]]+)\]\((\/(?:secrets|notes|assets|tasks|meetings|thoughts|memories|projects|clients|recurrings|thinking-space|profile)[^)]*)\)/g,
+        /\[([^\]]+)\]\((\/(?:secrets|notes|assets|tasks|meetings|thoughts|memories|projects|clients|recurrings|finance|thinking-space|profile)[^)]*)\)/g,
         '<a href="$2" class="text-forest font-medium underline decoration-sage-dark/50 hover:decoration-forest whitespace-nowrap">$1</a>'
       );
       if (withBold.startsWith("- ")) {
