@@ -2,6 +2,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { encryptSecret, decryptSecret } from "./crypto";
 import { DEFAULT_MODELS } from "./llm-defaults";
+import { migrateStaleModelId } from "./llm-model-ids";
 import { nowIso } from "./store";
 import { LlmProvider, LlmSettingsPublic, LlmSettingsStored } from "./types";
 
@@ -22,10 +23,17 @@ export async function readLlmSettings(): Promise<LlmSettingsStored> {
   try {
     const raw = await fs.readFile(DATA_PATH, "utf-8");
     const parsed = JSON.parse(raw) as Partial<LlmSettingsStored>;
+    const provider = (parsed.provider || DEFAULT_SETTINGS.provider) as typeof DEFAULT_SETTINGS.provider;
+    const model = migrateStaleModelId(
+      provider,
+      parsed.model || DEFAULT_MODELS[provider]
+    );
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
       enabled: Boolean(parsed.enabled),
+      provider,
+      model,
       apiKeyCiphertext: parsed.apiKeyCiphertext || null,
     };
   } catch (err: unknown) {
@@ -127,7 +135,12 @@ export async function updateLlmSettings(body: {
     }
   }
   if (typeof body.model === "string" && body.model.trim()) {
-    current.model = body.model.trim();
+    current.model = migrateStaleModelId(
+      current.provider,
+      body.model.trim()
+    );
+  } else {
+    current.model = migrateStaleModelId(current.provider, current.model);
   }
   if (typeof body.baseUrl === "string") {
     current.baseUrl = body.baseUrl.trim();

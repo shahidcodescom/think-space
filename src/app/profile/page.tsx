@@ -22,6 +22,9 @@ export default function ProfilePage() {
   const [apiKeyDraft, setApiKeyDraft] = useState("");
   const [llmSaved, setLlmSaved] = useState(false);
   const [llmBusy, setLlmBusy] = useState(false);
+  const [modelOptions, setModelOptions] = useState<{ value: string; label: string }[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const [modelsError, setModelsError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/profile")
@@ -33,7 +36,10 @@ export default function ProfilePage() {
       .catch(() => setVault(null));
     fetch("/api/llm/settings")
       .then((r) => r.json())
-      .then(setLlm)
+      .then((settings: LlmSettingsPublic) => {
+        setLlm(settings);
+        void loadModels(settings.provider, settings.baseUrl, settings.model);
+      })
       .catch(() => setLlm(null));
   }, []);
 
@@ -52,6 +58,53 @@ export default function ProfilePage() {
     setTimeout(() => setSaved(false), 2000);
   }
 
+  async function loadModels(
+    provider: LlmProvider,
+    baseUrl: string,
+    preferModel?: string
+  ) {
+    setModelsLoading(true);
+    setModelsError(null);
+    try {
+      const qs = new URLSearchParams({ provider });
+      if (baseUrl.trim()) qs.set("baseUrl", baseUrl.trim());
+      const res = await fetch(`/api/llm/models?${qs}`);
+      const data = (await res.json()) as {
+        models?: { id: string; label: string }[];
+        defaultModel?: string;
+        error?: string;
+      };
+      const opts = (data.models || []).map((m) => ({
+        value: m.id,
+        label: m.label,
+      }));
+      setModelOptions(opts);
+      if (data.error) setModelsError(data.error);
+      const pick =
+        (preferModel && opts.some((o) => o.value === preferModel)
+          ? preferModel
+          : null) ||
+        data.defaultModel ||
+        opts[0]?.value ||
+        DEFAULT_MODELS[provider];
+      setLlm((prev) =>
+        prev && prev.provider === provider
+          ? { ...prev, model: pick }
+          : prev
+      );
+    } catch {
+      setModelsError("Could not load models");
+      setModelOptions([
+        {
+          value: DEFAULT_MODELS[provider],
+          label: `${DEFAULT_MODELS[provider]} (default)`,
+        },
+      ]);
+    } finally {
+      setModelsLoading(false);
+    }
+  }
+
   async function saveLlm(e: React.FormEvent) {
     e.preventDefault();
     if (!llm) return;
@@ -68,11 +121,17 @@ export default function ProfilePage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    setLlm(await res.json());
+    const savedSettings = (await res.json()) as LlmSettingsPublic;
+    setLlm(savedSettings);
     setApiKeyDraft("");
     setLlmBusy(false);
     setLlmSaved(true);
     setTimeout(() => setLlmSaved(false), 2000);
+    await loadModels(
+      savedSettings.provider,
+      savedSettings.baseUrl,
+      savedSettings.model
+    );
   }
 
   async function clearLlmKey() {
@@ -196,11 +255,13 @@ export default function ProfilePage() {
                 value={llm.provider}
                 onChange={(provider) => {
                   const next = provider as LlmProvider;
-                  setLlm({
+                  const nextLlm = {
                     ...llm,
                     provider: next,
                     model: DEFAULT_MODELS[next],
-                  });
+                  };
+                  setLlm(nextLlm);
+                  void loadModels(next, nextLlm.baseUrl, nextLlm.model);
                 }}
                 aria-label="Provider"
                 required
@@ -211,12 +272,36 @@ export default function ProfilePage() {
               <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
                 Model
               </label>
-              <input
-                className="input-field"
-                value={llm.model}
-                onChange={(e) => setLlm({ ...llm, model: e.target.value })}
-                placeholder={DEFAULT_MODELS[llm.provider]}
+              <SearchableSelect
+                options={
+                  modelOptions.length
+                    ? modelOptions
+                    : [
+                        {
+                          value: llm.model || DEFAULT_MODELS[llm.provider],
+                          label: llm.model || DEFAULT_MODELS[llm.provider],
+                        },
+                      ]
+                }
+                value={llm.model || DEFAULT_MODELS[llm.provider]}
+                onChange={(model) => setLlm({ ...llm, model })}
+                placeholder={
+                  modelsLoading
+                    ? "Loading models…"
+                    : DEFAULT_MODELS[llm.provider]
+                }
+                aria-label="Model"
+                required
               />
+              <p className="mt-1 text-xs text-forest/45">
+                {modelsLoading
+                  ? "Fetching latest models from provider…"
+                  : modelsError
+                    ? `Could not refresh list: ${modelsError}`
+                    : modelOptions.length
+                      ? `${modelOptions.length} models from provider`
+                      : "Save an API key to load live models"}
+              </p>
             </div>
 
             <div>

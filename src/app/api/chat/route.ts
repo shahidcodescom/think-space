@@ -122,7 +122,8 @@ export async function POST(req: NextRequest) {
       text = fallback.text;
       const err = !llm.ok ? llm.error : "Empty model response";
       if (err && err !== "LLM disabled") {
-        text = `${fallback.text}\n\n_(LLM unavailable — used built-in answers.)_`;
+        const hint = err.replace(/\s+/g, " ").slice(0, 160);
+        text = `${fallback.text}\n\n_(LLM unavailable: ${hint} — used built-in answers.)_`;
       }
     }
   } else {

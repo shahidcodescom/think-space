@@ -1,6 +1,7 @@
 import { AiExtras } from "./ai";
 import { stripHtml } from "./sanitize";
 import { DEFAULT_BASE_URLS, DEFAULT_MODELS } from "./llm-defaults";
+import { migrateStaleModelId, normalizeGeminiModelId } from "./llm-model-ids";
 import { getDecryptedApiKey, readLlmSettings } from "./llm-store";
 import { LlmProvider, StoreData } from "./types";
 
@@ -34,10 +35,11 @@ export async function resolveLlmConfig(): Promise<LlmResolved> {
     }
   }
 
-  const model =
+  const rawModel =
     process.env.LLM_MODEL?.trim() ||
     settings.model ||
     DEFAULT_MODELS[provider];
+  const model = migrateStaleModelId(provider, rawModel);
 
   const baseUrl =
     settings.baseUrl.trim() ||
@@ -317,27 +319,57 @@ async function callGemini(
   user: string
 ): Promise<string> {
   const root = baseUrl.replace(/\/$/, "");
-  const url = `${root}/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const modelId = normalizeGeminiModelId(model);
+  // Prefer header auth so keys never land in URLs/logs.
+  const url = `${root}/models/${encodeURIComponent(modelId)}:generateContent`;
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": apiKey,
+    },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
       contents: [{ role: "user", parts: [{ text: user }] }],
+      generationConfig: { temperature: 0.4 },
     }),
   });
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
-    throw new Error(`HTTP ${res.status}: ${errText.slice(0, 200)}`);
+    let detail = errText.slice(0, 220);
+    try {
+      const parsed = JSON.parse(errText) as {
+        error?: { message?: string; status?: string };
+      };
+      if (parsed.error?.message) {
+        detail = `${parsed.error.status || res.status}: ${parsed.error.message}`.slice(
+          0,
+          220
+        );
+      }
+    } catch {
+      /* keep raw slice */
+    }
+    throw new Error(`Gemini ${detail}`);
   }
   const data = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    candidates?: {
+      content?: { parts?: { text?: string }[] };
+      finishReason?: string;
+    }[];
+    promptFeedback?: { blockReason?: string };
   };
+  if (data.promptFeedback?.blockReason) {
+    throw new Error(`Gemini blocked: ${data.promptFeedback.blockReason}`);
+  }
   const text = data.candidates?.[0]?.content?.parts
     ?.map((p) => p.text || "")
     .join("")
     .trim();
-  if (!text) throw new Error("Empty Gemini response");
+  if (!text) {
+    const reason = data.candidates?.[0]?.finishReason || "empty";
+    throw new Error(`Empty Gemini response (${reason})`);
+  }
   return text;
 }
 
@@ -440,7 +472,7 @@ export async function callLlm(opts: {
         text = await callGemini(
           config.baseUrl,
           config.apiKey,
-          config.model,
+          migrateStaleModelId("gemini", config.model),
           SYSTEM_PROMPT,
           userContent
         );
