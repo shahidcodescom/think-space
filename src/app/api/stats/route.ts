@@ -6,12 +6,13 @@ import { readFinanceFile, remainingAmount } from "@/lib/finance-store";
 import { readBelongingsFile } from "@/lib/belongings-store";
 import { readCalendarFile } from "@/lib/calendar-store";
 import { readJobsFile } from "@/lib/jobs-store";
+import { readSkillsFile } from "@/lib/skills-store";
 import { readProjectsFile } from "@/lib/projects-store";
 import { readSecretsFile } from "@/lib/secrets-store";
 import { readStore } from "@/lib/store";
 
 export async function GET() {
-  const [store, assets, secrets, projects, billing, recurrings, finance, belongings, calendar, jobs] = await Promise.all([
+  const [store, assets, secrets, projects, billing, recurrings, finance, belongings, calendar, jobs, skills] = await Promise.all([
     readStore(),
     readAssetsFile(),
     readSecretsFile(),
@@ -22,6 +23,7 @@ export async function GET() {
     readBelongingsFile(),
     readCalendarFile(),
     readJobsFile(),
+    readSkillsFile(),
   ]);
   const list = projects.projects;
   const today = new Date();
@@ -79,6 +81,11 @@ export async function GET() {
     jobs: jobs.jobs.length,
     jobsActive: jobs.jobs.filter(
       (j) => !["abandoned", "rejected", "failed", "accepted"].includes(j.status)
+    ).length,
+    skills: skills.skills.length,
+    skillsHave: skills.skills.filter((s) => s.status === "have").length,
+    skillsLearning: skills.skills.filter(
+      (s) => s.status === "learning" || s.status === "planned"
     ).length,
   });
 }

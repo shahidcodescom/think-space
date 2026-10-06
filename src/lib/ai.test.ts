@@ -360,7 +360,35 @@ const jobsSample = [
   },
 ];
 
-const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs, recurrings, finance: financeTx, belongings: belongingsSample, calendarEvents: calendarSample, jobs: jobsSample };
+
+const skillsSample = [
+  {
+    id: "sk-1",
+    name: "TypeScript",
+    category: "Engineering",
+    status: "have",
+    proficiency: "advanced",
+    priority: null,
+    notes: "",
+    targetDate: "",
+    createdAt: "2025-01-10T10:00:00.000Z",
+    updatedAt: "2026-09-01T10:00:00.000Z",
+  },
+  {
+    id: "sk-2",
+    name: "Rust",
+    category: "Engineering",
+    status: "planned",
+    proficiency: null,
+    priority: 2,
+    notes: "",
+    targetDate: "2027-03-01",
+    createdAt: "2026-08-01T10:00:00.000Z",
+    updatedAt: "2026-08-01T10:00:00.000Z",
+  },
+];
+
+const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs, recurrings, finance: financeTx, belongings: belongingsSample, calendarEvents: calendarSample, jobs: jobsSample, skills: skillsSample };
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);
@@ -505,6 +533,15 @@ assert(jobsAns.text.includes("first round") || jobsAns.text.includes("first_roun
 
 assert(glance.text.includes("Jobs:** 2"), "glance jobs");
 assert(help.text.toLowerCase().includes("job"), "help jobs");
+
+
+const skillsAns = answerQuery("List my skills", sample, extras);
+assert(skillsAns.title === "Your skills", "skills title");
+assert(skillsAns.text.includes("TypeScript"), "skill have");
+assert(skillsAns.text.includes("Rust"), "skill learn");
+
+assert(glance.text.includes("Skills:** 2"), "glance skills");
+assert(help.text.toLowerCase().includes("skills"), "help skills");
 
 console.log("ai.test.ts: all assertions passed");
 

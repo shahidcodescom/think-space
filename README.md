@@ -210,3 +210,14 @@ Track applications through interview rounds to offer/accept.
 - Persist: `data/jobs.json`
 - Thinking space: “Job applications”
 
+## Skills
+
+Track skills you have vs skills to learn.
+
+- Page: `/skills` — two lists (Have / To learn), move between them
+- Status: `have` | `learning` | `planned`
+- Proficiency (have/learning): beginner → expert; priority 1–5 for to-learn
+- API: `GET/POST /api/skills`, `GET/PUT/DELETE /api/skills/[id]` (+ `mark_have` / `mark_learn` actions)
+- Persist: `data/skills.json`
+- Thinking space: “List my skills”
+

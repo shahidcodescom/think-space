@@ -354,3 +354,12 @@ export function JobsIcon(props: IconProps) {
   );
 }
 
+export function SkillsIcon(props: IconProps) {
+  return (
+    <svg {...base(props)} viewBox="0 0 24 24">
+      <path d="M12 3 4 7v5c0 4.5 3.4 8.4 8 9.5 4.6-1.1 8-5 8-9.5V7l-8-4z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+

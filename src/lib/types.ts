@@ -383,3 +383,25 @@ export interface JobApplication {
   updatedAt: string;
 }
 
+export type SkillStatus = "have" | "learning" | "planned";
+export type SkillProficiency =
+  | "beginner"
+  | "intermediate"
+  | "advanced"
+  | "expert";
+
+export interface Skill {
+  id: string;
+  name: string;
+  category: string;
+  status: SkillStatus;
+  /** Meaningful when status is have (or learning). */
+  proficiency: SkillProficiency | null;
+  /** 1 (high) … 5 (low) for learning/planned. */
+  priority: number | null;
+  notes: string;
+  targetDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
