@@ -14,8 +14,8 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex w-56 lg:w-60 shrink-0 bg-forest text-white flex-col min-h-screen sticky top-0 h-screen">
-      <div className="flex items-center px-4 pt-5 pb-3">
+    <aside className="hidden md:flex fixed inset-y-0 left-0 z-40 w-56 lg:w-60 bg-forest text-white flex-col h-[100dvh] overflow-hidden">
+      <div className="shrink-0 flex items-center px-4 pt-5 pb-3">
         <Link href="/thinking-space" className="flex items-center gap-2 min-w-0">
           <LeafIcon size={20} className="text-sage-light shrink-0" />
           <span className="font-serif text-lg lowercase tracking-tight truncate">
@@ -25,7 +25,7 @@ export function Sidebar() {
       </div>
 
       <nav
-        className="flex-1 px-2.5 space-y-3 overflow-y-auto scroll-thin pb-3"
+        className="flex-1 min-h-0 px-2.5 space-y-3 overflow-y-auto scroll-thin pb-3"
         aria-label="Main"
       >
         {NAV_GROUPS.map((group) => {
@@ -61,7 +61,7 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="px-4 pb-5 pt-1 mt-auto border-t border-white/10">
+      <div className="shrink-0 px-4 pb-5 pt-1 border-t border-white/10">
         <p className="text-[10px] tracking-[0.14em] uppercase text-white/50 leading-relaxed">
           A calmer mind &amp; brighter tomorrow.
         </p>

@@ -29,7 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-[100dvh] flex bg-cream overflow-x-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0 min-h-[100dvh]">
+      <div className="flex-1 flex flex-col min-w-0 min-h-[100dvh] md:pl-56 lg:pl-60">
         {/* Compact mobile top bar — title only (nav is bottom tabs) */}
         <header
           className="md:hidden sticky top-0 z-30 flex items-center gap-3 px-4 bg-cream/95 backdrop-blur-lg border-b border-forest/5"
