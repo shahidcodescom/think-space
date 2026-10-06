@@ -76,6 +76,7 @@ export function ActionItems({
           <input
             className="input-field"
             autoFocus
+            aria-label="New action item"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="New action item…"

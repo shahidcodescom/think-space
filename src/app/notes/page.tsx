@@ -163,19 +163,25 @@ function NotesInner() {
         onClose={() => setModalOpen(false)}
       >
         <form onSubmit={save} className="space-y-3">
-          <input
-            className="input-field"
-            placeholder="Title"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            required
-          />
-          <RichTextEditor
-            key={editorKey}
-            value={form.content}
-            onChange={(content) => setForm((f) => ({ ...f, content }))}
-            placeholder="Write your note…"
-          />
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Title</label>
+            <input
+              className="input-field"
+              placeholder="Title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Content</label>
+            <RichTextEditor
+              key={editorKey}
+              value={form.content}
+              onChange={(content) => setForm((f) => ({ ...f, content }))}
+              placeholder="Write your note…"
+            />
+          </div>
           <div className="flex justify-end gap-2">
             <button type="button" className="btn-ghost" onClick={() => setModalOpen(false)}>
               Cancel

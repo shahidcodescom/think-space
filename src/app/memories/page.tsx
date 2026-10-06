@@ -150,25 +150,34 @@ export default function MemoriesPage() {
         onClose={() => setModalOpen(false)}
       >
         <form onSubmit={save} className="space-y-3">
-          <input
-            className="input-field"
-            placeholder="Title"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            required
-          />
-          <textarea
-            className="input-field min-h-[120px]"
-            placeholder="What do you want to remember?"
-            value={form.content}
-            onChange={(e) => setForm({ ...form, content: e.target.value })}
-          />
-          <input
-            className="input-field"
-            placeholder="Tags (comma separated)"
-            value={form.tags}
-            onChange={(e) => setForm({ ...form, tags: e.target.value })}
-          />
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Title</label>
+            <input
+              className="input-field"
+              placeholder="Title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Memory</label>
+            <textarea
+              className="input-field min-h-[120px]"
+              placeholder="What do you want to remember?"
+              value={form.content}
+              onChange={(e) => setForm({ ...form, content: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Tags</label>
+            <input
+              className="input-field"
+              placeholder="Comma separated"
+              value={form.tags}
+              onChange={(e) => setForm({ ...form, tags: e.target.value })}
+            />
+          </div>
           <div className="flex justify-end gap-2">
             <button type="button" className="btn-ghost" onClick={() => setModalOpen(false)}>
               Cancel

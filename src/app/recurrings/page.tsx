@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import {
@@ -317,30 +318,28 @@ export default function RecurringsPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <select
-          className="input-field md:w-40"
+        <SearchableSelect
+          className="md:w-40"
+          options={[
+            { value: "", label: "All categories" },
+            ...CATEGORIES.map((c) => ({ value: c, label: c })),
+          ]}
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-        >
-          <option value="">All categories</option>
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        <select
-          className="input-field md:w-36"
+          onChange={setCategoryFilter}
+          placeholder="All categories"
+          aria-label="Filter by category"
+        />
+        <SearchableSelect
+          className="md:w-36"
+          options={[
+            { value: "", label: "All statuses" },
+            ...STATUSES.map((s) => ({ value: s, label: s })),
+          ]}
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">All statuses</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+          onChange={setStatusFilter}
+          placeholder="All statuses"
+          aria-label="Filter by status"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4">
@@ -492,121 +491,144 @@ export default function RecurringsPage() {
         onClose={() => setModalOpen(false)}
       >
         <form onSubmit={save} className="space-y-3">
-          <input
-            className="input-field"
-            placeholder="Name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-          <div className="grid grid-cols-2 gap-2">
-            <select
-              className="input-field"
-              value={form.category}
-              onChange={(e) =>
-                setForm({ ...form, category: e.target.value as RecurringCategory })
-              }
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <select
-              className="input-field"
-              value={form.status}
-              onChange={(e) =>
-                setForm({ ...form, status: e.target.value as RecurringStatus })
-              }
-            >
-              {STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="number"
-              className="input-field"
-              placeholder="Amount"
-              value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: e.target.value })}
-              required
-            />
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Name</label>
             <input
               className="input-field"
-              placeholder="Currency"
-              value={form.currency}
-              onChange={(e) => setForm({ ...form, currency: e.target.value })}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <select
-              className="input-field"
-              value={form.billingPeriod}
-              onChange={(e) =>
-                setForm({ ...form, billingPeriod: e.target.value as RecurringPeriod })
-              }
-            >
-              {PERIODS.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-            <input
-              type="date"
-              className="input-field"
-              value={form.nextDueDate}
-              onChange={(e) => setForm({ ...form, nextDueDate: e.target.value })}
+              placeholder="Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
             />
           </div>
-          <input
-            className="input-field"
-            placeholder="Payment method note"
-            value={form.paymentMethod}
-            onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
-          />
-          <input
-            className="input-field"
-            placeholder="URL"
-            value={form.url}
-            onChange={(e) => setForm({ ...form, url: e.target.value })}
-          />
-          <select
-            className="input-field"
-            value={form.linkedSecretId}
-            onChange={(e) => setForm({ ...form, linkedSecretId: e.target.value })}
-          >
-            <option value="">No linked secret</option>
-            {secrets.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-          <select
-            className="input-field"
-            value={form.linkedProjectId}
-            onChange={(e) => setForm({ ...form, linkedProjectId: e.target.value })}
-          >
-            <option value="">No linked project</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-          <textarea
-            className="input-field min-h-[80px]"
-            placeholder="Notes"
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Category</label>
+              <SearchableSelect
+                options={CATEGORIES.map((c) => ({ value: c, label: c }))}
+                value={form.category}
+                onChange={(category) =>
+                  setForm({ ...form, category: category as RecurringCategory })
+                }
+                aria-label="Category"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Status</label>
+              <SearchableSelect
+                options={STATUSES.map((s) => ({ value: s, label: s }))}
+                value={form.status}
+                onChange={(status) =>
+                  setForm({ ...form, status: status as RecurringStatus })
+                }
+                aria-label="Status"
+                required
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Amount</label>
+              <input
+                type="number"
+                className="input-field"
+                placeholder="Amount"
+                value={form.amount}
+                onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Currency</label>
+              <input
+                className="input-field"
+                placeholder="Currency"
+                value={form.currency}
+                onChange={(e) => setForm({ ...form, currency: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Billing</label>
+              <SearchableSelect
+                options={PERIODS.map((p) => ({ value: p, label: p }))}
+                value={form.billingPeriod}
+                onChange={(billingPeriod) =>
+                  setForm({
+                    ...form,
+                    billingPeriod: billingPeriod as RecurringPeriod,
+                  })
+                }
+                aria-label="Billing period"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Next due</label>
+              <input
+                type="date"
+                className="input-field"
+                value={form.nextDueDate}
+                onChange={(e) => setForm({ ...form, nextDueDate: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Payment method</label>
+            <input
+              className="input-field"
+              placeholder="Payment method note"
+              value={form.paymentMethod}
+              onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">URL</label>
+            <input
+              className="input-field"
+              placeholder="URL"
+              value={form.url}
+              onChange={(e) => setForm({ ...form, url: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Linked secret</label>
+            <SearchableSelect
+              options={[
+                { value: "", label: "No linked secret" },
+                ...secrets.map((s) => ({ value: s.id, label: s.name })),
+              ]}
+              value={form.linkedSecretId}
+              onChange={(linkedSecretId) => setForm({ ...form, linkedSecretId })}
+              placeholder="No linked secret"
+              aria-label="Linked secret"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Linked project</label>
+            <SearchableSelect
+              options={[
+                { value: "", label: "No linked project" },
+                ...projects.map((p) => ({ value: p.id, label: p.name })),
+              ]}
+              value={form.linkedProjectId}
+              onChange={(linkedProjectId) => setForm({ ...form, linkedProjectId })}
+              placeholder="No linked project"
+              aria-label="Linked project"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Notes</label>
+            <textarea
+              className="input-field min-h-[80px]"
+              placeholder="Notes"
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            />
+          </div>
           {error && (
             <p className="text-sm text-red-700" role="alert">
               {error}

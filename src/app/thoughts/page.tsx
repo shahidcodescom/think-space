@@ -225,19 +225,25 @@ export default function ThoughtsPage() {
         onClose={() => setModalOpen(false)}
       >
         <form onSubmit={save} className="space-y-3">
-          <input
-            className="input-field"
-            placeholder="Title"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            required
-          />
-          <textarea
-            className="input-field min-h-[140px]"
-            placeholder="What's on your mind?"
-            value={form.content}
-            onChange={(e) => setForm({ ...form, content: e.target.value })}
-          />
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Title</label>
+            <input
+              className="input-field"
+              placeholder="Title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Thought</label>
+            <textarea
+              className="input-field min-h-[140px]"
+              placeholder="What's on your mind?"
+              value={form.content}
+              onChange={(e) => setForm({ ...form, content: e.target.value })}
+            />
+          </div>
           <div className="flex justify-end gap-2">
             <button type="button" className="btn-ghost" onClick={() => setModalOpen(false)}>
               Cancel

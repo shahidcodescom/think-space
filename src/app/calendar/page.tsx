@@ -412,21 +412,25 @@ export default function CalendarPage() {
 
       {tab === "schedule" && (
         <>
-          <div className="flex flex-wrap gap-2">
-            <button
-              className={`btn-ghost text-sm ${view === "month" ? "bg-sage-muted" : ""}`}
-              onClick={() => setView("month")}
-            >
-              Month
-            </button>
-            <button
-              className={`btn-ghost text-sm ${view === "agenda" ? "bg-sage-muted" : ""}`}
-              onClick={() => setView("agenda")}
-            >
-              Agenda
-            </button>
+          <div className="card p-3 flex flex-col md:flex-row gap-2 md:items-center">
+            <div className="flex gap-2 shrink-0">
+              <button
+                type="button"
+                className={`btn-ghost text-sm ${view === "month" ? "bg-sage-muted" : ""}`}
+                onClick={() => setView("month")}
+              >
+                Month
+              </button>
+              <button
+                type="button"
+                className={`btn-ghost text-sm ${view === "agenda" ? "bg-sage-muted" : ""}`}
+                onClick={() => setView("agenda")}
+              >
+                Agenda
+              </button>
+            </div>
             <SearchableSelect
-              className="w-40"
+              className="md:w-40 md:ml-auto"
               options={[
                 { value: "", label: "All types" },
                 ...TYPES.map((t) => ({ value: t, label: t })),

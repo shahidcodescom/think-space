@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import {
   ClientsIcon,
   PencilIcon,
@@ -390,29 +391,31 @@ export default function ClientsPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <select
-          className="input-field md:w-48"
+        <SearchableSelect
+          className="md:w-48"
+          options={[
+            { value: "", label: "All live products" },
+            ...liveProjects.map((p) => ({ value: p.id, label: p.name })),
+          ]}
           value={projectFilter}
-          onChange={(e) => setProjectFilter(e.target.value)}
-        >
-          <option value="">All live products</option>
-          {liveProjects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-        <select
-          className="input-field md:w-40"
+          onChange={setProjectFilter}
+          placeholder="All live products"
+          aria-label="Filter by product"
+        />
+        <SearchableSelect
+          className="md:w-40"
+          options={[
+            { value: "", label: "All statuses" },
+            { value: "active", label: "Active" },
+            { value: "past_due", label: "Past due" },
+            { value: "trial", label: "Trial" },
+            { value: "cancelled", label: "Cancelled" },
+          ]}
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="past_due">Past due</option>
-          <option value="trial">Trial</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
+          onChange={setStatusFilter}
+          placeholder="All statuses"
+          aria-label="Filter by status"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
@@ -580,32 +583,44 @@ export default function ClientsPage() {
         onClose={() => setClientModal(false)}
       >
         <form onSubmit={saveClient} className="space-y-3">
-          <input
-            className="input-field"
-            placeholder="Name"
-            value={clientForm.name}
-            onChange={(e) => setClientForm({ ...clientForm, name: e.target.value })}
-            required
-          />
-          <input
-            className="input-field"
-            type="email"
-            placeholder="Email"
-            value={clientForm.email}
-            onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
-          />
-          <input
-            className="input-field"
-            placeholder="Company"
-            value={clientForm.company}
-            onChange={(e) => setClientForm({ ...clientForm, company: e.target.value })}
-          />
-          <textarea
-            className="input-field min-h-[80px]"
-            placeholder="Notes"
-            value={clientForm.notes}
-            onChange={(e) => setClientForm({ ...clientForm, notes: e.target.value })}
-          />
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Name</label>
+            <input
+              className="input-field"
+              placeholder="Name"
+              value={clientForm.name}
+              onChange={(e) => setClientForm({ ...clientForm, name: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Email</label>
+            <input
+              className="input-field"
+              type="email"
+              placeholder="Email"
+              value={clientForm.email}
+              onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Company</label>
+            <input
+              className="input-field"
+              placeholder="Company"
+              value={clientForm.company}
+              onChange={(e) => setClientForm({ ...clientForm, company: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Notes</label>
+            <textarea
+              className="input-field min-h-[80px]"
+              placeholder="Notes"
+              value={clientForm.notes}
+              onChange={(e) => setClientForm({ ...clientForm, notes: e.target.value })}
+            />
+          </div>
           {error && <p className="text-sm text-red-700">{error}</p>}
           <div className="flex justify-end gap-2">
             <button type="button" className="btn-ghost" onClick={() => setClientModal(false)}>
@@ -621,100 +636,137 @@ export default function ClientsPage() {
       {/* Subscription modal */}
       <Modal open={subModal} title="Add subscription" onClose={() => setSubModal(false)}>
         <form onSubmit={saveSub} className="space-y-3">
-          <select
-            className="input-field"
-            value={subForm.clientId}
-            onChange={(e) => setSubForm({ ...subForm, clientId: e.target.value })}
-            required
-          >
-            <option value="">Client…</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <select
-            className="input-field"
-            value={subForm.projectId}
-            onChange={(e) => setSubForm({ ...subForm, projectId: e.target.value })}
-            required
-          >
-            <option value="">Live product…</option>
-            {liveProjects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-          <input
-            className="input-field"
-            placeholder="Plan name"
-            value={subForm.plan}
-            onChange={(e) => setSubForm({ ...subForm, plan: e.target.value })}
-            required
-          />
-          <div className="grid grid-cols-2 gap-2">
-            <select
-              className="input-field"
-              value={subForm.status}
-              onChange={(e) =>
-                setSubForm({ ...subForm, status: e.target.value as SubscriptionStatus })
-              }
-            >
-              <option value="active">Active</option>
-              <option value="trial">Trial</option>
-              <option value="past_due">Past due</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-            <select
-              className="input-field"
-              value={subForm.billingPeriod}
-              onChange={(e) =>
-                setSubForm({ ...subForm, billingPeriod: e.target.value as BillingPeriod })
-              }
-            >
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-              <option value="custom">Custom</option>
-            </select>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="date"
-              className="input-field"
-              value={subForm.startDate}
-              onChange={(e) => setSubForm({ ...subForm, startDate: e.target.value })}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Client</label>
+            <SearchableSelect
+              options={[
+                { value: "", label: "Client…" },
+                ...clients.map((c) => ({ value: c.id, label: c.name })),
+              ]}
+              value={subForm.clientId}
+              onChange={(clientId) => setSubForm({ ...subForm, clientId })}
+              placeholder="Client…"
+              aria-label="Client"
+              required
             />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Live product</label>
+            <SearchableSelect
+              options={[
+                { value: "", label: "Live product…" },
+                ...liveProjects.map((p) => ({ value: p.id, label: p.name })),
+              ]}
+              value={subForm.projectId}
+              onChange={(projectId) => setSubForm({ ...subForm, projectId })}
+              placeholder="Live product…"
+              aria-label="Live product"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Plan</label>
             <input
-              type="date"
               className="input-field"
-              value={subForm.renewalDate}
-              onChange={(e) => setSubForm({ ...subForm, renewalDate: e.target.value })}
+              placeholder="Plan name"
+              value={subForm.plan}
+              onChange={(e) => setSubForm({ ...subForm, plan: e.target.value })}
               required
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <input
-              type="number"
-              className="input-field"
-              placeholder="Amount"
-              value={subForm.amount}
-              onChange={(e) => setSubForm({ ...subForm, amount: e.target.value })}
-            />
-            <input
-              className="input-field"
-              placeholder="Currency"
-              value={subForm.currency}
-              onChange={(e) => setSubForm({ ...subForm, currency: e.target.value })}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Status</label>
+              <SearchableSelect
+                options={[
+                  { value: "active", label: "Active" },
+                  { value: "trial", label: "Trial" },
+                  { value: "past_due", label: "Past due" },
+                  { value: "cancelled", label: "Cancelled" },
+                ]}
+                value={subForm.status}
+                onChange={(status) =>
+                  setSubForm({
+                    ...subForm,
+                    status: status as SubscriptionStatus,
+                  })
+                }
+                aria-label="Subscription status"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Billing</label>
+              <SearchableSelect
+                options={[
+                  { value: "monthly", label: "Monthly" },
+                  { value: "yearly", label: "Yearly" },
+                  { value: "custom", label: "Custom" },
+                ]}
+                value={subForm.billingPeriod}
+                onChange={(billingPeriod) =>
+                  setSubForm({
+                    ...subForm,
+                    billingPeriod: billingPeriod as BillingPeriod,
+                  })
+                }
+                aria-label="Billing period"
+                required
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Start</label>
+              <input
+                type="date"
+                className="input-field"
+                value={subForm.startDate}
+                onChange={(e) => setSubForm({ ...subForm, startDate: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Renewal</label>
+              <input
+                type="date"
+                className="input-field"
+                value={subForm.renewalDate}
+                onChange={(e) => setSubForm({ ...subForm, renewalDate: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Amount</label>
+              <input
+                type="number"
+                className="input-field"
+                placeholder="Amount"
+                value={subForm.amount}
+                onChange={(e) => setSubForm({ ...subForm, amount: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Currency</label>
+              <input
+                className="input-field"
+                placeholder="Currency"
+                value={subForm.currency}
+                onChange={(e) => setSubForm({ ...subForm, currency: e.target.value })}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Notes</label>
+            <textarea
+              className="input-field min-h-[70px]"
+              placeholder="Notes"
+              value={subForm.notes}
+              onChange={(e) => setSubForm({ ...subForm, notes: e.target.value })}
             />
           </div>
-          <textarea
-            className="input-field min-h-[70px]"
-            placeholder="Notes"
-            value={subForm.notes}
-            onChange={(e) => setSubForm({ ...subForm, notes: e.target.value })}
-          />
           {error && <p className="text-sm text-red-700">{error}</p>}
           <div className="flex justify-end gap-2">
             <button type="button" className="btn-ghost" onClick={() => setSubModal(false)}>
@@ -730,87 +782,115 @@ export default function ClientsPage() {
       {/* Payment modal */}
       <Modal open={payModal} title="Add payment" onClose={() => setPayModal(false)}>
         <form onSubmit={savePay} className="space-y-3">
-          <select
-            className="input-field"
-            value={payForm.clientId}
-            onChange={(e) => setPayForm({ ...payForm, clientId: e.target.value })}
-            required
-          >
-            <option value="">Client…</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <select
-            className="input-field"
-            value={payForm.subscriptionId}
-            onChange={(e) => setPayForm({ ...payForm, subscriptionId: e.target.value })}
-          >
-            <option value="">No subscription link</option>
-            {subscriptions
-              .filter((s) => !payForm.clientId || s.clientId === payForm.clientId)
-              .map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.plan}
-                </option>
-              ))}
-          </select>
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="number"
-              className="input-field"
-              placeholder="Amount"
-              value={payForm.amount}
-              onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Client</label>
+            <SearchableSelect
+              options={[
+                { value: "", label: "Client…" },
+                ...clients.map((c) => ({ value: c.id, label: c.name })),
+              ]}
+              value={payForm.clientId}
+              onChange={(clientId) => setPayForm({ ...payForm, clientId })}
+              placeholder="Client…"
+              aria-label="Client"
               required
             />
-            <input
-              className="input-field"
-              placeholder="Currency"
-              value={payForm.currency}
-              onChange={(e) => setPayForm({ ...payForm, currency: e.target.value })}
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Subscription</label>
+            <SearchableSelect
+              options={[
+                { value: "", label: "No subscription link" },
+                ...subscriptions
+                  .filter((s) => !payForm.clientId || s.clientId === payForm.clientId)
+                  .map((s) => ({ value: s.id, label: s.plan })),
+              ]}
+              value={payForm.subscriptionId}
+              onChange={(subscriptionId) =>
+                setPayForm({ ...payForm, subscriptionId })
+              }
+              placeholder="No subscription link"
+              aria-label="Subscription"
             />
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="date"
-              className="input-field"
-              value={payForm.date}
-              onChange={(e) => setPayForm({ ...payForm, date: e.target.value })}
-            />
-            <input
-              className="input-field"
-              placeholder="Method"
-              value={payForm.method}
-              onChange={(e) => setPayForm({ ...payForm, method: e.target.value })}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Amount</label>
+              <input
+                type="number"
+                className="input-field"
+                placeholder="Amount"
+                value={payForm.amount}
+                onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Currency</label>
+              <input
+                className="input-field"
+                placeholder="Currency"
+                value={payForm.currency}
+                onChange={(e) => setPayForm({ ...payForm, currency: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Date</label>
+              <input
+                type="date"
+                className="input-field"
+                value={payForm.date}
+                onChange={(e) => setPayForm({ ...payForm, date: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Method</label>
+              <input
+                className="input-field"
+                placeholder="Method"
+                value={payForm.method}
+                onChange={(e) => setPayForm({ ...payForm, method: e.target.value })}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Status</label>
+            <SearchableSelect
+              options={[
+                { value: "paid", label: "Paid" },
+                { value: "pending", label: "Pending" },
+                { value: "failed", label: "Failed" },
+                { value: "refunded", label: "Refunded" },
+              ]}
+              value={payForm.status}
+              onChange={(status) =>
+                setPayForm({ ...payForm, status: status as PaymentStatus })
+              }
+              aria-label="Payment status"
+              required
             />
           </div>
-          <select
-            className="input-field"
-            value={payForm.status}
-            onChange={(e) =>
-              setPayForm({ ...payForm, status: e.target.value as PaymentStatus })
-            }
-          >
-            <option value="paid">Paid</option>
-            <option value="pending">Pending</option>
-            <option value="failed">Failed</option>
-            <option value="refunded">Refunded</option>
-          </select>
-          <input
-            className="input-field"
-            placeholder="Reference"
-            value={payForm.reference}
-            onChange={(e) => setPayForm({ ...payForm, reference: e.target.value })}
-          />
-          <textarea
-            className="input-field min-h-[70px]"
-            placeholder="Notes"
-            value={payForm.notes}
-            onChange={(e) => setPayForm({ ...payForm, notes: e.target.value })}
-          />
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Reference</label>
+            <input
+              className="input-field"
+              placeholder="Reference"
+              value={payForm.reference}
+              onChange={(e) => setPayForm({ ...payForm, reference: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Notes</label>
+            <textarea
+              className="input-field min-h-[70px]"
+              placeholder="Notes"
+              value={payForm.notes}
+              onChange={(e) => setPayForm({ ...payForm, notes: e.target.value })}
+            />
+          </div>
           {error && <p className="text-sm text-red-700">{error}</p>}
           <div className="flex justify-end gap-2">
             <button type="button" className="btn-ghost" onClick={() => setPayModal(false)}>

@@ -279,21 +279,31 @@ export default function JobsPage() {
         </button>
       </header>
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          className={`btn-ghost text-sm ${view === "board" ? "bg-sage-muted" : ""}`}
-          onClick={() => setView("board")}
-        >
-          Board
-        </button>
-        <button
-          className={`btn-ghost text-sm ${view === "list" ? "bg-sage-muted" : ""}`}
-          onClick={() => setView("list")}
-        >
-          List
-        </button>
+      <div className="card p-3 flex flex-col md:flex-row gap-2 md:items-center">
+        <div className="flex gap-2 shrink-0">
+          <button
+            type="button"
+            className={`btn-ghost text-sm ${view === "board" ? "bg-sage-muted" : ""}`}
+            onClick={() => setView("board")}
+          >
+            Board
+          </button>
+          <button
+            type="button"
+            className={`btn-ghost text-sm ${view === "list" ? "bg-sage-muted" : ""}`}
+            onClick={() => setView("list")}
+          >
+            List
+          </button>
+        </div>
+        <input
+          className="input-field md:flex-1"
+          placeholder="Search company or role…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
         <SearchableSelect
-          className="w-44"
+          className="md:w-40"
           options={[
             { value: "", label: "All statuses" },
             ...JOB_STATUSES.map((s) => ({ value: s, label: statusLabel(s) })),
@@ -302,12 +312,6 @@ export default function JobsPage() {
           onChange={setStatusFilter}
           placeholder="All statuses"
           aria-label="Filter by status"
-        />
-        <input
-          className="input-field min-w-[10rem] flex-1"
-          placeholder="Search company or role…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
         />
       </div>
 

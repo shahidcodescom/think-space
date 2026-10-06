@@ -192,27 +192,27 @@ export function PublicBookingClient({
             </strong>
           </p>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Your name</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Your name</span>
             <input
-              className="input w-full"
+              className="input-field"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Email</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Email</span>
             <input
-              className="input w-full"
+              className="input-field"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Topic (optional)</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Topic (optional)</span>
             <input
-              className="input w-full"
+              className="input-field"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />

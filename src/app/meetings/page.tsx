@@ -273,44 +273,62 @@ export default function MeetingsPage() {
         onClose={() => setModalOpen(false)}
       >
         <form onSubmit={save} className="space-y-3">
-          <input
-            className="input-field"
-            placeholder="Title"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            required
-          />
-          <input
-            type="date"
-            className="input-field"
-            value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-            required
-          />
-          <input
-            className="input-field"
-            placeholder="Participants (comma separated)"
-            value={form.participants}
-            onChange={(e) => setForm({ ...form, participants: e.target.value })}
-          />
-          <textarea
-            className="input-field min-h-[70px]"
-            placeholder="Agenda"
-            value={form.agenda}
-            onChange={(e) => setForm({ ...form, agenda: e.target.value })}
-          />
-          <textarea
-            className="input-field min-h-[70px]"
-            placeholder="Minutes"
-            value={form.minutes}
-            onChange={(e) => setForm({ ...form, minutes: e.target.value })}
-          />
-          <textarea
-            className="input-field min-h-[70px]"
-            placeholder="Decisions"
-            value={form.decisions}
-            onChange={(e) => setForm({ ...form, decisions: e.target.value })}
-          />
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Title</label>
+            <input
+              className="input-field"
+              placeholder="Title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Date</label>
+            <input
+              type="date"
+              className="input-field"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Participants</label>
+            <input
+              className="input-field"
+              placeholder="Comma separated"
+              value={form.participants}
+              onChange={(e) => setForm({ ...form, participants: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Agenda</label>
+            <textarea
+              className="input-field min-h-[80px]"
+              placeholder="Agenda"
+              value={form.agenda}
+              onChange={(e) => setForm({ ...form, agenda: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Minutes</label>
+            <textarea
+              className="input-field min-h-[80px]"
+              placeholder="Minutes"
+              value={form.minutes}
+              onChange={(e) => setForm({ ...form, minutes: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Decisions</label>
+            <textarea
+              className="input-field min-h-[80px]"
+              placeholder="Decisions"
+              value={form.decisions}
+              onChange={(e) => setForm({ ...form, decisions: e.target.value })}
+            />
+          </div>
           <div className="flex justify-end gap-2">
             <button type="button" className="btn-ghost" onClick={() => setModalOpen(false)}>
               Cancel
@@ -324,13 +342,16 @@ export default function MeetingsPage() {
 
       <Modal open={noteModal} title="Add linked note" onClose={() => setNoteModal(false)}>
         <form onSubmit={addNote} className="space-y-3">
-          <input
-            className="input-field"
-            placeholder="Title"
-            value={noteForm.title}
-            onChange={(e) => setNoteForm({ ...noteForm, title: e.target.value })}
-            required
-          />
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Title</label>
+            <input
+              className="input-field"
+              placeholder="Title"
+              value={noteForm.title}
+              onChange={(e) => setNoteForm({ ...noteForm, title: e.target.value })}
+              required
+            />
+          </div>
           <RichTextEditor
             key={noteEditorKey}
             value={noteForm.content}

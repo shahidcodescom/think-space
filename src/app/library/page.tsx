@@ -220,15 +220,15 @@ export default function LibraryPage() {
         </div>
       </header>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="card p-3 flex flex-col md:flex-row gap-2 md:items-center">
         <input
-          className="input-field min-w-[10rem] flex-1"
+          className="input-field md:flex-1"
           placeholder="Search…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <SearchableSelect
-          className="w-36"
+          className="md:w-40"
           options={[
             { value: "", label: "All types" },
             ...TYPES.map((t) => ({ value: t, label: t })),
@@ -239,7 +239,7 @@ export default function LibraryPage() {
           aria-label="Filter by type"
         />
         <SearchableSelect
-          className="w-40"
+          className="md:w-40"
           options={[
             { value: "", label: "All tags" },
             ...allTags.map((t) => ({ value: t, label: t })),

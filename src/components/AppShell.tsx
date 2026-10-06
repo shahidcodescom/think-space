@@ -2,7 +2,7 @@
 
 import { Sidebar } from "./Sidebar";
 import { MobileBottomNav } from "./MobileBottomNav";
-import { LeafIcon } from "./Icons";
+import { BiPolarMark, BiPolarIcon } from "./BiPolarMark";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS, isNavActive } from "@/lib/nav";
 
@@ -18,7 +18,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           className="sticky top-0 z-30 flex items-center gap-2 px-4 py-3 bg-cream/95 backdrop-blur-lg border-b border-forest/5"
           style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
         >
-          <LeafIcon size={18} className="text-forest shrink-0" />
+          <BiPolarIcon size={18} variant="onLight" />
           <p className="font-serif text-base lowercase text-forest">book a time</p>
         </header>
         <main className="flex-1 min-w-0 w-full">{children}</main>
@@ -39,17 +39,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           }}
         >
           <div className="flex items-center gap-2 min-w-0">
-            <LeafIcon size={18} className="text-forest shrink-0" />
-            <div className="min-w-0">
-              <p className="font-serif text-base lowercase leading-none truncate">
-                bi-polar.
+            <BiPolarMark size={18} variant="onLight" href={null} />
+            {current && (
+              <p className="text-[11px] text-forest/45 truncate min-w-0">
+                {current.label}
               </p>
-              {current && (
-                <p className="text-[11px] text-forest/45 mt-0.5 truncate">
-                  {current.label}
-                </p>
-              )}
-            </div>
+            )}
           </div>
         </header>
 

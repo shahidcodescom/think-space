@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LeafIcon } from "./Icons";
+import { BiPolarMark } from "./BiPolarMark";
 import {
   isNavActive,
   NAV_GROUPS,
@@ -16,12 +16,7 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex fixed inset-y-0 left-0 z-40 w-56 lg:w-60 bg-forest text-white flex-col h-[100dvh] overflow-hidden">
       <div className="shrink-0 flex items-center px-4 pt-5 pb-3">
-        <Link href="/thinking-space" className="flex items-center gap-2 min-w-0">
-          <LeafIcon size={20} className="text-sage-light shrink-0" />
-          <span className="font-serif text-lg lowercase tracking-tight truncate">
-            bi-polar.
-          </span>
-        </Link>
+        <BiPolarMark size={22} variant="onDark" />
       </div>
 
       <nav

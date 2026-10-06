@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import {
   PencilIcon,
   PlusIcon,
@@ -303,62 +304,87 @@ export default function ProjectsPage() {
         onClose={() => setModalOpen(false)}
       >
         <form onSubmit={save} className="space-y-3">
-          <input
-            className="input-field"
-            placeholder="Name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-          <textarea
-            className="input-field min-h-[80px]"
-            placeholder="Description"
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-          />
-          <select
-            className="input-field"
-            value={form.status}
-            onChange={(e) =>
-              setForm({ ...form, status: e.target.value as ProjectStatus })
-            }
-          >
-            <option value="in_progress">In progress</option>
-            <option value="live">Live / Released</option>
-          </select>
-          <input
-            className="input-field"
-            placeholder="URL (optional)"
-            value={form.url}
-            onChange={(e) => setForm({ ...form, url: e.target.value })}
-          />
-          <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Name</label>
             <input
-              type="date"
               className="input-field"
-              value={form.startedAt}
-              onChange={(e) => setForm({ ...form, startedAt: e.target.value })}
-            />
-            <input
-              type="date"
-              className="input-field"
-              value={form.releasedAt}
-              onChange={(e) => setForm({ ...form, releasedAt: e.target.value })}
-              placeholder="Released"
+              placeholder="Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
             />
           </div>
-          <input
-            className="input-field"
-            placeholder="Tags (comma separated)"
-            value={form.tags}
-            onChange={(e) => setForm({ ...form, tags: e.target.value })}
-          />
-          <textarea
-            className="input-field min-h-[80px]"
-            placeholder="Notes"
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-          />
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Description</label>
+            <textarea
+              className="input-field min-h-[80px]"
+              placeholder="Description"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Status</label>
+            <SearchableSelect
+              options={[
+                { value: "in_progress", label: "In progress" },
+                { value: "live", label: "Live / Released" },
+              ]}
+              value={form.status}
+              onChange={(status) =>
+                setForm({ ...form, status: status as ProjectStatus })
+              }
+              aria-label="Status"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">URL</label>
+            <input
+              className="input-field"
+              placeholder="Optional"
+              value={form.url}
+              onChange={(e) => setForm({ ...form, url: e.target.value })}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Started</label>
+              <input
+                type="date"
+                className="input-field"
+                value={form.startedAt}
+                onChange={(e) => setForm({ ...form, startedAt: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Released</label>
+              <input
+                type="date"
+                className="input-field"
+                value={form.releasedAt}
+                onChange={(e) => setForm({ ...form, releasedAt: e.target.value })}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Tags</label>
+            <input
+              className="input-field"
+              placeholder="Comma separated"
+              value={form.tags}
+              onChange={(e) => setForm({ ...form, tags: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Notes</label>
+            <textarea
+              className="input-field min-h-[80px]"
+              placeholder="Notes"
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            />
+          </div>
           {error && (
             <p className="text-sm text-red-700" role="alert">
               {error}

@@ -264,15 +264,15 @@ export default function SkillsPage() {
         </div>
       </header>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="card p-3 flex flex-col md:flex-row gap-2 md:items-center">
         <input
-          className="input-field min-w-[10rem] flex-1"
+          className="input-field md:flex-1"
           placeholder="Search skills…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <SearchableSelect
-          className="w-44"
+          className="md:w-40"
           options={[
             { value: "", label: "All categories" },
             ...categories.map((c) => ({ value: c, label: c })),

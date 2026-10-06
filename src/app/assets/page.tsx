@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import {
   AssetIcon,
   PencilIcon,
@@ -204,30 +205,28 @@ export default function AssetsPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <select
-          className="input-field md:w-40"
+        <SearchableSelect
+          className="md:w-40"
+          options={[
+            { value: "", label: "All types" },
+            ...TYPES.map((t) => ({ value: t, label: t })),
+          ]}
           value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-        >
-          <option value="">All types</option>
-          {TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-        <select
-          className="input-field md:w-40"
+          onChange={setTypeFilter}
+          placeholder="All types"
+          aria-label="Filter by type"
+        />
+        <SearchableSelect
+          className="md:w-40"
+          options={[
+            { value: "", label: "All statuses" },
+            ...STATUSES.map((s) => ({ value: s, label: s })),
+          ]}
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">All statuses</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+          onChange={setStatusFilter}
+          placeholder="All statuses"
+          aria-label="Filter by status"
+        />
         <span className="text-xs text-forest/45 px-2 shrink-0">
           {assets.length} shown
         </span>
@@ -382,101 +381,129 @@ export default function AssetsPage() {
         onClose={() => setModalOpen(false)}
       >
         <form onSubmit={save} className="space-y-3">
-          <input
-            className="input-field"
-            placeholder="Name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-          <div className="grid grid-cols-2 gap-2">
-            <select
-              className="input-field"
-              value={form.type}
-              onChange={(e) =>
-                setForm({ ...form, type: e.target.value as AssetType })
-              }
-            >
-              {TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-            <select
-              className="input-field"
-              value={form.status}
-              onChange={(e) =>
-                setForm({ ...form, status: e.target.value as AssetStatus })
-              }
-            >
-              {STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
-          <input
-            className="input-field font-mono text-sm"
-            placeholder="Serial / ID"
-            value={form.serial}
-            onChange={(e) => setForm({ ...form, serial: e.target.value })}
-          />
-          <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Name</label>
             <input
-              type="date"
               className="input-field"
-              value={form.purchaseDate}
-              onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
-            />
-            <input
-              type="number"
-              step="any"
-              className="input-field"
-              placeholder="Value / cost"
-              value={form.value}
-              onChange={(e) => setForm({ ...form, value: e.target.value })}
+              placeholder="Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
             />
           </div>
-          <input
-            className="input-field"
-            placeholder="Location"
-            value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
-          />
-          <input
-            className="input-field"
-            placeholder="Owner"
-            value={form.owner}
-            onChange={(e) => setForm({ ...form, owner: e.target.value })}
-          />
-          <input
-            className="input-field"
-            placeholder="Tags (comma separated)"
-            value={form.tags}
-            onChange={(e) => setForm({ ...form, tags: e.target.value })}
-          />
-          <textarea
-            className="input-field min-h-[90px]"
-            placeholder="Notes"
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-          />
-          <input
-            className="input-field text-sm"
-            placeholder="Related note IDs (comma separated)"
-            value={form.relatedNoteIds}
-            onChange={(e) => setForm({ ...form, relatedNoteIds: e.target.value })}
-          />
-          <input
-            className="input-field text-sm"
-            placeholder="Related secret IDs (comma separated)"
-            value={form.relatedSecretIds}
-            onChange={(e) =>
-              setForm({ ...form, relatedSecretIds: e.target.value })
-            }
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Type</label>
+              <SearchableSelect
+                options={TYPES.map((t) => ({ value: t, label: t }))}
+                value={form.type}
+                onChange={(type) =>
+                  setForm({ ...form, type: type as AssetType })
+                }
+                aria-label="Type"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Status</label>
+              <SearchableSelect
+                options={STATUSES.map((s) => ({ value: s, label: s }))}
+                value={form.status}
+                onChange={(status) =>
+                  setForm({ ...form, status: status as AssetStatus })
+                }
+                aria-label="Status"
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Serial / ID</label>
+            <input
+              className="input-field font-mono text-sm"
+              placeholder="Serial / ID"
+              value={form.serial}
+              onChange={(e) => setForm({ ...form, serial: e.target.value })}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Purchase date</label>
+              <input
+                type="date"
+                className="input-field"
+                value={form.purchaseDate}
+                onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Value / cost</label>
+              <input
+                type="number"
+                step="any"
+                className="input-field"
+                placeholder="0"
+                value={form.value}
+                onChange={(e) => setForm({ ...form, value: e.target.value })}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Location</label>
+            <input
+              className="input-field"
+              placeholder="Location"
+              value={form.location}
+              onChange={(e) => setForm({ ...form, location: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Owner</label>
+            <input
+              className="input-field"
+              placeholder="Owner"
+              value={form.owner}
+              onChange={(e) => setForm({ ...form, owner: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Tags</label>
+            <input
+              className="input-field"
+              placeholder="Comma separated"
+              value={form.tags}
+              onChange={(e) => setForm({ ...form, tags: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Notes</label>
+            <textarea
+              className="input-field min-h-[90px]"
+              placeholder="Notes"
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Related note IDs</label>
+            <input
+              className="input-field text-sm"
+              placeholder="Comma separated"
+              value={form.relatedNoteIds}
+              onChange={(e) => setForm({ ...form, relatedNoteIds: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Related secret IDs</label>
+            <input
+              className="input-field text-sm"
+              placeholder="Comma separated"
+              value={form.relatedSecretIds}
+              onChange={(e) =>
+                setForm({ ...form, relatedSecretIds: e.target.value })
+              }
+            />
+          </div>
           {error && (
             <p className="text-sm text-red-700" role="alert">
               {error}

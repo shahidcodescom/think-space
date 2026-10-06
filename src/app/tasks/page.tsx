@@ -62,6 +62,7 @@ export default function TasksPage() {
         <input
           className="input-field"
           placeholder="Add a task…"
+          aria-label="New task"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />

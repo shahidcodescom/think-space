@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { LockIcon } from "@/components/Icons";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import {
   DEFAULT_MODELS,
   LLM_PROVIDERS,
@@ -120,31 +121,35 @@ export default function ProfilePage() {
           <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
             Language
           </label>
-          <select
-            className="input-field"
+          <SearchableSelect
+            options={[
+              { value: "English (India)", label: "English (India)" },
+              { value: "English (US)", label: "English (US)" },
+              { value: "English (UK)", label: "English (UK)" },
+              { value: "Hindi", label: "Hindi" },
+            ]}
             value={profile.language}
-            onChange={(e) => setProfile({ ...profile, language: e.target.value })}
-          >
-            <option>English (India)</option>
-            <option>English (US)</option>
-            <option>English (UK)</option>
-            <option>Hindi</option>
-          </select>
+            onChange={(language) => setProfile({ ...profile, language })}
+            aria-label="Language"
+            required
+          />
         </div>
 
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
             Voice
           </label>
-          <select
-            className="input-field"
+          <SearchableSelect
+            options={[
+              { value: "Default voice", label: "Default voice" },
+              { value: "Calm voice", label: "Calm voice" },
+              { value: "Bright voice", label: "Bright voice" },
+            ]}
             value={profile.voice}
-            onChange={(e) => setProfile({ ...profile, voice: e.target.value })}
-          >
-            <option>Default voice</option>
-            <option>Calm voice</option>
-            <option>Bright voice</option>
-          </select>
+            onChange={(voice) => setProfile({ ...profile, voice })}
+            aria-label="Voice"
+            required
+          />
         </div>
 
         <ToggleSwitch
@@ -183,24 +188,23 @@ export default function ProfilePage() {
               <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
                 Provider
               </label>
-              <select
-                className="input-field"
+              <SearchableSelect
+                options={LLM_PROVIDERS.map((p) => ({
+                  value: p,
+                  label: PROVIDER_LABELS[p],
+                }))}
                 value={llm.provider}
-                onChange={(e) => {
-                  const provider = e.target.value as LlmProvider;
+                onChange={(provider) => {
+                  const next = provider as LlmProvider;
                   setLlm({
                     ...llm,
-                    provider,
-                    model: DEFAULT_MODELS[provider],
+                    provider: next,
+                    model: DEFAULT_MODELS[next],
                   });
                 }}
-              >
-                {LLM_PROVIDERS.map((p) => (
-                  <option key={p} value={p}>
-                    {PROVIDER_LABELS[p]}
-                  </option>
-                ))}
-              </select>
+                aria-label="Provider"
+                required
+              />
             </div>
 
             <div>
