@@ -180,3 +180,30 @@ export interface Payment {
   createdAt: string;
   updatedAt: string;
 }
+
+export type RecurringCategory =
+  | "Software"
+  | "Media"
+  | "Domain"
+  | "Utilities"
+  | "Other";
+export type RecurringPeriod = "weekly" | "monthly" | "yearly" | "custom";
+export type RecurringStatus = "active" | "paused" | "cancelled";
+
+export interface Recurring {
+  id: string;
+  name: string;
+  category: RecurringCategory;
+  amount: number;
+  currency: string;
+  billingPeriod: RecurringPeriod;
+  nextDueDate: string;
+  status: RecurringStatus;
+  paymentMethod: string;
+  url: string;
+  notes: string;
+  linkedSecretId: string | null;
+  linkedProjectId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -144,7 +144,45 @@ const billingSubs: Subscription[] = [
   },
 ];
 
-const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs };
+
+const recurrings = [
+  {
+    id: "rec-1",
+    name: "Netflix",
+    category: "Media",
+    amount: 649,
+    currency: "INR",
+    billingPeriod: "monthly",
+    nextDueDate: "2026-10-18",
+    status: "active",
+    paymentMethod: "UPI",
+    url: "https://www.netflix.com",
+    notes: "",
+    linkedSecretId: null,
+    linkedProjectId: null,
+    createdAt: "2025-06-01T10:00:00.000Z",
+    updatedAt: "2026-09-18T10:00:00.000Z",
+  },
+  {
+    id: "rec-2",
+    name: "secondbrain.ai domain",
+    category: "Domain",
+    amount: 14,
+    currency: "USD",
+    billingPeriod: "yearly",
+    nextDueDate: "2026-10-02",
+    status: "active",
+    paymentMethod: "Card",
+    url: "",
+    notes: "overdue",
+    linkedSecretId: null,
+    linkedProjectId: null,
+    createdAt: "2025-10-02T10:00:00.000Z",
+    updatedAt: "2025-10-02T10:00:00.000Z",
+  },
+];
+
+const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs, recurrings };
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);
@@ -229,6 +267,19 @@ assert(renewalsAns.text.includes("RuneRail Pro"), "renewal plan");
 assert(glance.text.includes("Clients:** 1"), "glance clients");
 assert(help.text.toLowerCase().includes("clients"), "help clients");
 assert(help.text.toLowerCase().includes("renewals"), "help renewals");
+
+
+const recurringsAns = answerQuery("List my recurrings", sample, extras);
+assert(recurringsAns.title === "Your recurrings", "recurrings title");
+assert(recurringsAns.text.includes("Netflix"), "recurring name");
+assert(recurringsAns.text.includes("secondbrain.ai domain"), "domain recurring");
+
+const duesAns = answerQuery("upcoming dues", sample, extras);
+assert(duesAns.title === "Upcoming dues", "dues title");
+assert(duesAns.text.includes("Netflix") || duesAns.text.includes("domain"), "dues item");
+
+assert(glance.text.includes("Recurrings:** 2"), "glance recurrings");
+assert(help.text.toLowerCase().includes("recurrings") || help.text.toLowerCase().includes("dues"), "help recurrings");
 
 console.log("ai.test.ts: all assertions passed");
 

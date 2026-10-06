@@ -69,7 +69,7 @@ src/
   lib/                  # types, store, ai, format
 data/store.json         # Local persistence + seed
 data/projects.json      # Projects / products
-data/clients.json       # Clients, subscriptions, payments
+data/clients.json, data/recurrings.json       # Clients, subscriptions, payments
 data/assets.json        # Asset inventory
 data/secrets.json       # Encrypted secrets vault
 data/.secrets-master-key  # Auto key (gitignored)
@@ -147,10 +147,20 @@ Track builds separately from shipped products.
 
 Manage customers of **live** products: subscriptions, renewals, payments.
 
-- UI: `/clients` — clients CRUD, upcoming renewals (30d + overdue), subscriptions & payments, mark renewed
-- Data: `data/clients.json` (`clients`, `subscriptions`, `payments`)
+- UI: `/clients`, `/recurrings` — clients CRUD, upcoming renewals (30d + overdue), subscriptions & payments, mark renewed
+- Data: `data/clients.json, data/recurrings.json` (`clients`, `subscriptions`, `payments`)
 - API:
-  - `GET/POST /api/clients`, `GET/PUT/DELETE /api/clients/:id`
+  - `GET/POST /api/clients, /api/recurrings`, `GET/PUT/DELETE /api/clients/:id`
   - `GET/POST /api/subscriptions`, `GET/PUT/DELETE /api/subscriptions/:id` (`PUT` with `{ action: "renew" }` bumps renewal + records payment)
   - `GET/POST /api/payments`, `PUT/DELETE /api/payments/:id`
 - Thinking space: “List my clients”, “Upcoming renewals”
+
+## Recurrings (My Subscriptions)
+
+Personal subscriptions and recurring expenses (Netflix, domains, SaaS tools) — separate from **Clients → Subscriptions** (customer billing).
+
+- Page: `/recurrings`
+- API: `GET/POST /api/recurrings`, `GET/PUT/DELETE /api/recurrings/[id]`, `PUT` with `{ "action": "mark_paid" }` bumps `nextDueDate` by billing period
+- Persist: `data/recurrings.json`
+- Thinking space: “List my recurrings”, “Upcoming dues”
+

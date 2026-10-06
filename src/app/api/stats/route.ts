@@ -1,17 +1,19 @@
 import { NextResponse } from "next/server";
 import { readAssetsFile } from "@/lib/assets-store";
 import { readClientsFile } from "@/lib/clients-store";
+import { readRecurringsFile } from "@/lib/recurrings-store";
 import { readProjectsFile } from "@/lib/projects-store";
 import { readSecretsFile } from "@/lib/secrets-store";
 import { readStore } from "@/lib/store";
 
 export async function GET() {
-  const [store, assets, secrets, projects, billing] = await Promise.all([
+  const [store, assets, secrets, projects, billing, recurrings] = await Promise.all([
     readStore(),
     readAssetsFile(),
     readSecretsFile(),
     readProjectsFile(),
     readClientsFile(),
+    readRecurringsFile(),
   ]);
   const list = projects.projects;
   const today = new Date();
@@ -40,5 +42,12 @@ export async function GET() {
     clients: billing.clients.length,
     subscriptions: billing.subscriptions.length,
     upcomingRenewals,
+    recurrings: recurrings.recurrings.length,
+    upcomingRecurrings: recurrings.recurrings.filter((r) => {
+      if (r.status === "cancelled" || !r.nextDueDate) return false;
+      const d = new Date(`${r.nextDueDate}T12:00:00`);
+      if (d < today) return r.status === "active";
+      return r.status === "active" && d >= today && d <= end;
+    }).length,
   });
 }

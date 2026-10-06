@@ -1,5 +1,5 @@
 import { stripHtml } from "./sanitize";
-import { Asset, Client, Project, SecretPublic, StoreData, Subscription } from "./types";
+import { Asset, Client, Project, Recurring, SecretPublic, StoreData, Subscription } from "./types";
 
 /** Extra workspace data for the rule-based assistant (secrets = metadata only). */
 export type AiExtras = {
@@ -9,6 +9,7 @@ export type AiExtras = {
   projects?: Project[];
   clients?: Client[];
   subscriptions?: Subscription[];
+  recurrings?: Recurring[];
 };
 
 function formatDate(isoDate: string): string {
@@ -59,6 +60,7 @@ export function answerQuery(
   const projects = extras.projects || [];
   const clients = extras.clients || [];
   const subscriptions = extras.subscriptions || [];
+  const recurrings = extras.recurrings || [];
 
   if (/list.*notes|my notes|show.*notes|what.*notes/.test(q)) {
     if (store.notes.length === 0) {
@@ -206,6 +208,47 @@ export function answerQuery(
     return { text: lines.join("\n"), title: "Upcoming renewals" };
   }
 
+  if (/list.*recurring|my recurring|show.*recurring|my subs\b|personal subs|list.*dues/.test(q)) {
+    if (recurrings.length === 0) {
+      return {
+        text: "You have no personal recurrings yet. Add one from Recurrings.",
+        title: "Your recurrings",
+      };
+    }
+    const lines = recurrings.map((r) => {
+      return `**${r.name}** · ${r.category} · ${r.amount} ${r.currency}/${r.billingPeriod} · due ${r.nextDueDate || "—"} · ${r.status}`;
+    });
+    return { text: lines.join("\n"), title: "Your recurrings" };
+  }
+
+  if (/upcoming dues|personal renewals|recurring dues/.test(q)) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const end = new Date(today);
+    end.setDate(end.getDate() + 30);
+    const rows = recurrings
+      .filter((r) => r.status === "active" && r.nextDueDate)
+      .map((r) => {
+        const d = new Date(`${r.nextDueDate}T12:00:00`);
+        const days = Math.round((d.getTime() - today.getTime()) / 86400000);
+        return { r, days };
+      })
+      .filter(({ days }) => days < 0 || (days >= 0 && days <= 30))
+      .sort((a, b) => a.days - b.days);
+    if (!rows.length) {
+      return {
+        text: "No personal dues in the next 30 days.",
+        title: "Upcoming dues",
+      };
+    }
+    const lines = rows.map(({ r, days }) => {
+      const when = days < 0 ? `overdue (${r.nextDueDate})` : `in ${days}d (${r.nextDueDate})`;
+      return `**${r.name}** · ${r.amount} ${r.currency} · ${when}`;
+    });
+    return { text: lines.join("\n"), title: "Upcoming dues" };
+  }
+
+
     if (/product planning|meeting.*product/.test(q)) {
     const m = store.meetings.find((x) => /product planning/i.test(x.title));
     if (m) {
@@ -236,6 +279,7 @@ export function answerQuery(
         `**Projects:** ${projects.length} (${projects.filter((p) => p.status === "in_progress").length} in progress · ${projects.filter((p) => p.status === "live").length} live)`,
         `**Clients:** ${clients.length}`,
         `**Subscriptions:** ${subscriptions.length}`,
+        `**Recurrings:** ${recurrings.length}`,
       ].join("\n"),
     };
   }
@@ -243,7 +287,7 @@ export function answerQuery(
   if (/hello|hi\b|hey|good morning|good evening/.test(q)) {
     return {
       title: "Hello",
-      text: `Hi ${store.profile.name.split(" ")[0]}. Ask me to list notes, tasks, meetings, thoughts, memories, assets, secrets, projects, or clients — or summarise your workspace.`,
+      text: `Hi ${store.profile.name.split(" ")[0]}. Ask me to list notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, or recurrings — or summarise your workspace.`,
     };
   }
 
@@ -261,6 +305,8 @@ export function answerQuery(
         "- List my projects",
         "- List my clients",
         "- Upcoming renewals",
+        "- List my recurrings",
+        "- Upcoming dues",
         "- At a glance",
         "- Tell me about Product planning",
       ].join("\n"),
@@ -322,6 +368,12 @@ export function answerQuery(
       hits.push(`Client · **${c.name}**${company}`);
     }
   }
+  for (const r of recurrings) {
+    const hay = `${r.name} ${r.category} ${r.notes} ${r.paymentMethod}`.toLowerCase();
+    if (hay.includes(q)) {
+      hits.push(`Recurring · **${r.name}** · ${r.amount} ${r.currency} due ${r.nextDueDate || "—"}`);
+    }
+  }
 
   if (hits.length) {
     return { title: "I found this", text: hits.join("\n") };
@@ -329,7 +381,7 @@ export function answerQuery(
 
   return {
     title: "Thinking…",
-    text: `I searched your notes, tasks, meetings, thoughts, memories, assets, secrets, projects, and clients but did not find a match for “${query}”. Try “List my notes”, “List my assets”, or “At a glance”.`,
+    text: `I searched your notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, and recurrings but did not find a match for “${query}”. Try “List my notes”, “List my assets”, or “At a glance”.`,
   };
 }
 
@@ -340,7 +392,7 @@ export function renderAnswerMarkdown(title: string | undefined, text: string): s
       let withBold = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
       // Safe internal markdown links e.g. [Open in Secrets](/secrets?id=...)
       withBold = withBold.replace(
-        /\[([^\]]+)\]\((\/(?:secrets|notes|assets|tasks|meetings|thoughts|memories|projects|clients|thinking-space|profile)[^)]*)\)/g,
+        /\[([^\]]+)\]\((\/(?:secrets|notes|assets|tasks|meetings|thoughts|memories|projects|clients|recurrings|thinking-space|profile)[^)]*)\)/g,
         '<a href="$2" class="text-forest font-medium underline decoration-sage-dark/50 hover:decoration-forest whitespace-nowrap">$1</a>'
       );
       if (withBold.startsWith("- ")) {

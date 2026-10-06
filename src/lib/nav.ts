@@ -10,6 +10,7 @@ import {
   ProjectIcon,
   TaskIcon,
   ThoughtIcon,
+  RecurringIcon,
 } from "@/components/Icons";
 
 export type NavItem = {
@@ -28,6 +29,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/memories", label: "Memories", shortLabel: "Memories", icon: MemoryIcon },
   { href: "/projects", label: "Projects", shortLabel: "Projects", icon: ProjectIcon },
   { href: "/clients", label: "Clients", shortLabel: "Clients", icon: ClientsIcon },
+  { href: "/recurrings", label: "Recurrings", shortLabel: "Recurring", icon: RecurringIcon },
   { href: "/assets", label: "Assets", shortLabel: "Assets", icon: AssetIcon },
   { href: "/secrets", label: "Secrets", shortLabel: "Secrets", icon: LockIcon },
   { href: "/profile", label: "Profile", shortLabel: "Profile", icon: ProfileIcon },

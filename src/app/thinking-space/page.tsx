@@ -19,6 +19,7 @@ import {
   LockIcon,
   ProjectIcon,
   ClientsIcon,
+  RecurringIcon,
 } from "@/components/Icons";
 import { ChatMessage, Profile } from "@/lib/types";
 import { plainFromHtml } from "@/lib/format";
@@ -31,6 +32,7 @@ type Stats = {
   secrets: number;
   projects: number;
   clients: number;
+  recurrings?: number;
   upcomingRenewals?: number;
 };
 
@@ -278,6 +280,12 @@ export default function ThinkingSpacePage() {
             icon={<ClientsIcon size={22} />}
             label={`${stats.clients ?? 0} Clients`}
             tone="bg-teal-soft"
+          />
+          <GlanceCard
+            href="/recurrings"
+            icon={<RecurringIcon size={22} />}
+            label={`${stats.recurrings ?? 0} Recurrings`}
+            tone="bg-white"
           />
         </div>
       </aside>

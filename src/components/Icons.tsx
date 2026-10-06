@@ -313,3 +313,14 @@ export function BackIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function RecurringIcon(props: IconProps) {
+  return (
+    <svg {...base(props)} viewBox="0 0 24 24">
+      <path d="M4 12a8 8 0 0 1 14-5.3" />
+      <path d="M18 4v4h-4" />
+      <path d="M20 12a8 8 0 0 1-14 5.3" />
+      <path d="M6 20v-4h4" />
+    </svg>
+  );
+}
