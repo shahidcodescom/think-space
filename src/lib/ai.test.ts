@@ -1,4 +1,7 @@
 import { answerQuery, renderAnswerMarkdown } from "./ai";
+import { looksLikeSecretMaterial, toSecretContextMeta } from "./secret-safe";
+import { buildCompactContext } from "./llm";
+import { collectWorkspaceChunks } from "./rag";
 import { Asset, Client, Project, SecretPublic, StoreData, Subscription } from "./types";
 
 const sample: StoreData = {
@@ -405,7 +408,7 @@ const librarySample = [
   },
 ];
 
-const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs, recurrings, finance: financeTx, belongings: belongingsSample, calendarEvents: calendarSample, jobs: jobsSample, skills: skillsSample, library: librarySample };
+const extras = { assets, secrets: secrets.map(toSecretContextMeta), projects, clients: billingClients, subscriptions: billingSubs, recurrings, finance: financeTx, belongings: belongingsSample, calendarEvents: calendarSample, jobs: jobsSample, skills: skillsSample, library: librarySample };
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);
@@ -463,7 +466,42 @@ assertNoSecretLeak(secretHit.text, "keyword secret");
 
 const html = renderAnswerMarkdown(secretsAns.title, secretsAns.text);
 assert(html.includes('href="/secrets?id=secret-1"'), "rendered clickable secret link");
+assert(!secretsAns.text.includes("Sample key for demos"), "secret notes must not appear in rule answers");
+assert(!looksLikeSecretMaterial(secretsAns.text), "rule answer must not look like secret material");
+const metaOnly = extras.secrets!.map(toSecretContextMeta);
+assert(metaOnly.every((s) => !("notes" in s) && !("tags" in s) && !("valueCiphertext" in s)), "meta strip");
+const ctx = buildCompactContext(sample, { ...extras, secrets: metaOnly });
+assert(!ctx.includes("Sample key"), "compact context excludes secret notes");
+assert(!ctx.includes("valueCiphertext"), "compact context excludes ciphertext field");
+assert(!looksLikeSecretMaterial(ctx), "compact context clean");
+
 assert(secretsAns.links && secretsAns.links.some((l) => l.href.startsWith("/secrets")), "structured secrets links");
+
+// Raw SecretRecord must never leak ciphertext/notes into RAG chunks
+const rawCipher = "YWJjZGVmZ2g=.aWprdWxtbm9w.cXJzdHV2d3h5ejEyMzQ1Njc4OTA=";
+const poisoned = {
+  id: "secret-poison",
+  name: "Poisoned",
+  category: "API Keys",
+  tags: ["leak-tag"],
+  notes: "Sample key for demos",
+  valueCiphertext: rawCipher,
+  valueFingerprint: "fp",
+  createdAt: "2026-10-01T10:00:00.000Z",
+  updatedAt: "2026-10-01T10:00:00.000Z",
+};
+const stripped = toSecretContextMeta(poisoned);
+assert(!("notes" in stripped) && !("tags" in stripped) && !("valueCiphertext" in stripped), "poison strip fields");
+const poisonExtras = { ...extras, secrets: [stripped] };
+const chunks = collectWorkspaceChunks(sample, poisonExtras, ["secrets"]);
+const joined = chunks.map((c) => `${c.title} ${c.text}`).join("\n");
+assert(joined.includes("Poisoned"), "rag chunk has name");
+assert(!joined.includes(rawCipher), "rag chunk excludes ciphertext");
+assert(!joined.includes("Sample key for demos"), "rag chunk excludes notes");
+assert(!joined.includes("leak-tag"), "rag chunk excludes tags");
+assert(!looksLikeSecretMaterial(joined), "rag chunk clean");
+assertNoSecretLeak(joined, "rag chunks");
+
 assert(notes.text.includes("Go to:") || (notes.links && notes.links.length > 0), "notes redirects");
 assertNoSecretLeak(html, "rendered html");
 

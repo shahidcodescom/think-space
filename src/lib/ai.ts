@@ -1,4 +1,8 @@
 import {
+  formatSecretMetaLine,
+  type SecretContextMeta,
+} from "./secret-safe";
+import {
   AnswerLink,
   appendGoToFooter,
   buildCatalog,
@@ -11,7 +15,7 @@ import {
 } from "./ai-links";
 import { stripHtml } from "./sanitize";
 import { Asset, Belonging, CalendarEvent, Client, FinanceFixedItem,
-  FinanceTransaction, JobApplication, LibraryItem, Project, Recurring, SecretPublic, Skill, StoreData, Subscription } from "./types";
+  FinanceTransaction, JobApplication, LibraryItem, Project, Recurring, Skill, StoreData, Subscription } from "./types";
 import { summarizeMonth } from "./finance-store";
 
 
@@ -26,8 +30,8 @@ export type AiAnswer = {
 /** Extra workspace data for the rule-based assistant (secrets = metadata only). */
 export type AiExtras = {
   assets?: Asset[];
-  /** Never include valueCiphertext or plaintext values. */
-  secrets?: SecretPublic[];
+  /** Allowlisted metadata only — never ciphertext, plaintext, notes, or tags. */
+  secrets?: SecretContextMeta[];
   projects?: Project[];
   clients?: Client[];
   subscriptions?: Subscription[];
@@ -65,11 +69,8 @@ function formatAssetLine(a: Asset): string {
   return `${bits.join(" · ")} — ${mdOpen("assets", a.id)}`;
 }
 
-function formatSecretLine(s: SecretPublic): string {
-  const tags = s.tags.length ? ` · ${s.tags.join(", ")}` : "";
-  const notes = s.notes ? `: ${s.notes}` : "";
-  // Metadata only + redirect into Secrets UI (never values)
-  return `**${s.name}** (${s.category})${tags}${notes} — ${mdOpen("secrets", s.id, "Open in Secrets")}`;
+function formatSecretLine(s: SecretContextMeta): string {
+  return formatSecretMetaLine(s, mdOpen("secrets", s.id, "Open in Secrets"));
 }
 
 function formatProjectLine(p: Project): string {
@@ -657,8 +658,8 @@ function computeAnswer(
     }
   }
   for (const s of secrets) {
-    // Metadata only — never search ciphertext/values (they are not present on SecretPublic)
-    const hay = `${s.name} ${s.category} ${s.tags.join(" ")} ${s.notes}`.toLowerCase();
+    // Metadata only — never notes/tags/ciphertext/values
+    const hay = `${s.name} ${s.category} ${s.id}`.toLowerCase();
     if (hay.includes(q)) {
       hits.push(`Secret · ${formatSecretLine(s)}`);
     }

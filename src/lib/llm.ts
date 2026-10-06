@@ -1,4 +1,5 @@
 import { AiExtras } from "./ai";
+import { formatSecretMetaCompact, toSecretContextMeta } from "./secret-safe";
 import { stripHtml } from "./sanitize";
 import { DEFAULT_BASE_URLS, DEFAULT_MODELS } from "./llm-defaults";
 import { migrateStaleModelId, normalizeGeminiModelId } from "./llm-model-ids";
@@ -217,12 +218,12 @@ export function buildCompactContext(
           .join(" | ")
     );
   }
-  // Secrets: names/categories only — never values
+  // Secrets: allowlisted metadata only — never values, notes, tags, or ciphertext
   if (secrets.length) {
     lines.push(
-      "Secrets (names only, no values): " +
+      "Secrets (metadata only — open in app to reveal): " +
         take(secrets, 10)
-          .map((s) => `${s.name} [${s.category}]`)
+          .map((s) => formatSecretMetaCompact(toSecretContextMeta(s)))
           .join(" | ")
     );
   }
@@ -235,7 +236,7 @@ export function buildCompactContext(
 const DEFAULT_SYSTEM_PROMPT = `You are the Thinking space assistant for Bi-Polar, a personal workspace app.
 Answer helpfully and concisely using the workspace context provided.
 Rules:
-- Never invent secret values, passwords, or API keys. Secrets are listed by name only; tell the user to open Secrets in the app to reveal values.
+- Never invent or request secret values, passwords, API keys, or ciphertext. Secrets appear as metadata only (name, category, id). Tell the user to open Secrets in the app to reveal values. Never echo anything that looks like a key or ciphertext.
 - Prefer concrete references to items in the context (notes, tasks, jobs, etc.).
 - When you mention a workspace item, add a markdown link so the user can open it, e.g. [Open](/notes?id=NOTE_ID) or [Open Notes](/notes). Only use app paths: /notes /tasks /meetings /thoughts /memories /secrets /assets /projects /clients /recurrings /finance /belongings /calendar /jobs /skills /library.
 - If context is insufficient, say what you know and suggest which section to check.

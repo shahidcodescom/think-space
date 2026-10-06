@@ -19,29 +19,7 @@ import {
 } from "@/lib/llm";
 import { buildThinkingRagContext } from "@/lib/rag";
 import { nowIso, readStore, uid, writeStore } from "@/lib/store";
-import { SecretPublic } from "@/lib/types";
-
-function toSecretPublic(s: {
-  id: string;
-  name: string;
-  category: string;
-  tags: string[];
-  notes: string;
-  valueCiphertext: string;
-  createdAt: string;
-  updatedAt: string;
-}): SecretPublic {
-  return {
-    id: s.id,
-    name: s.name,
-    category: s.category,
-    tags: s.tags,
-    notes: s.notes,
-    hasValue: Boolean(s.valueCiphertext),
-    createdAt: s.createdAt,
-    updatedAt: s.updatedAt,
-  };
-}
+import { toSecretContextMeta } from "@/lib/secret-safe";
 
 export async function GET() {
   const store = await readStore();
@@ -87,7 +65,7 @@ export async function POST(req: NextRequest) {
 
   const extras: AiExtras = {
     assets: assetsFile.assets,
-    secrets: secretsFile.secrets.map(toSecretPublic),
+    secrets: secretsFile.secrets.map(toSecretContextMeta),
     projects: projectsFile.projects,
     clients: clientsFile.clients,
     subscriptions: clientsFile.subscriptions,

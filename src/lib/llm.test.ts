@@ -109,10 +109,7 @@ async function main() {
         id: "s1",
         name: "Demo API key",
         category: "api",
-        tags: [],
-        notes: "",
         hasValue: true,
-        createdAt: "2026-01-01T00:00:00.000Z",
         updatedAt: "2026-01-01T00:00:00.000Z",
       },
     ],
@@ -123,7 +120,7 @@ async function main() {
   assert.match(ctx, /Database backup/);
   assert.match(ctx, /Update docs/);
   assert.match(ctx, /Demo API key/);
-  assert.match(ctx, /names only/);
+  assert.match(ctx, /metadata only/);
   assert.match(ctx, /Bi-Polar/);
   assert.doesNotMatch(ctx, /sk-live|password123|secret-value/i);
 

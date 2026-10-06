@@ -1,4 +1,5 @@
 import { AiExtras } from "./ai";
+import { toSecretContextMeta } from "./secret-safe";
 import { stripHtml } from "./sanitize";
 import { StoreData } from "./types";
 
@@ -92,11 +93,13 @@ export function collectWorkspaceChunks(
     });
   }
   for (const s of extras.secrets || []) {
+    const meta = toSecretContextMeta(s);
     push({
       module: "secrets",
-      id: s.id,
-      title: s.name,
-      text: `${s.name} [${s.category}] ${s.notes || ""} (value hidden)`,
+      id: meta.id,
+      title: meta.name,
+      // Metadata only — never notes, tags, values, or ciphertext
+      text: `${meta.name} [${meta.category}] id=${meta.id} updated=${meta.updatedAt.slice(0, 10)} (value not included — open Secrets)`,
     });
   }
   for (const a of extras.assets || []) {

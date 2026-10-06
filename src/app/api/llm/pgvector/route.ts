@@ -19,6 +19,7 @@ import {
 import { readLlmSettings } from "@/lib/llm-store";
 import { readStore } from "@/lib/store";
 import type { AiExtras } from "@/lib/ai";
+import { toSecretContextMeta } from "@/lib/secret-safe";
 
 async function loadExtras(): Promise<{ store: Awaited<ReturnType<typeof readStore>>; extras: AiExtras }> {
   const [
@@ -52,16 +53,7 @@ async function loadExtras(): Promise<{ store: Awaited<ReturnType<typeof readStor
     store,
     extras: {
       assets: assetsFile.assets,
-      secrets: secretsFile.secrets.map((s) => ({
-        id: s.id,
-        name: s.name,
-        category: s.category,
-        tags: s.tags,
-        notes: s.notes,
-        hasValue: Boolean(s.valueCiphertext),
-        createdAt: s.createdAt,
-        updatedAt: s.updatedAt,
-      })),
+      secrets: secretsFile.secrets.map(toSecretContextMeta),
       projects: projectsFile.projects,
       clients: clientsFile.clients,
       subscriptions: clientsFile.subscriptions,
