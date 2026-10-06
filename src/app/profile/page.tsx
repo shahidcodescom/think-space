@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { LockIcon } from "@/components/Icons";
+import { ToggleSwitch } from "@/components/ToggleSwitch";
 import {
   DEFAULT_MODELS,
   LLM_PROVIDERS,
@@ -146,17 +147,11 @@ export default function ProfilePage() {
           </select>
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-forest/80">
-          <input
-            type="checkbox"
-            className="accent-forest"
-            checked={profile.readAloud}
-            onChange={(e) =>
-              setProfile({ ...profile, readAloud: e.target.checked })
-            }
-          />
-          Read replies aloud in Thinking space
-        </label>
+        <ToggleSwitch
+          checked={profile.readAloud}
+          onChange={(readAloud) => setProfile({ ...profile, readAloud })}
+          label="Read replies aloud in Thinking space"
+        />
 
         <div className="flex items-center gap-3 pt-2">
           <button type="submit" className="btn-primary" disabled={busy}>
@@ -178,17 +173,11 @@ export default function ProfilePage() {
 
         {llm ? (
           <>
-            <label className="flex items-center gap-2 text-sm text-forest/80">
-              <input
-                type="checkbox"
-                className="accent-forest"
-                checked={llm.enabled}
-                onChange={(e) =>
-                  setLlm({ ...llm, enabled: e.target.checked })
-                }
-              />
-              Enable LLM for Thinking space
-            </label>
+            <ToggleSwitch
+              checked={llm.enabled}
+              onChange={(enabled) => setLlm({ ...llm, enabled })}
+              label="Enable LLM for Thinking space"
+            />
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">

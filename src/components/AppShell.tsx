@@ -27,9 +27,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-[100dvh] flex bg-cream overflow-x-hidden">
+    <div className="h-[100dvh] flex bg-cream overflow-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0 min-h-[100dvh] md:pl-56 lg:pl-60">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full md:pl-56 lg:pl-60">
         {/* Compact mobile top bar — title only (nav is bottom tabs) */}
         <header
           className="md:hidden sticky top-0 z-30 flex items-center gap-3 px-4 bg-cream/95 backdrop-blur-lg border-b border-forest/5"
@@ -53,7 +53,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 min-w-0 w-full pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0">
+        <main className="flex-1 min-h-0 min-w-0 w-full overflow-y-auto pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0">
           {children}
         </main>
       </div>
