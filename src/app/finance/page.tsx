@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { SearchableSelect } from "@/components/SearchableSelect";
+import { ToggleSwitch } from "@/components/ToggleSwitch";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import {
   FinanceIcon,
@@ -13,6 +15,8 @@ import {
 } from "@/components/Icons";
 import { formatDisplayDate } from "@/lib/format";
 import {
+  FinanceFixedItem,
+  FinanceFixedKind,
   FinanceSettleStatus,
   FinanceTransaction,
   FinanceTxType,
@@ -21,7 +25,6 @@ import {
 
 const TYPES: FinanceTxType[] = ["income", "expense", "lend", "due"];
 const STATUSES: FinanceSettleStatus[] = ["open", "partial", "settled"];
-
 const CATEGORIES = [
   "Salary",
   "Freelance",
@@ -59,11 +62,35 @@ const emptyForm: FormState = {
   linkedRecurringId: "",
 };
 
+type FixedForm = {
+  kind: FinanceFixedKind;
+  name: string;
+  amount: string;
+  currency: string;
+  category: string;
+  notes: string;
+  active: boolean;
+};
+
+const emptyFixed: FixedForm = {
+  kind: "expense",
+  name: "",
+  amount: "",
+  currency: "INR",
+  category: "Other",
+  notes: "",
+  active: true,
+};
+
 type MonthSummary = {
   month: string;
   income: number;
   expenses: number;
   net: number;
+  txnIncome: number;
+  txnExpenses: number;
+  fixedIncome: number;
+  fixedExpenses: number;
   outstandingLends: number;
   outstandingDues: number;
   openLendCount: number;
@@ -111,9 +138,13 @@ function shiftMonth(ym: string, delta: number) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+const fieldLabel =
+  "block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5";
+
 export default function FinancePage() {
   const confirm = useConfirm();
   const [all, setAll] = useState<FinanceTransaction[]>([]);
+  const [fixedItems, setFixedItems] = useState<FinanceFixedItem[]>([]);
   const [recurrings, setRecurrings] = useState<Recurring[]>([]);
   const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [summary, setSummary] = useState<MonthSummary | null>(null);
@@ -128,17 +159,25 @@ export default function FinancePage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [repayAmount, setRepayAmount] = useState("");
 
+  const [fixedModalOpen, setFixedModalOpen] = useState(false);
+  const [fixedEdit, setFixedEdit] = useState<FinanceFixedItem | null>(null);
+  const [fixedForm, setFixedForm] = useState<FixedForm>(emptyFixed);
+  const [fixedError, setFixedError] = useState<string | null>(null);
+  const [manageFixedOpen, setManageFixedOpen] = useState(false);
+
   const reload = useCallback(async () => {
-    const [allRes, sumRes, rRes] = await Promise.all([
+    const [allRes, sumRes, rRes, fixedRes] = await Promise.all([
       fetch("/api/finance"),
       fetch(`/api/finance?summary=1&month=${month}`),
       fetch("/api/recurrings"),
+      fetch("/api/finance/fixed"),
     ]);
     const items: FinanceTransaction[] = await allRes.json();
     const sumData = await sumRes.json();
     setAll(items);
     setSummary(sumData.summary || null);
     setRecurrings(await rRes.json());
+    if (fixedRes.ok) setFixedItems(await fixedRes.json());
     setSelectedId((prev) => {
       if (prev && items.some((t) => t.id === prev)) return prev;
       const inMonth = items.filter((t) => t.date.startsWith(month));
@@ -156,11 +195,14 @@ export default function FinancePage() {
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter((t) =>
-        `${t.category} ${t.counterparty} ${t.notes} ${t.type}`.toLowerCase().includes(q)
+        `${t.category} ${t.counterparty} ${t.notes} ${t.type}`
+          .toLowerCase()
+          .includes(q)
       );
     }
     return list.sort(
-      (a, b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt)
+      (a, b) =>
+        b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt)
     );
   }, [all, month, typeFilter, query]);
 
@@ -173,18 +215,54 @@ export default function FinancePage() {
     [all]
   );
 
+  const fixedIncomes = useMemo(
+    () => fixedItems.filter((f) => f.kind === "income"),
+    [fixedItems]
+  );
+  const fixedExpenses = useMemo(
+    () => fixedItems.filter((f) => f.kind === "expense"),
+    [fixedItems]
+  );
+
+  const categoryOptions = useMemo(() => {
+    const names = new Set(CATEGORIES);
+    for (const t of all) if (t.category) names.add(t.category);
+    for (const f of fixedItems) if (f.category) names.add(f.category);
+    return Array.from(names)
+      .sort((a, b) => a.localeCompare(b))
+      .map((c) => ({ value: c, label: c }));
+  }, [all, fixedItems]);
+
+  const typeOptions = [
+    { value: "", label: "All types" },
+    ...TYPES.map((t) => ({ value: t, label: typeLabel(t) })),
+  ];
+  const formTypeOptions = TYPES.map((t) => ({
+    value: t,
+    label: typeLabel(t),
+  }));
+  const statusOptions = STATUSES.map((s) => ({
+    value: s,
+    label: s.charAt(0).toUpperCase() + s.slice(1),
+  }));
+  const recurringOptions = [
+    { value: "", label: "None" },
+    ...recurrings.map((r) => ({ value: r.id, label: r.name })),
+  ];
+  const fixedKindOptions = [
+    { value: "expense", label: "Fixed expense" },
+    { value: "income", label: "Fixed income" },
+  ];
+
   const selected = all.find((t) => t.id === selectedId) || null;
 
   function openCreate(type: FinanceTxType = "expense") {
     setEditing(null);
+    const today = new Date().toISOString().slice(0, 10);
     setForm({
       ...emptyForm,
       type,
-      date: `${month}-01`.slice(0, 7) === month
-        ? new Date().toISOString().slice(0, 10).startsWith(month)
-          ? new Date().toISOString().slice(0, 10)
-          : `${month}-15`
-        : `${month}-15`,
+      date: today.startsWith(month) ? today : `${month}-15`,
     });
     setError(null);
     setModalOpen(true);
@@ -252,7 +330,14 @@ export default function FinancePage() {
   }
 
   async function remove(t: FinanceTransaction) {
-    if (!(await confirm({ title: "Delete transaction?", message: `Delete this ${t.type}?`, confirmLabel: "Delete" }))) return;
+    if (
+      !(await confirm({
+        title: "Delete transaction?",
+        message: `Delete this ${t.type}?`,
+        confirmLabel: "Delete",
+      }))
+    )
+      return;
     await fetch(`/api/finance/${t.id}`, { method: "DELETE" });
     if (selectedId === t.id) setSelectedId(null);
     setMobileDetail(false);
@@ -289,37 +374,136 @@ export default function FinancePage() {
     await reload();
   }
 
-  const showList = !mobileDetail;
+  function openFixedCreate(kind: FinanceFixedKind = "expense") {
+    setFixedEdit(null);
+    setFixedForm({ ...emptyFixed, kind });
+    setFixedError(null);
+    setFixedModalOpen(true);
+  }
+
+  function openFixedEdit(item: FinanceFixedItem) {
+    setFixedEdit(item);
+    setFixedForm({
+      kind: item.kind,
+      name: item.name,
+      amount: String(item.amount),
+      currency: item.currency,
+      category: item.category,
+      notes: item.notes,
+      active: item.active,
+    });
+    setFixedError(null);
+    setFixedModalOpen(true);
+  }
+
+  async function saveFixed(e: React.FormEvent) {
+    e.preventDefault();
+    setFixedError(null);
+    const amount = Number(fixedForm.amount);
+    if (!fixedForm.name.trim()) {
+      setFixedError("Name is required");
+      return;
+    }
+    if (!Number.isFinite(amount) || amount < 0) {
+      setFixedError("Enter a valid amount");
+      return;
+    }
+    const payload = {
+      kind: fixedForm.kind,
+      name: fixedForm.name.trim(),
+      amount,
+      currency: fixedForm.currency,
+      category: fixedForm.category,
+      notes: fixedForm.notes,
+      active: fixedForm.active,
+    };
+    const res = fixedEdit
+      ? await fetch(`/api/finance/fixed/${fixedEdit.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+      : await fetch("/api/finance/fixed", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      setFixedError(err.error || "Save failed");
+      return;
+    }
+    setFixedModalOpen(false);
+    await reload();
+  }
+
+  async function toggleFixedActive(item: FinanceFixedItem, active: boolean) {
+    await fetch(`/api/finance/fixed/${item.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active }),
+    });
+    await reload();
+  }
+
+  async function removeFixed(item: FinanceFixedItem) {
+    if (
+      !(await confirm({
+        title: "Delete fixed item?",
+        message: `Delete monthly ${item.kind} “${item.name}”?`,
+        confirmLabel: "Delete",
+      }))
+    )
+      return;
+    await fetch(`/api/finance/fixed/${item.id}`, { method: "DELETE" });
+    await reload();
+  }
+
   const showDetail = mobileDetail;
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4 p-4 md:p-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sage-muted text-forest">
+    <div className="page-shell h-full min-h-0 flex flex-col gap-4 overflow-hidden">
+      <header className="page-header shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sage-muted text-forest shrink-0">
             <FinanceIcon size={22} />
           </div>
-          <div>
-            <h1 className="font-serif text-2xl text-forest md:text-3xl">Finance</h1>
-            <p className="text-sm text-forest/60">
-              Income, expenses, lends &amp; dues
+          <div className="min-w-0">
+            <h1 className="section-title">Finance.</h1>
+            <p className="text-forest/55 mt-1 text-sm">
+              Income, expenses, lends, dues &amp; monthly fixed amounts.
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button className="btn-ghost" onClick={() => openCreate("income")}>
+        <div className="flex flex-wrap gap-2 shrink-0">
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => setManageFixedOpen(true)}
+          >
+            Fixed monthly
+          </button>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => openCreate("income")}
+          >
             + Income
           </button>
-          <button className="btn-primary" onClick={() => openCreate("expense")}>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => openCreate("expense")}
+          >
             <PlusIcon size={16} /> Expense
           </button>
         </div>
       </header>
 
-      {/* Month selector + totals */}
-      <section className="rounded-2xl border border-forest/10 bg-white p-4 shadow-sm">
+      <section className="card p-4 shrink-0">
         <div className="mb-4 flex items-center justify-between gap-2">
           <button
+            type="button"
             className="btn-ghost px-3 py-1.5"
             onClick={() => setMonth((m) => shiftMonth(m, -1))}
             aria-label="Previous month"
@@ -328,6 +512,7 @@ export default function FinancePage() {
           </button>
           <p className="font-serif text-lg text-forest">{monthLabel(month)}</p>
           <button
+            type="button"
             className="btn-ghost px-3 py-1.5"
             onClick={() => setMonth((m) => shiftMonth(m, 1))}
             aria-label="Next month"
@@ -339,11 +524,21 @@ export default function FinancePage() {
           <StatCard
             label="Income"
             value={money(summary?.income ?? 0)}
+            hint={
+              summary
+                ? `txns ${money(summary.txnIncome)} + fixed ${money(summary.fixedIncome)}`
+                : undefined
+            }
             tone="bg-sage-muted/60"
           />
           <StatCard
             label="Expenses"
             value={money(summary?.expenses ?? 0)}
+            hint={
+              summary
+                ? `txns ${money(summary.txnExpenses)} + fixed ${money(summary.fixedExpenses)}`
+                : undefined
+            }
             tone="bg-peach-soft/60"
           />
           <StatCard
@@ -382,35 +577,38 @@ export default function FinancePage() {
       </section>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
-        {/* List */}
         <div
           className={`flex min-h-0 w-full flex-col gap-3 lg:w-[42%] ${
             showDetail ? "hidden lg:flex" : "flex"
-          } ${showList ? "" : ""}`}
+          }`}
         >
-          <div className="flex flex-wrap gap-2">
-            <select
-              className="input max-w-[9rem]"
+          <div className="flex flex-wrap gap-2 items-center">
+            <SearchableSelect
+              className="w-40"
+              options={typeOptions}
               value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-            >
-              <option value="">All types</option>
-              {TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {typeLabel(t)}
-                </option>
-              ))}
-            </select>
+              onChange={setTypeFilter}
+              placeholder="All types"
+              aria-label="Filter by type"
+            />
             <input
-              className="input flex-1 min-w-[8rem]"
+              className="input-field flex-1 min-w-[8rem]"
               placeholder="Search…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-            <button className="btn-ghost text-sm" onClick={() => openCreate("lend")}>
+            <button
+              type="button"
+              className="btn-ghost text-sm"
+              onClick={() => openCreate("lend")}
+            >
               + Lend
             </button>
-            <button className="btn-ghost text-sm" onClick={() => openCreate("due")}>
+            <button
+              type="button"
+              className="btn-ghost text-sm"
+              onClick={() => openCreate("due")}
+            >
               + Due
             </button>
           </div>
@@ -430,7 +628,9 @@ export default function FinancePage() {
                   <span>
                     Lend · <strong>{t.counterparty || t.category}</strong>
                   </span>
-                  <span className="font-medium">{money(remaining(t), t.currency)}</span>
+                  <span className="font-medium">
+                    {money(remaining(t), t.currency)}
+                  </span>
                 </button>
               ))}
               {openDues.slice(0, 3).map((t) => (
@@ -446,16 +646,20 @@ export default function FinancePage() {
                   <span>
                     Due · <strong>{t.counterparty || t.category}</strong>
                   </span>
-                  <span className="font-medium">{money(remaining(t), t.currency)}</span>
+                  <span className="font-medium">
+                    {money(remaining(t), t.currency)}
+                  </span>
                 </button>
               ))}
             </div>
           )}
 
-          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pb-4">
+          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto scroll-thin pb-4">
             {monthItems.length === 0 && (
-              <p className="rounded-xl border border-dashed border-forest/15 bg-white p-6 text-center text-sm text-forest/50">
-                No transactions in {monthLabel(month)}. Add income or an expense.
+              <p className="card p-6 text-center text-sm text-forest/50 border-dashed">
+                No transactions in {monthLabel(month)}. Add income or an
+                expense — fixed monthly amounts still count in the totals
+                above.
               </p>
             )}
             {monthItems.map((t) => (
@@ -466,7 +670,7 @@ export default function FinancePage() {
                   setSelectedId(t.id);
                   setMobileDetail(true);
                 }}
-                className={`flex w-full items-start justify-between gap-3 rounded-xl border px-3 py-3 text-left transition ${
+                className={`flex w-full items-start justify-between gap-3 rounded-xl border px-3 py-3 text-left transition min-h-[52px] ${
                   selectedId === t.id
                     ? "border-sage bg-sage-muted"
                     : "border-forest/5 bg-white hover:border-sage/60"
@@ -491,15 +695,7 @@ export default function FinancePage() {
                     {t.status ? ` · ${t.status}` : ""}
                   </p>
                 </div>
-                <span
-                  className={`shrink-0 font-medium ${
-                    t.type === "income"
-                      ? "text-emerald-800"
-                      : t.type === "expense"
-                        ? "text-forest"
-                        : "text-forest"
-                  }`}
-                >
+                <span className="shrink-0 font-medium text-forest">
                   {t.type === "income" ? "+" : t.type === "expense" ? "−" : ""}
                   {money(t.amount, t.currency)}
                 </span>
@@ -508,11 +704,10 @@ export default function FinancePage() {
           </div>
         </div>
 
-        {/* Detail */}
         <div
           className={`min-h-0 flex-1 ${
             showDetail ? "flex" : "hidden lg:flex"
-          } flex-col rounded-2xl border border-forest/10 bg-white p-4 shadow-sm md:p-6`}
+          } flex-col card p-4 md:p-6 overflow-y-auto scroll-thin`}
         >
           <div className="mb-3 lg:hidden">
             <MobileBackButton
@@ -540,10 +735,15 @@ export default function FinancePage() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <button className="btn-ghost" onClick={() => openEdit(selected)}>
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => openEdit(selected)}
+                  >
                     <PencilIcon size={16} /> Edit
                   </button>
                   <button
+                    type="button"
                     className="btn-ghost text-red-700"
                     onClick={() => remove(selected)}
                   >
@@ -554,15 +754,15 @@ export default function FinancePage() {
 
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                 <Field label="Date" value={formatDisplayDate(selected.date)} />
-                <Field
-                  label="Status"
-                  value={selected.status || "—"}
-                />
+                <Field label="Status" value={selected.status || "—"} />
                 {(selected.type === "lend" || selected.type === "due") && (
                   <>
                     <Field
                       label="Settled"
-                      value={money(selected.amountSettled || 0, selected.currency)}
+                      value={money(
+                        selected.amountSettled || 0,
+                        selected.currency
+                      )}
                     />
                     <Field
                       label="Remaining"
@@ -593,9 +793,9 @@ export default function FinancePage() {
                     <p className="text-sm font-medium text-forest">
                       Settlement
                     </p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 items-center">
                       <input
-                        className="input w-32"
+                        className="input-field w-32"
                         type="number"
                         min="0"
                         step="1"
@@ -604,6 +804,7 @@ export default function FinancePage() {
                         onChange={(e) => setRepayAmount(e.target.value)}
                       />
                       <button
+                        type="button"
                         className="btn-ghost"
                         disabled={busyId === selected.id}
                         onClick={() => repay(selected)}
@@ -611,6 +812,7 @@ export default function FinancePage() {
                         Record repayment
                       </button>
                       <button
+                        type="button"
                         className="btn-primary"
                         disabled={busyId === selected.id}
                         onClick={() => settle(selected)}
@@ -619,7 +821,9 @@ export default function FinancePage() {
                       </button>
                     </div>
                     {error && (
-                      <p className="text-sm text-red-700">{error}</p>
+                      <p className="text-sm text-red-700" role="alert">
+                        {error}
+                      </p>
                     )}
                   </div>
                 )}
@@ -632,85 +836,79 @@ export default function FinancePage() {
         </div>
       </div>
 
+      {/* Transaction modal */}
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         title={editing ? "Edit transaction" : "New transaction"}
       >
         <form onSubmit={save} className="space-y-3">
-          <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Type</span>
-            <select
-              className="input w-full"
+          <div>
+            <label className={fieldLabel}>Type</label>
+            <SearchableSelect
+              options={formTypeOptions}
               value={form.type}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, type: e.target.value as FinanceTxType }))
+              onChange={(type) =>
+                setForm((f) => ({ ...f, type: type as FinanceTxType }))
               }
-            >
-              {TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {typeLabel(t)}
-                </option>
-              ))}
-            </select>
-          </label>
+              aria-label="Type"
+              required
+            />
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Amount</span>
+            <div>
+              <label className={fieldLabel}>Amount</label>
               <input
-                className="input w-full"
+                className="input-field"
                 type="number"
                 min="0"
                 step="1"
                 required
                 value={form.amount}
-                onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, amount: e.target.value }))
+                }
               />
-            </label>
-            <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Currency</span>
+            </div>
+            <div>
+              <label className={fieldLabel}>Currency</label>
               <input
-                className="input w-full"
+                className="input-field"
                 value={form.currency}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, currency: e.target.value }))
                 }
               />
-            </label>
+            </div>
           </div>
-          <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Date</span>
+          <div>
+            <label className={fieldLabel}>Date</label>
             <input
-              className="input w-full"
+              className="input-field"
               type="date"
               required
               value={form.date}
               onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
             />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Category</span>
-            <input
-              className="input w-full"
-              list="finance-cats"
+          </div>
+          <div>
+            <label className={fieldLabel}>Category</label>
+            <SearchableSelect
+              options={categoryOptions}
               value={form.category}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, category: e.target.value }))
-              }
+              onChange={(category) => setForm((f) => ({ ...f, category }))}
+              placeholder="Search categories…"
+              aria-label="Category"
+              required
             />
-            <datalist id="finance-cats">
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c} />
-              ))}
-            </datalist>
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">
+          </div>
+          <div>
+            <label className={fieldLabel}>
               Counterparty
               {(form.type === "lend" || form.type === "due") && " (required)"}
-            </span>
+            </label>
             <input
-              className="input w-full"
+              className="input-field"
               value={form.counterparty}
               onChange={(e) =>
                 setForm((f) => ({ ...f, counterparty: e.target.value }))
@@ -723,54 +921,48 @@ export default function FinancePage() {
                     : "Optional"
               }
             />
-          </label>
+          </div>
           {(form.type === "lend" || form.type === "due") && (
-            <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Status</span>
-              <select
-                className="input w-full"
+            <div>
+              <label className={fieldLabel}>Status</label>
+              <SearchableSelect
+                options={statusOptions}
                 value={form.status}
-                onChange={(e) =>
+                onChange={(status) =>
                   setForm((f) => ({
                     ...f,
-                    status: e.target.value as FinanceSettleStatus,
+                    status: status as FinanceSettleStatus,
                   }))
                 }
-              >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </label>
+                aria-label="Status"
+              />
+            </div>
           )}
-          <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Linked recurring</span>
-            <select
-              className="input w-full"
+          <div>
+            <label className={fieldLabel}>Linked recurring</label>
+            <SearchableSelect
+              options={recurringOptions}
               value={form.linkedRecurringId}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, linkedRecurringId: e.target.value }))
+              onChange={(linkedRecurringId) =>
+                setForm((f) => ({ ...f, linkedRecurringId }))
               }
-            >
-              <option value="">None</option>
-              {recurrings.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Notes</span>
+              placeholder="None"
+              aria-label="Linked recurring"
+            />
+          </div>
+          <div>
+            <label className={fieldLabel}>Notes</label>
             <textarea
-              className="input min-h-[4rem] w-full"
+              className="input-field min-h-[80px]"
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
             />
-          </label>
-          {error && <p className="text-sm text-red-700">{error}</p>}
+          </div>
+          {error && (
+            <p className="text-sm text-red-700" role="alert">
+              {error}
+            </p>
+          )}
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
@@ -785,6 +977,216 @@ export default function FinancePage() {
           </div>
         </form>
       </Modal>
+
+      {/* Manage fixed monthly */}
+      <Modal
+        open={manageFixedOpen}
+        onClose={() => setManageFixedOpen(false)}
+        title="Monthly fixed amounts"
+      >
+        <div className="space-y-5">
+          <p className="text-sm text-forest/60">
+            Active fixed incomes and expenses are added to every month&apos;s
+            totals (on top of one-off transactions).
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => openFixedCreate("income")}
+            >
+              <PlusIcon size={16} /> Fixed income
+            </button>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => openFixedCreate("expense")}
+            >
+              <PlusIcon size={16} /> Fixed expense
+            </button>
+          </div>
+
+          <FixedList
+            title="Fixed incomes"
+            items={fixedIncomes}
+            onToggle={toggleFixedActive}
+            onEdit={openFixedEdit}
+            onDelete={removeFixed}
+          />
+          <FixedList
+            title="Fixed expenses"
+            items={fixedExpenses}
+            onToggle={toggleFixedActive}
+            onEdit={openFixedEdit}
+            onDelete={removeFixed}
+          />
+        </div>
+      </Modal>
+
+      <Modal
+        open={fixedModalOpen}
+        onClose={() => setFixedModalOpen(false)}
+        title={fixedEdit ? "Edit fixed amount" : "New fixed amount"}
+      >
+        <form onSubmit={saveFixed} className="space-y-3">
+          <div>
+            <label className={fieldLabel}>Kind</label>
+            <SearchableSelect
+              options={fixedKindOptions}
+              value={fixedForm.kind}
+              onChange={(kind) =>
+                setFixedForm((f) => ({ ...f, kind: kind as FinanceFixedKind }))
+              }
+              aria-label="Kind"
+              required
+            />
+          </div>
+          <div>
+            <label className={fieldLabel}>Name</label>
+            <input
+              className="input-field"
+              required
+              value={fixedForm.name}
+              onChange={(e) =>
+                setFixedForm((f) => ({ ...f, name: e.target.value }))
+              }
+              placeholder="e.g. Rent, Side retainer"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={fieldLabel}>Amount / month</label>
+              <input
+                className="input-field"
+                type="number"
+                min="0"
+                step="1"
+                required
+                value={fixedForm.amount}
+                onChange={(e) =>
+                  setFixedForm((f) => ({ ...f, amount: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label className={fieldLabel}>Currency</label>
+              <input
+                className="input-field"
+                value={fixedForm.currency}
+                onChange={(e) =>
+                  setFixedForm((f) => ({ ...f, currency: e.target.value }))
+                }
+              />
+            </div>
+          </div>
+          <div>
+            <label className={fieldLabel}>Category</label>
+            <SearchableSelect
+              options={categoryOptions}
+              value={fixedForm.category}
+              onChange={(category) =>
+                setFixedForm((f) => ({ ...f, category }))
+              }
+              aria-label="Category"
+              required
+            />
+          </div>
+          <div>
+            <label className={fieldLabel}>Notes</label>
+            <textarea
+              className="input-field min-h-[80px]"
+              value={fixedForm.notes}
+              onChange={(e) =>
+                setFixedForm((f) => ({ ...f, notes: e.target.value }))
+              }
+            />
+          </div>
+          <ToggleSwitch
+            checked={fixedForm.active}
+            onChange={(active) => setFixedForm((f) => ({ ...f, active }))}
+            label="Include in monthly totals"
+          />
+          {fixedError && (
+            <p className="text-sm text-red-700" role="alert">
+              {fixedError}
+            </p>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => setFixedModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary">
+              {fixedEdit ? "Save" : "Add"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+}
+
+function FixedList({
+  title,
+  items,
+  onToggle,
+  onEdit,
+  onDelete,
+}: {
+  title: string;
+  items: FinanceFixedItem[];
+  onToggle: (item: FinanceFixedItem, active: boolean) => void;
+  onEdit: (item: FinanceFixedItem) => void;
+  onDelete: (item: FinanceFixedItem) => void;
+}) {
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-forest/60 mb-2">{title}</h3>
+      <ul className="card divide-y divide-forest/5">
+        {items.map((item) => (
+          <li
+            key={item.id}
+            className="flex flex-wrap items-center gap-2 px-3 py-2.5 min-h-[52px]"
+          >
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-forest truncate">
+                {item.name}
+              </p>
+              <p className="text-xs text-forest/45">
+                {item.category} · {money(item.amount, item.currency)}/mo
+              </p>
+            </div>
+            <ToggleSwitch
+              checked={item.active}
+              onChange={(active) => onToggle(item, active)}
+              label={item.active ? "On" : "Off"}
+              className="min-h-[36px] text-xs"
+            />
+            <button
+              type="button"
+              className="btn-ghost shrink-0"
+              aria-label={`Edit ${item.name}`}
+              onClick={() => onEdit(item)}
+            >
+              <PencilIcon size={14} />
+            </button>
+            <button
+              type="button"
+              className="btn-ghost shrink-0 text-red-700"
+              aria-label={`Delete ${item.name}`}
+              onClick={() => onDelete(item)}
+            >
+              <TrashIcon size={14} />
+            </button>
+          </li>
+        ))}
+        {items.length === 0 && (
+          <li className="px-3 py-4 text-sm text-forest/40">None yet.</li>
+        )}
+      </ul>
     </div>
   );
 }
@@ -792,16 +1194,23 @@ export default function FinancePage() {
 function StatCard({
   label,
   value,
+  hint,
   tone,
 }: {
   label: string;
   value: string;
+  hint?: string;
   tone: string;
 }) {
   return (
     <div className={`rounded-xl px-3 py-3 ${tone}`}>
-      <p className="text-[11px] uppercase tracking-wide text-forest/50">{label}</p>
+      <p className="text-[11px] uppercase tracking-wide text-forest/50">
+        {label}
+      </p>
       <p className="mt-0.5 font-serif text-lg text-forest md:text-xl">{value}</p>
+      {hint && (
+        <p className="mt-0.5 text-[10px] text-forest/45 leading-snug">{hint}</p>
+      )}
     </div>
   );
 }
@@ -809,7 +1218,9 @@ function StatCard({
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="rounded-xl bg-cream/70 px-3 py-2">
-      <p className="text-[11px] uppercase tracking-wide text-forest/45">{label}</p>
+      <p className="text-[11px] uppercase tracking-wide text-forest/45">
+        {label}
+      </p>
       <p className="mt-0.5 text-forest">{value}</p>
     </div>
   );

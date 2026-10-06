@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import {
@@ -265,23 +266,22 @@ export default function SkillsPage() {
 
       <div className="flex flex-wrap gap-2">
         <input
-          className="input min-w-[10rem] flex-1"
+          className="input-field min-w-[10rem] flex-1"
           placeholder="Search skills…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <select
-          className="input max-w-[12rem]"
+        <SearchableSelect
+          className="w-44"
+          options={[
+            { value: "", label: "All categories" },
+            ...categories.map((c) => ({ value: c, label: c })),
+          ]}
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-        >
-          <option value="">All categories</option>
-          {categories.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+          onChange={setCategoryFilter}
+          placeholder="All categories"
+          aria-label="Filter by category"
+        />
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
@@ -462,9 +462,9 @@ export default function SkillsPage() {
       >
         <form onSubmit={save} className="space-y-3">
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Name</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Name</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               required
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -472,9 +472,9 @@ export default function SkillsPage() {
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Category</span>
+              <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Category</span>
               <input
-                className="input w-full"
+                className="input-field w-full"
                 list="skill-cats"
                 value={form.category}
                 onChange={(e) =>
@@ -488,54 +488,48 @@ export default function SkillsPage() {
               </datalist>
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Status</span>
-              <select
-                className="input w-full"
+              <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Status</span>
+              <SearchableSelect
+                options={STATUSES.map((s) => ({
+                  value: s,
+                  label: statusLabel(s),
+                }))}
                 value={form.status}
-                onChange={(e) =>
+                onChange={(status) =>
                   setForm((f) => ({
                     ...f,
-                    status: e.target.value as SkillStatus,
+                    status: status as SkillStatus,
                   }))
                 }
-              >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {statusLabel(s)}
-                  </option>
-                ))}
-              </select>
+                aria-label="Status"
+                required
+              />
             </label>
           </div>
           {(form.status === "have" || form.status === "learning") && (
             <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Proficiency</span>
-              <select
-                className="input w-full"
+              <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Proficiency</span>
+              <SearchableSelect
+                options={PROFICIENCIES.map((p) => ({ value: p, label: p }))}
                 value={form.proficiency}
-                onChange={(e) =>
+                onChange={(proficiency) =>
                   setForm((f) => ({
                     ...f,
-                    proficiency: e.target.value as SkillProficiency,
+                    proficiency: proficiency as SkillProficiency,
                   }))
                 }
-              >
-                {PROFICIENCIES.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
+                aria-label="Proficiency"
+              />
             </label>
           )}
           {(form.status === "learning" || form.status === "planned") && (
             <>
               <label className="block text-sm">
-                <span className="mb-1 block text-forest/70">
+                <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
                   Priority (1 high – 5 low)
                 </span>
                 <input
-                  className="input w-full"
+                  className="input-field w-full"
                   type="number"
                   min={1}
                   max={5}
@@ -546,9 +540,9 @@ export default function SkillsPage() {
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block text-forest/70">Target date</span>
+                <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Target date</span>
                 <input
-                  className="input w-full"
+                  className="input-field w-full"
                   type="date"
                   value={form.targetDate}
                   onChange={(e) =>
@@ -559,9 +553,9 @@ export default function SkillsPage() {
             </>
           )}
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Notes</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Notes</span>
             <textarea
-              className="input min-h-[4rem] w-full"
+              className="input-field min-h-[4rem] w-full"
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
             />

@@ -70,7 +70,7 @@
       "counterparty": "Landlord",
       "status": "partial",
       "amountSettled": 5000,
-      "notes": "October rent share — paid 5k so far.",
+      "notes": "October rent share \u2014 paid 5k so far.",
       "linkedRecurringId": null,
       "createdAt": "2026-09-15T10:00:00.000Z",
       "updatedAt": "2026-10-01T10:00:00.000Z"
@@ -97,7 +97,7 @@
       "currency": "INR",
       "date": "2026-10-06",
       "category": "Food",
-      "counterparty": "Café Coffee Day",
+      "counterparty": "Caf\u00e9 Coffee Day",
       "status": null,
       "amountSettled": 0,
       "notes": "Client meetup.",
@@ -115,10 +115,48 @@
       "counterparty": "Priya",
       "status": "settled",
       "amountSettled": 2000,
-      "notes": "Settled — repaid in full.",
+      "notes": "Settled \u2014 repaid in full.",
       "linkedRecurringId": null,
       "createdAt": "2026-09-20T10:00:00.000Z",
       "updatedAt": "2026-10-01T10:00:00.000Z"
+    }
+  ],
+  "fixedItems": [
+    {
+      "id": "fin-fix-1",
+      "kind": "expense",
+      "name": "Rent",
+      "amount": 25000,
+      "currency": "INR",
+      "category": "Rent",
+      "notes": "Monthly house rent",
+      "active": true,
+      "createdAt": "2026-10-06T17:52:00.000Z",
+      "updatedAt": "2026-10-06T17:52:00.000Z"
+    },
+    {
+      "id": "fin-fix-2",
+      "kind": "expense",
+      "name": "Internet",
+      "amount": 999,
+      "currency": "INR",
+      "category": "Utilities",
+      "notes": "Home broadband",
+      "active": true,
+      "createdAt": "2026-10-06T17:52:00.000Z",
+      "updatedAt": "2026-10-06T17:52:00.000Z"
+    },
+    {
+      "id": "fin-fix-3",
+      "kind": "income",
+      "name": "Side retainer",
+      "amount": 15000,
+      "currency": "INR",
+      "category": "Freelance",
+      "notes": "Monthly retainer",
+      "active": true,
+      "createdAt": "2026-10-06T17:52:00.000Z",
+      "updatedAt": "2026-10-06T17:52:00.000Z"
     }
   ]
 }

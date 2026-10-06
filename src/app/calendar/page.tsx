@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import {
@@ -424,18 +425,17 @@ export default function CalendarPage() {
             >
               Agenda
             </button>
-            <select
-              className="input max-w-[10rem]"
+            <SearchableSelect
+              className="w-40"
+              options={[
+                { value: "", label: "All types" },
+                ...TYPES.map((t) => ({ value: t, label: t })),
+              ]}
               value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-            >
-              <option value="">All types</option>
-              {TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+              onChange={setTypeFilter}
+              placeholder="All types"
+              aria-label="Filter by type"
+            />
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
@@ -666,7 +666,7 @@ export default function CalendarPage() {
               <label className="flex items-center gap-2 text-sm text-forest/70">
                 Slot length
                 <input
-                  className="input w-20"
+                  className="input-field w-20"
                   type="number"
                   min={15}
                   max={180}
@@ -680,23 +680,22 @@ export default function CalendarPage() {
             <div className="space-y-2">
               {weekly.map((w, i) => (
                 <div key={w.id} className="flex flex-wrap items-center gap-2">
-                  <select
-                    className="input"
-                    value={w.dayOfWeek}
-                    onChange={(e) => {
+                  <SearchableSelect
+                    className="w-36"
+                    options={DOW.map((d, di) => ({
+                      value: String(di),
+                      label: d,
+                    }))}
+                    value={String(w.dayOfWeek)}
+                    onChange={(v) => {
                       const next = [...weekly];
-                      next[i] = { ...w, dayOfWeek: Number(e.target.value) };
+                      next[i] = { ...w, dayOfWeek: Number(v) };
                       setWeekly(next);
                     }}
-                  >
-                    {DOW.map((d, di) => (
-                      <option key={d} value={di}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
+                    aria-label="Day of week"
+                  />
                   <input
-                    className="input w-28"
+                    className="input-field w-28"
                     type="time"
                     value={w.startTime}
                     onChange={(e) => {
@@ -707,7 +706,7 @@ export default function CalendarPage() {
                   />
                   <span className="text-forest/40">–</span>
                   <input
-                    className="input w-28"
+                    className="input-field w-28"
                     type="time"
                     value={w.endTime}
                     onChange={(e) => {
@@ -751,7 +750,7 @@ export default function CalendarPage() {
               {dateWindows.map((w, i) => (
                 <div key={w.id} className="flex flex-wrap items-center gap-2">
                   <input
-                    className="input"
+                    className="input-field"
                     type="date"
                     value={w.date}
                     onChange={(e) => {
@@ -761,7 +760,7 @@ export default function CalendarPage() {
                     }}
                   />
                   <input
-                    className="input w-28"
+                    className="input-field w-28"
                     type="time"
                     value={w.startTime}
                     onChange={(e) => {
@@ -772,7 +771,7 @@ export default function CalendarPage() {
                   />
                   <span className="text-forest/40">–</span>
                   <input
-                    className="input w-28"
+                    className="input-field w-28"
                     type="time"
                     value={w.endTime}
                     onChange={(e) => {
@@ -828,7 +827,7 @@ export default function CalendarPage() {
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="text-sm text-forest/60">/book/</span>
               <input
-                className="input w-32"
+                className="input-field w-32"
                 value={slugDraft}
                 onChange={(e) => setSlugDraft(e.target.value)}
               />
@@ -861,7 +860,7 @@ export default function CalendarPage() {
             </p>
             <form onSubmit={createTemp} className="mt-3 space-y-2">
               <input
-                className="input w-full"
+                className="input-field w-full"
                 placeholder="Label"
                 value={newTemp.label}
                 onChange={(e) =>
@@ -870,7 +869,7 @@ export default function CalendarPage() {
               />
               <div className="flex flex-wrap gap-2">
                 <input
-                  className="input w-28"
+                  className="input-field w-28"
                   type="number"
                   min={1}
                   placeholder="Days"
@@ -880,7 +879,7 @@ export default function CalendarPage() {
                   }
                 />
                 <input
-                  className="input min-w-[12rem] flex-1"
+                  className="input-field min-w-[12rem] flex-1"
                   placeholder="Dates YYYY-MM-DD, comma-separated (optional)"
                   value={newTemp.dates}
                   onChange={(e) =>
@@ -952,9 +951,9 @@ export default function CalendarPage() {
       >
         <form onSubmit={save} className="space-y-3">
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Title</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Title</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               required
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
@@ -962,49 +961,44 @@ export default function CalendarPage() {
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Type</span>
-              <select
-                className="input w-full"
+              <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Type</span>
+              <SearchableSelect
+                options={TYPES.map((t) => ({ value: t, label: t }))}
                 value={form.type}
-                onChange={(e) =>
+                onChange={(type) =>
                   setForm((f) => ({
                     ...f,
-                    type: e.target.value as CalendarEventType,
+                    type: type as CalendarEventType,
                   }))
                 }
-              >
-                {TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
+                aria-label="Event type"
+                required
+              />
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Status</span>
-              <select
-                className="input w-full"
+              <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Status</span>
+              <SearchableSelect
+                options={STATUSES.map((s) => ({
+                  value: s,
+                  label: s.charAt(0).toUpperCase() + s.slice(1),
+                }))}
                 value={form.status}
-                onChange={(e) =>
+                onChange={(status) =>
                   setForm((f) => ({
                     ...f,
-                    status: e.target.value as CalendarEventStatus,
+                    status: status as CalendarEventStatus,
                   }))
                 }
-              >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+                aria-label="Status"
+                required
+              />
             </label>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Start</span>
+              <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Start</span>
               <input
-                className="input w-full"
+                className="input-field w-full"
                 type="datetime-local"
                 required
                 value={form.start}
@@ -1014,9 +1008,9 @@ export default function CalendarPage() {
               />
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">End</span>
+              <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">End</span>
               <input
-                className="input w-full"
+                className="input-field w-full"
                 type="datetime-local"
                 required
                 value={form.end}
@@ -1025,9 +1019,9 @@ export default function CalendarPage() {
             </label>
           </div>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Location</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Location</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               value={form.location}
               onChange={(e) =>
                 setForm((f) => ({ ...f, location: e.target.value }))
@@ -1035,17 +1029,17 @@ export default function CalendarPage() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">URL</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">URL</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               value={form.url}
               onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Notes (private)</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Notes (private)</span>
             <textarea
-              className="input min-h-[4rem] w-full"
+              className="input-field min-h-[4rem] w-full"
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
             />

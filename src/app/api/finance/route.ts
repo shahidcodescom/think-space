@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
         : new Date().toISOString().slice(0, 7);
     return NextResponse.json({
       transactions: items,
-      summary: summarizeMonth(file.transactions, m),
+      summary: summarizeMonth(file.transactions, m, file.fixedItems),
     });
   }
 

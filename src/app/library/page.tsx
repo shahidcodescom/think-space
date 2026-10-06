@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import {
@@ -221,35 +222,33 @@ export default function LibraryPage() {
 
       <div className="flex flex-wrap gap-2">
         <input
-          className="input min-w-[10rem] flex-1"
+          className="input-field min-w-[10rem] flex-1"
           placeholder="Search…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <select
-          className="input max-w-[9rem]"
+        <SearchableSelect
+          className="w-36"
+          options={[
+            { value: "", label: "All types" },
+            ...TYPES.map((t) => ({ value: t, label: t })),
+          ]}
           value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-        >
-          <option value="">All types</option>
-          {TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-        <select
-          className="input max-w-[10rem]"
+          onChange={setTypeFilter}
+          placeholder="All types"
+          aria-label="Filter by type"
+        />
+        <SearchableSelect
+          className="w-40"
+          options={[
+            { value: "", label: "All tags" },
+            ...allTags.map((t) => ({ value: t, label: t })),
+          ]}
           value={tagFilter}
-          onChange={(e) => setTagFilter(e.target.value)}
-        >
-          <option value="">All tags</option>
-          {allTags.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
+          onChange={setTagFilter}
+          placeholder="All tags"
+          aria-label="Filter by tag"
+        />
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
@@ -443,54 +442,50 @@ export default function LibraryPage() {
       >
         <form onSubmit={save} className="space-y-3">
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Title</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Title</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               required
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Type</span>
-            <select
-              className="input w-full"
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Type</span>
+            <SearchableSelect
+              options={TYPES.map((t) => ({ value: t, label: t }))}
               value={form.type}
-              onChange={(e) =>
+              onChange={(type) =>
                 setForm((f) => ({
                   ...f,
-                  type: e.target.value as LibraryItemType,
+                  type: type as LibraryItemType,
                 }))
               }
-            >
-              {TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+              aria-label="Type"
+              required
+            />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">URL</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">URL</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               value={form.url}
               onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
               placeholder={form.type === "link" ? "https://…" : "Optional"}
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Tags (comma-separated)</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Tags (comma-separated)</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               value={form.tags}
               onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Notes</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Notes</span>
             <textarea
-              className="input min-h-[4rem] w-full"
+              className="input-field min-h-[4rem] w-full"
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
             />

@@ -1,5 +1,7 @@
 import { stripHtml } from "./sanitize";
-import { Asset, Belonging, CalendarEvent, Client, FinanceTransaction, JobApplication, LibraryItem, Project, Recurring, SecretPublic, Skill, StoreData, Subscription } from "./types";
+import { Asset, Belonging, CalendarEvent, Client, FinanceFixedItem,
+  FinanceTransaction, JobApplication, LibraryItem, Project, Recurring, SecretPublic, Skill, StoreData, Subscription } from "./types";
+import { summarizeMonth } from "./finance-store";
 
 /** Extra workspace data for the rule-based assistant (secrets = metadata only). */
 export type AiExtras = {
@@ -11,6 +13,7 @@ export type AiExtras = {
   subscriptions?: Subscription[];
   recurrings?: Recurring[];
   finance?: FinanceTransaction[];
+  fixedFinance?: FinanceFixedItem[];
   belongings?: Belonging[];
   calendarEvents?: CalendarEvent[];
   jobs?: JobApplication[];
@@ -277,25 +280,16 @@ export function answerQuery(
 
   if (/finance summary|this month.?s? finance|finance overview|my finance|list.*expenses|list.*income|money summary/.test(q)) {
     const month = new Date().toISOString().slice(0, 7);
-    const inMonth = finance.filter((t) => t.date.startsWith(month));
-    let income = 0;
-    let expenses = 0;
-    for (const t of inMonth) {
-      if (t.type === "income") income += t.amount;
-      if (t.type === "expense") expenses += t.amount;
-    }
-    const openLends = finance.filter((t) => t.type === "lend" && t.status !== "settled");
-    const openDues = finance.filter((t) => t.type === "due" && t.status !== "settled");
-    const lendLeft = openLends.reduce((s, t) => s + Math.max(0, t.amount - (t.amountSettled || 0)), 0);
-    const dueLeft = openDues.reduce((s, t) => s + Math.max(0, t.amount - (t.amountSettled || 0)), 0);
+    const fixed = extras.fixedFinance || [];
+    const sum = summarizeMonth(finance, month, fixed);
     const lines = [
       `**Month:** ${month}`,
-      `**Income:** ${income}`,
-      `**Expenses:** ${expenses}`,
-      `**Net:** ${income - expenses}`,
-      `**Open lends:** ${openLends.length} (outstanding ${lendLeft})`,
-      `**Open dues:** ${openDues.length} (outstanding ${dueLeft})`,
-      `**Transactions this month:** ${inMonth.length}`,
+      `**Income:** ${sum.income} (txns ${sum.txnIncome} + fixed ${sum.fixedIncome})`,
+      `**Expenses:** ${sum.expenses} (txns ${sum.txnExpenses} + fixed ${sum.fixedExpenses})`,
+      `**Net:** ${sum.net}`,
+      `**Open lends:** ${sum.openLendCount} (outstanding ${sum.outstandingLends})`,
+      `**Open dues:** ${sum.openDueCount} (outstanding ${sum.outstandingDues})`,
+      `**Transactions this month:** ${sum.transactionCount}`,
     ];
     return { text: lines.join("\n"), title: "Finance summary" };
   }

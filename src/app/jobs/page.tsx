@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { ToggleSwitch } from "@/components/ToggleSwitch";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import { RichTextEditor } from "@/components/RichTextEditor";
@@ -290,20 +292,19 @@ export default function JobsPage() {
         >
           List
         </button>
-        <select
-          className="input max-w-[12rem]"
+        <SearchableSelect
+          className="w-44"
+          options={[
+            { value: "", label: "All statuses" },
+            ...JOB_STATUSES.map((s) => ({ value: s, label: statusLabel(s) })),
+          ]}
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">All statuses</option>
-          {JOB_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {statusLabel(s)}
-            </option>
-          ))}
-        </select>
+          onChange={setStatusFilter}
+          placeholder="All statuses"
+          aria-label="Filter by status"
+        />
         <input
-          className="input min-w-[10rem] flex-1"
+          className="input-field min-w-[10rem] flex-1"
           placeholder="Search company or role…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -454,19 +455,18 @@ export default function JobsPage() {
 
               <label className="mt-4 block text-sm">
                 <span className="mb-1 block text-forest/55">Move status</span>
-                <select
-                  className="input w-full max-w-xs"
+                <SearchableSelect
+                  className="w-full max-w-xs"
+                  options={JOB_STATUSES.map((s) => ({
+                    value: s,
+                    label: statusLabel(s),
+                  }))}
                   value={selected.status}
-                  onChange={(e) =>
-                    moveStatus(selected, e.target.value as JobStatus)
+                  onChange={(status) =>
+                    moveStatus(selected, status as JobStatus)
                   }
-                >
-                  {JOB_STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {statusLabel(s)}
-                    </option>
-                  ))}
-                </select>
+                  aria-label="Application status"
+                />
               </label>
 
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
@@ -607,9 +607,9 @@ export default function JobsPage() {
         <form onSubmit={save} className="space-y-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Company</span>
+              <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Company</span>
               <input
-                className="input w-full"
+                className="input-field w-full"
                 required
                 value={form.company}
                 onChange={(e) =>
@@ -618,9 +618,9 @@ export default function JobsPage() {
               />
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Role / title</span>
+              <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Role / title</span>
               <input
-                className="input w-full"
+                className="input-field w-full"
                 required
                 value={form.role}
                 onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
@@ -629,30 +629,27 @@ export default function JobsPage() {
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Location</span>
+              <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Location</span>
               <input
-                className="input w-full"
+                className="input-field w-full"
                 value={form.location}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, location: e.target.value }))
                 }
               />
             </label>
-            <label className="flex items-center gap-2 pt-6 text-sm text-forest">
-              <input
-                type="checkbox"
+            <div className="pt-4">
+              <ToggleSwitch
                 checked={form.remote}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, remote: e.target.checked }))
-                }
+                onChange={(remote) => setForm((f) => ({ ...f, remote }))}
+                label="Remote"
               />
-              Remote
-            </label>
+            </div>
           </div>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Source URL</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Source URL</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               value={form.sourceUrl}
               onChange={(e) =>
                 setForm((f) => ({ ...f, sourceUrl: e.target.value }))
@@ -661,28 +658,27 @@ export default function JobsPage() {
           </label>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Status</span>
-              <select
-                className="input w-full"
+              <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Status</span>
+              <SearchableSelect
+                options={JOB_STATUSES.map((s) => ({
+                  value: s,
+                  label: statusLabel(s),
+                }))}
                 value={form.status}
-                onChange={(e) =>
+                onChange={(status) =>
                   setForm((f) => ({
                     ...f,
-                    status: e.target.value as JobStatus,
+                    status: status as JobStatus,
                   }))
                 }
-              >
-                {JOB_STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {statusLabel(s)}
-                  </option>
-                ))}
-              </select>
+                aria-label="Status"
+                required
+              />
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Applied date</span>
+              <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Applied date</span>
               <input
-                className="input w-full"
+                className="input-field w-full"
                 type="date"
                 value={form.appliedDate}
                 onChange={(e) =>
@@ -692,9 +688,9 @@ export default function JobsPage() {
             </label>
           </div>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Next interview</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Next interview</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               type="datetime-local"
               value={form.nextInterviewAt}
               onChange={(e) =>
@@ -703,21 +699,18 @@ export default function JobsPage() {
             />
           </label>
           {form.nextInterviewAt && (
-            <label className="flex items-center gap-2 text-sm text-forest">
-              <input
-                type="checkbox"
-                checked={form.linkToCalendar}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, linkToCalendar: e.target.checked }))
-                }
-              />
-              Also create Calendar interview event
-            </label>
+            <ToggleSwitch
+              checked={form.linkToCalendar}
+              onChange={(linkToCalendar) =>
+                setForm((f) => ({ ...f, linkToCalendar }))
+              }
+              label="Also create Calendar interview event"
+            />
           )}
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Salary notes</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Salary notes</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               value={form.salaryNotes}
               onChange={(e) =>
                 setForm((f) => ({ ...f, salaryNotes: e.target.value }))
@@ -725,9 +718,9 @@ export default function JobsPage() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Contacts</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Contacts</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               value={form.contacts}
               onChange={(e) =>
                 setForm((f) => ({ ...f, contacts: e.target.value }))
@@ -735,7 +728,7 @@ export default function JobsPage() {
             />
           </label>
           <div className="text-sm">
-            <span className="mb-1 block text-forest/70">Job description</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Job description</span>
             <RichTextEditor
               value={form.jdHtml}
               onChange={(html) => setForm((f) => ({ ...f, jdHtml: html }))}
@@ -743,9 +736,9 @@ export default function JobsPage() {
             />
           </div>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Notes</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Notes</span>
             <textarea
-              className="input min-h-[3.5rem] w-full"
+              className="input-field min-h-[3.5rem] w-full"
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
             />

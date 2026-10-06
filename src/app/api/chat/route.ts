@@ -89,6 +89,7 @@ export async function POST(req: NextRequest) {
     subscriptions: clientsFile.subscriptions,
     recurrings: recurringsFile.recurrings,
     finance: financeFile.transactions,
+    fixedFinance: financeFile.fixedItems,
     belongings: belongingsFile.belongings,
     calendarEvents: calendarFile.events,
     jobs: jobsFile.jobs,

@@ -237,6 +237,23 @@ export interface FinanceTransaction {
   updatedAt: string;
 }
 
+/** Recurring monthly amount that rolls into every month's finance totals. */
+export type FinanceFixedKind = "income" | "expense";
+
+export interface FinanceFixedItem {
+  id: string;
+  kind: FinanceFixedKind;
+  name: string;
+  amount: number;
+  currency: string;
+  category: string;
+  notes: string;
+  /** When false, excluded from monthly totals. */
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type BelongingStatus = "with_me" | "stored" | "lent_out" | "missing";
 
 export interface Belonging {

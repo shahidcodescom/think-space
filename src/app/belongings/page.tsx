@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import {
@@ -258,47 +259,44 @@ export default function BelongingsPage() {
 
       <div className="flex flex-wrap gap-2">
         <input
-          className="input min-w-[10rem] flex-1"
+          className="input-field min-w-[10rem] flex-1"
           placeholder="Search or “where is …”"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <select
-          className="input max-w-[10rem]"
+        <SearchableSelect
+          className="w-40"
+          options={[
+            { value: "", label: "All categories" },
+            ...categories.map((c) => ({ value: c, label: c })),
+          ]}
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-        >
-          <option value="">All categories</option>
-          {categories.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        <select
-          className="input max-w-[10rem]"
+          onChange={setCategoryFilter}
+          placeholder="All categories"
+          aria-label="Filter by category"
+        />
+        <SearchableSelect
+          className="w-40"
+          options={[
+            { value: "", label: "All statuses" },
+            ...STATUSES.map((s) => ({ value: s, label: statusLabel(s) })),
+          ]}
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">All statuses</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {statusLabel(s)}
-            </option>
-          ))}
-        </select>
-        <select
-          className="input max-w-[14rem]"
+          onChange={setStatusFilter}
+          placeholder="All statuses"
+          aria-label="Filter by status"
+        />
+        <SearchableSelect
+          className="w-48"
+          options={[
+            { value: "", label: "All locations" },
+            ...locations.map((loc) => ({ value: loc, label: loc })),
+          ]}
           value={locationFilter}
-          onChange={(e) => setLocationFilter(e.target.value)}
-        >
-          <option value="">All locations</option>
-          {locations.map((loc) => (
-            <option key={loc} value={loc}>
-              {loc}
-            </option>
-          ))}
-        </select>
+          onChange={setLocationFilter}
+          placeholder="All locations"
+          aria-label="Filter by location"
+        />
         <button
           type="button"
           className={`btn-ghost text-sm ${groupByLoc ? "bg-sage-muted" : ""}`}
@@ -455,9 +453,9 @@ export default function BelongingsPage() {
       >
         <form onSubmit={save} className="space-y-3">
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Name</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Name</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               required
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -465,9 +463,9 @@ export default function BelongingsPage() {
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Category</span>
+              <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Category</span>
               <input
-                className="input w-full"
+                className="input-field w-full"
                 list="bel-cats"
                 value={form.category}
                 onChange={(e) =>
@@ -481,9 +479,9 @@ export default function BelongingsPage() {
               </datalist>
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block text-forest/70">Quantity</span>
+              <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Quantity</span>
               <input
-                className="input w-full"
+                className="input-field w-full"
                 type="number"
                 min="1"
                 value={form.quantity}
@@ -494,11 +492,11 @@ export default function BelongingsPage() {
             </label>
           </div>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
               Location (room / place / container)
             </span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               list="bel-locs"
               value={form.location}
               onChange={(e) =>
@@ -513,28 +511,27 @@ export default function BelongingsPage() {
             </datalist>
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Status</span>
-            <select
-              className="input w-full"
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Status</span>
+            <SearchableSelect
+              options={STATUSES.map((s) => ({
+                value: s,
+                label: statusLabel(s),
+              }))}
               value={form.status}
-              onChange={(e) =>
+              onChange={(status) =>
                 setForm((f) => ({
                   ...f,
-                  status: e.target.value as BelongingStatus,
+                  status: status as BelongingStatus,
                 }))
               }
-            >
-              {STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {statusLabel(s)}
-                </option>
-              ))}
-            </select>
+              aria-label="Status"
+              required
+            />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Photo URL</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Photo URL</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               value={form.photoUrl}
               onChange={(e) =>
                 setForm((f) => ({ ...f, photoUrl: e.target.value }))
@@ -543,9 +540,9 @@ export default function BelongingsPage() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Photo note</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Photo note</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               value={form.photoNote}
               onChange={(e) =>
                 setForm((f) => ({ ...f, photoNote: e.target.value }))
@@ -554,34 +551,32 @@ export default function BelongingsPage() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Tags (comma-separated)</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Tags (comma-separated)</span>
             <input
-              className="input w-full"
+              className="input-field w-full"
               value={form.tags}
               onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Linked asset</span>
-            <select
-              className="input w-full"
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Linked asset</span>
+            <SearchableSelect
+              options={[
+                { value: "", label: "None" },
+                ...assets.map((a) => ({ value: a.id, label: a.name })),
+              ]}
               value={form.linkedAssetId}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, linkedAssetId: e.target.value }))
+              onChange={(linkedAssetId) =>
+                setForm((f) => ({ ...f, linkedAssetId }))
               }
-            >
-              <option value="">None</option>
-              {assets.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
+              placeholder="None"
+              aria-label="Linked asset"
+            />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-forest/70">Notes</span>
+            <span className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">Notes</span>
             <textarea
-              className="input min-h-[4rem] w-full"
+              className="input-field min-h-[4rem] w-full"
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
             />
