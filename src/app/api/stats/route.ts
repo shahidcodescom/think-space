@@ -4,12 +4,13 @@ import { readClientsFile } from "@/lib/clients-store";
 import { readRecurringsFile } from "@/lib/recurrings-store";
 import { readFinanceFile, remainingAmount } from "@/lib/finance-store";
 import { readBelongingsFile } from "@/lib/belongings-store";
+import { readCalendarFile } from "@/lib/calendar-store";
 import { readProjectsFile } from "@/lib/projects-store";
 import { readSecretsFile } from "@/lib/secrets-store";
 import { readStore } from "@/lib/store";
 
 export async function GET() {
-  const [store, assets, secrets, projects, billing, recurrings, finance, belongings] = await Promise.all([
+  const [store, assets, secrets, projects, billing, recurrings, finance, belongings, calendar] = await Promise.all([
     readStore(),
     readAssetsFile(),
     readSecretsFile(),
@@ -18,6 +19,7 @@ export async function GET() {
     readRecurringsFile(),
     readFinanceFile(),
     readBelongingsFile(),
+    readCalendarFile(),
   ]);
   const list = projects.projects;
   const today = new Date();
@@ -65,5 +67,12 @@ export async function GET() {
     belongings: belongings.belongings.length,
     belongingsMissing: belongings.belongings.filter((b) => b.status === "missing").length,
     belongingsLent: belongings.belongings.filter((b) => b.status === "lent_out").length,
+    calendarEvents: calendar.events.filter((e) => e.status !== "cancelled").length,
+    upcomingAppointments: calendar.events.filter((e) => {
+      if (e.status === "cancelled") return false;
+      const t = new Date(e.start).getTime();
+      const now = Date.now();
+      return t >= now && t <= now + 14 * 86400000;
+    }).length,
   });
 }

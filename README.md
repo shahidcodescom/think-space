@@ -188,3 +188,13 @@ Personal items and **where they are kept** — distinct from Assets (inventory/v
 - Status: `with_me` | `stored` | `lent_out` | `missing`
 - Thinking space: “List my belongings”, “Where is my passport”
 
+## Calendar & public booking
+
+- Owner page: `/calendar` — month + agenda, availability, booking links
+- Persist: `data/calendar.json` (events, weeklyAvailability, dateWindows, tempLinks, settings)
+- APIs: `/api/calendar/events`, `/availability`, `/settings`, `/temp-links`
+- **Permanent public link:** `/book/[slug]` (default slug `me`) — `GET/POST /api/book/[slug]`
+- **Temporary link:** `/book/t/[token]` — expires or revoke; `GET/POST /api/book/t/[token]`
+- Public APIs return open slots only (never private `notes`)
+- Thinking space: “Upcoming appointments”
+

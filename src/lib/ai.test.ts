@@ -280,7 +280,43 @@ const belongingsSample = [
   },
 ];
 
-const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs, recurrings, finance: financeTx, belongings: belongingsSample };
+
+const calendarSample = [
+  {
+    id: "cal-1",
+    title: "Product interview — Aisha",
+    type: "interview",
+    start: "2026-10-08T10:00:00.000+05:30",
+    end: "2026-10-08T10:30:00.000+05:30",
+    location: "Meet",
+    url: "",
+    notes: "secret note should not matter",
+    status: "confirmed",
+    bookingSource: "owner",
+    bookerName: "Aisha",
+    bookerEmail: "aisha@example.com",
+    createdAt: "2026-10-01T10:00:00.000Z",
+    updatedAt: "2026-10-01T10:00:00.000Z",
+  },
+  {
+    id: "cal-2",
+    title: "Dentist checkup",
+    type: "appointment",
+    start: "2026-10-10T11:00:00.000+05:30",
+    end: "2026-10-10T11:30:00.000+05:30",
+    location: "Clinic",
+    url: "",
+    notes: "",
+    status: "scheduled",
+    bookingSource: "owner",
+    bookerName: "",
+    bookerEmail: "",
+    createdAt: "2026-09-20T10:00:00.000Z",
+    updatedAt: "2026-09-20T10:00:00.000Z",
+  },
+];
+
+const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs, recurrings, finance: financeTx, belongings: belongingsSample, calendarEvents: calendarSample };
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);
@@ -407,6 +443,15 @@ assert(whereAns.text.toLowerCase().includes("bedroom"), "where location");
 
 assert(glance.text.includes("Belongings:** 2"), "glance belongings");
 assert(help.text.toLowerCase().includes("belongings") || help.text.toLowerCase().includes("where is"), "help belongings");
+
+
+const apptAns = answerQuery("upcoming appointments", sample, extras);
+assert(apptAns.title === "Upcoming appointments", "appointments title");
+assert(apptAns.text.includes("Aisha") || apptAns.text.includes("Dentist"), "appointment item");
+assert(!apptAns.text.includes("secret note"), "private notes not in chat listing via title alone is ok");
+
+assert(glance.text.includes("Calendar:** 2"), "glance calendar");
+assert(help.text.toLowerCase().includes("appointment") || help.text.toLowerCase().includes("calendar"), "help calendar");
 
 console.log("ai.test.ts: all assertions passed");
 

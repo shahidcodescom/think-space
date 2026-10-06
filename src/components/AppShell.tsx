@@ -9,6 +9,22 @@ import { NAV_ITEMS, isNavActive } from "@/lib/nav";
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const current = NAV_ITEMS.find((n) => isNavActive(pathname, n.href));
+  const isPublicBook = pathname.startsWith("/book");
+
+  if (isPublicBook) {
+    return (
+      <div className="min-h-[100dvh] flex flex-col bg-cream overflow-x-hidden">
+        <header
+          className="sticky top-0 z-30 flex items-center gap-2 px-4 py-3 bg-cream/95 backdrop-blur-lg border-b border-forest/5"
+          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+        >
+          <LeafIcon size={18} className="text-forest shrink-0" />
+          <p className="font-serif text-base lowercase text-forest">book a time</p>
+        </header>
+        <main className="flex-1 min-w-0 w-full">{children}</main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[100dvh] flex bg-cream overflow-x-hidden">

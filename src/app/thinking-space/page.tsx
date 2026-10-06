@@ -22,6 +22,7 @@ import {
   RecurringIcon,
   FinanceIcon,
   BelongingIcon,
+  CalendarIcon,
 } from "@/components/Icons";
 import { ChatMessage, Profile } from "@/lib/types";
 import { plainFromHtml } from "@/lib/format";
@@ -37,6 +38,8 @@ type Stats = {
   recurrings?: number;
   financeTransactions?: number;
   belongings?: number;
+  calendarEvents?: number;
+  upcomingAppointments?: number;
   openLends?: number;
   openDues?: number;
   upcomingRenewals?: number;
@@ -304,6 +307,12 @@ export default function ThinkingSpacePage() {
             icon={<BelongingIcon size={22} />}
             label={`${stats.belongings ?? 0} Belongings`}
             tone="bg-teal-soft/60"
+          />
+          <GlanceCard
+            href="/calendar"
+            icon={<CalendarIcon size={22} />}
+            label={`${stats.upcomingAppointments ?? stats.calendarEvents ?? 0} Calendar`}
+            tone="bg-white"
           />
         </div>
       </aside>

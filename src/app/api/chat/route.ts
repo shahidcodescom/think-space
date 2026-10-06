@@ -6,6 +6,7 @@ import { readProjectsFile } from "@/lib/projects-store";
 import { readRecurringsFile } from "@/lib/recurrings-store";
 import { readFinanceFile } from "@/lib/finance-store";
 import { readBelongingsFile } from "@/lib/belongings-store";
+import { readCalendarFile } from "@/lib/calendar-store";
 import { readSecretsFile } from "@/lib/secrets-store";
 import { nowIso, readStore, uid, writeStore } from "@/lib/store";
 import { SecretPublic } from "@/lib/types";
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Empty message" }, { status: 400 });
   }
 
-  const [store, assetsFile, secretsFile, projectsFile, clientsFile, recurringsFile, financeFile, belongingsFile] = await Promise.all([
+  const [store, assetsFile, secretsFile, projectsFile, clientsFile, recurringsFile, financeFile, belongingsFile, calendarFile] = await Promise.all([
     readStore(),
     readAssetsFile(),
     readSecretsFile(),
@@ -53,6 +54,7 @@ export async function POST(req: NextRequest) {
     readRecurringsFile(),
     readFinanceFile(),
     readBelongingsFile(),
+    readCalendarFile(),
   ]);
 
   const userMsg = {
@@ -72,6 +74,7 @@ export async function POST(req: NextRequest) {
     recurrings: recurringsFile.recurrings,
     finance: financeFile.transactions,
     belongings: belongingsFile.belongings,
+    calendarEvents: calendarFile.events,
   });
   const html = renderAnswerMarkdown(answer.title, answer.text);
   const assistantMsg = {

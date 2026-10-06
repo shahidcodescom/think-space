@@ -1,5 +1,5 @@
 import { stripHtml } from "./sanitize";
-import { Asset, Belonging, Client, FinanceTransaction, Project, Recurring, SecretPublic, StoreData, Subscription } from "./types";
+import { Asset, Belonging, CalendarEvent, Client, FinanceTransaction, Project, Recurring, SecretPublic, StoreData, Subscription } from "./types";
 
 /** Extra workspace data for the rule-based assistant (secrets = metadata only). */
 export type AiExtras = {
@@ -12,6 +12,7 @@ export type AiExtras = {
   recurrings?: Recurring[];
   finance?: FinanceTransaction[];
   belongings?: Belonging[];
+  calendarEvents?: CalendarEvent[];
 };
 
 function formatDate(isoDate: string): string {
@@ -65,6 +66,7 @@ export function answerQuery(
   const recurrings = extras.recurrings || [];
   const finance = extras.finance || [];
   const belongings = extras.belongings || [];
+  const calendarEvents = extras.calendarEvents || [];
 
   if (/list.*notes|my notes|show.*notes|what.*notes/.test(q)) {
     if (store.notes.length === 0) {
@@ -350,6 +352,33 @@ export function answerQuery(
     }
   }
 
+  if (/upcoming appointments|list.*appointments|my calendar|upcoming (events|interviews)|show.*calendar/.test(q)) {
+    const now = Date.now();
+    const end = now + 21 * 86400000;
+    const rows = calendarEvents
+      .filter((e) => e.status !== "cancelled")
+      .filter((e) => {
+        const t = new Date(e.start).getTime();
+        return t >= now - 3600000 && t <= end;
+      })
+      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+    if (!rows.length) {
+      return {
+        text: "No upcoming appointments in the next 3 weeks.",
+        title: "Upcoming appointments",
+      };
+    }
+    const lines = rows.map((e) => {
+      const when = formatDate(e.start);
+      const time = new Date(e.start).toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return `**${e.title}** · ${e.type} · ${when} ${time} · ${e.status}`;
+    });
+    return { text: lines.join("\n"), title: "Upcoming appointments" };
+  }
+
     if (/product planning|meeting.*product/.test(q)) {
     const m = store.meetings.find((x) => /product planning/i.test(x.title));
     if (m) {
@@ -383,6 +412,7 @@ export function answerQuery(
         `**Recurrings:** ${recurrings.length}`,
         `**Finance txns:** ${finance.length}`,
         `**Belongings:** ${belongings.length}`,
+        `**Calendar:** ${calendarEvents.filter((e) => e.status !== "cancelled").length}`,
       ].join("\n"),
     };
   }
@@ -390,7 +420,7 @@ export function answerQuery(
   if (/hello|hi\b|hey|good morning|good evening/.test(q)) {
     return {
       title: "Hello",
-      text: `Hi ${store.profile.name.split(" ")[0]}. Ask me to list notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, finance, or belongings — or summarise your workspace.`,
+      text: `Hi ${store.profile.name.split(" ")[0]}. Ask me to list notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, finance, belongings, or calendar — or summarise your workspace.`,
     };
   }
 
@@ -415,6 +445,7 @@ export function answerQuery(
         "- Outstanding dues",
         "- List my belongings",
         "- Where is my passport",
+        "- Upcoming appointments",
         "- At a glance",
         "- Tell me about Product planning",
       ].join("\n"),
@@ -494,6 +525,12 @@ export function answerQuery(
       hits.push(`Belonging · **${b.name}** · ${b.location || "—"}`);
     }
   }
+  for (const e of calendarEvents) {
+    const hay = `${e.title} ${e.type} ${e.location} ${e.bookerName}`.toLowerCase();
+    if (hay.includes(q)) {
+      hits.push(`Calendar · **${e.title}** · ${e.type} · ${formatDate(e.start)}`);
+    }
+  }
 
   if (hits.length) {
     return { title: "I found this", text: hits.join("\n") };
@@ -501,7 +538,7 @@ export function answerQuery(
 
   return {
     title: "Thinking…",
-    text: `I searched your notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, finance, and belongings but did not find a match for “${query}”. Try “List my notes”, “List my assets”, or “At a glance”.`,
+    text: `I searched your notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, finance, belongings, and calendar but did not find a match for “${query}”. Try “List my notes”, “List my assets”, or “At a glance”.`,
   };
 }
 
@@ -512,7 +549,7 @@ export function renderAnswerMarkdown(title: string | undefined, text: string): s
       let withBold = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
       // Safe internal markdown links e.g. [Open in Secrets](/secrets?id=...)
       withBold = withBold.replace(
-        /\[([^\]]+)\]\((\/(?:secrets|notes|assets|tasks|meetings|thoughts|memories|projects|clients|recurrings|finance|belongings|thinking-space|profile)[^)]*)\)/g,
+        /\[([^\]]+)\]\((\/(?:secrets|notes|assets|tasks|meetings|thoughts|memories|projects|clients|recurrings|finance|belongings|calendar|thinking-space|profile|book)[^)]*)\)/g,
         '<a href="$2" class="text-forest font-medium underline decoration-sage-dark/50 hover:decoration-forest whitespace-nowrap">$1</a>'
       );
       if (withBold.startsWith("- ")) {

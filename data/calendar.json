@@ -1,0 +1,108 @@
+{
+  "settings": {
+    "permanentSlug": "me",
+    "permanentEnabled": true,
+    "slotMinutes": 30,
+    "ownerDisplayName": "Mohammed Shahid",
+    "timezone": "Asia/Kolkata"
+  },
+  "events": [
+    {
+      "id": "cal-1",
+      "title": "Product interview — Aisha",
+      "type": "interview",
+      "start": "2026-10-08T10:00:00.000+05:30",
+      "end": "2026-10-08T10:30:00.000+05:30",
+      "location": "Google Meet",
+      "url": "https://meet.google.com/abc-defg-hij",
+      "notes": "Ask about RuneRail renewal timeline.",
+      "status": "confirmed",
+      "bookingSource": "owner",
+      "bookerName": "Aisha Rahman",
+      "bookerEmail": "aisha@example.com",
+      "createdAt": "2026-10-01T10:00:00.000Z",
+      "updatedAt": "2026-10-01T10:00:00.000Z"
+    },
+    {
+      "id": "cal-2",
+      "title": "Dentist checkup",
+      "type": "appointment",
+      "start": "2026-10-10T11:00:00.000+05:30",
+      "end": "2026-10-10T11:30:00.000+05:30",
+      "location": "Smile Dental Clinic",
+      "url": "",
+      "notes": "Bring previous X-rays.",
+      "status": "scheduled",
+      "bookingSource": "owner",
+      "bookerName": "",
+      "bookerEmail": "",
+      "createdAt": "2026-09-20T10:00:00.000Z",
+      "updatedAt": "2026-09-20T10:00:00.000Z"
+    },
+    {
+      "id": "cal-3",
+      "title": "Weekly sync",
+      "type": "meeting",
+      "start": "2026-10-07T14:00:00.000+05:30",
+      "end": "2026-10-07T14:30:00.000+05:30",
+      "location": "",
+      "url": "https://meet.google.com/sync-week",
+      "notes": "Internal only.",
+      "status": "scheduled",
+      "bookingSource": "owner",
+      "bookerName": "",
+      "bookerEmail": "",
+      "createdAt": "2026-10-01T10:00:00.000Z",
+      "updatedAt": "2026-10-01T10:00:00.000Z"
+    },
+    {
+      "id": "cal-4",
+      "title": "Coffee with Rahul",
+      "type": "other",
+      "start": "2026-10-17T16:00:00.000+05:30",
+      "end": "2026-10-17T16:30:00.000+05:30",
+      "location": "Café Coffee Day",
+      "url": "",
+      "notes": "Return Kindle.",
+      "status": "scheduled",
+      "bookingSource": "public_temp",
+      "bookerName": "Rahul",
+      "bookerEmail": "rahul@example.com",
+      "createdAt": "2026-10-02T10:00:00.000Z",
+      "updatedAt": "2026-10-02T10:00:00.000Z"
+    }
+  ],
+  "weeklyAvailability": [
+    {
+      "id": "wa-1",
+      "dayOfWeek": 2,
+      "startTime": "10:00",
+      "endTime": "12:00"
+    },
+    {
+      "id": "wa-2",
+      "dayOfWeek": 5,
+      "startTime": "14:00",
+      "endTime": "16:00"
+    }
+  ],
+  "dateWindows": [
+    {
+      "id": "dw-1",
+      "date": "2026-10-15",
+      "startTime": "09:00",
+      "endTime": "11:00"
+    }
+  ],
+  "tempLinks": [
+    {
+      "id": "tl-1",
+      "token": "demo-oct-week",
+      "label": "October hiring week",
+      "expiresAt": "2026-10-31T23:59:59.000+05:30",
+      "revoked": false,
+      "dates": ["2026-10-14", "2026-10-15", "2026-10-17"],
+      "createdAt": "2026-10-01T10:00:00.000Z"
+    }
+  ]
+}

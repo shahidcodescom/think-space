@@ -250,3 +250,82 @@ export interface Belonging {
   updatedAt: string;
 }
 
+export type CalendarEventType =
+  | "appointment"
+  | "interview"
+  | "meeting"
+  | "other";
+export type CalendarEventStatus =
+  | "scheduled"
+  | "confirmed"
+  | "cancelled"
+  | "completed";
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  type: CalendarEventType;
+  start: string;
+  end: string;
+  location: string;
+  url: string;
+  /** Private — never returned by public booking APIs. */
+  notes: string;
+  status: CalendarEventStatus;
+  bookingSource: "owner" | "public_permanent" | "public_temp" | null;
+  bookerName: string;
+  bookerEmail: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Public-safe event projection (no notes). */
+export type CalendarEventPublic = Omit<CalendarEvent, "notes">;
+
+export interface WeeklyAvailabilitySlot {
+  id: string;
+  /** 0 = Sunday … 6 = Saturday */
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+}
+
+export interface DateAvailabilityWindow {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface BookingSettings {
+  permanentSlug: string;
+  permanentEnabled: boolean;
+  slotMinutes: number;
+  ownerDisplayName: string;
+  timezone: string;
+}
+
+export interface TempBookingLink {
+  id: string;
+  token: string;
+  label: string;
+  expiresAt: string;
+  revoked: boolean;
+  /** Allowed dates (YYYY-MM-DD). Empty = any day with availability in range. */
+  dates: string[];
+  createdAt: string;
+}
+
+export interface CalendarFile {
+  settings: BookingSettings;
+  events: CalendarEvent[];
+  weeklyAvailability: WeeklyAvailabilitySlot[];
+  dateWindows: DateAvailabilityWindow[];
+  tempLinks: TempBookingLink[];
+}
+
+export interface PublicSlot {
+  start: string;
+  end: string;
+}
+
