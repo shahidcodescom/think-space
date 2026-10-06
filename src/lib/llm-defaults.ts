@@ -10,7 +10,7 @@ export const LLM_PROVIDERS: LlmProvider[] = [
 
 export const DEFAULT_MODELS: Record<LlmProvider, string> = {
   openai: "gpt-4o-mini",
-  gemini: "gemini-3.8-flash",
+  gemini: "gemini-2.5-flash",
   claude: "claude-3-5-haiku-latest",
   openrouter: "openai/gpt-4o-mini",
   ollama: "llama3.2",

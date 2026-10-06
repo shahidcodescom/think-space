@@ -7,8 +7,17 @@ export function normalizeGeminiModelId(model: string): string {
   return trimmed.replace(/^models\//i, "");
 }
 
-/** Gemini 2.0 Flash family was shut down — map to current default. */
-const SHUTDOWN_GEMINI_MODELS = new Set([
+/**
+ * Non-existent or retired Gemini IDs we have shipped / users may still have saved.
+ * Map all of these to the current DEFAULT_MODELS.gemini.
+ */
+const STALE_GEMINI_MODELS = new Set([
+  // Invented / never existed
+  "gemini-3.8-flash",
+  "gemini-3.8-flash-lite",
+  "models/gemini-3.8-flash",
+  "models/gemini-3.8-flash-lite",
+  // Retired 2.0 Flash family
   "gemini-2.0-flash",
   "gemini-2.0-flash-001",
   "gemini-2.0-flash-lite",
@@ -25,9 +34,34 @@ export function migrateStaleModelId(
 ): string {
   const m = model.trim();
   if (!m) return DEFAULT_MODELS[provider];
-  if (provider === "gemini" && SHUTDOWN_GEMINI_MODELS.has(m)) {
-    return DEFAULT_MODELS.gemini;
+  if (provider === "gemini") {
+    const id = normalizeGeminiModelId(m);
+    if (STALE_GEMINI_MODELS.has(m) || STALE_GEMINI_MODELS.has(id)) {
+      return DEFAULT_MODELS.gemini;
+    }
+    return id;
   }
-  if (provider === "gemini") return normalizeGeminiModelId(m);
   return m;
+}
+
+/**
+ * Prefer a generateContent flash model from a live list.
+ * Order: exact default → *-flash (non-lite/pro/exp noise last) → first id.
+ */
+export function preferGeminiFlashModel(
+  modelIds: string[],
+  preferred: string = DEFAULT_MODELS.gemini
+): string {
+  const ids = modelIds.map(normalizeGeminiModelId).filter(Boolean);
+  if (!ids.length) return preferred;
+  if (ids.includes(preferred)) return preferred;
+  const flash = ids.find(
+    (id) =>
+      /flash/i.test(id) &&
+      !/lite|exp|preview|tts|live|image|embed/i.test(id)
+  );
+  if (flash) return flash;
+  const anyFlash = ids.find((id) => /flash/i.test(id));
+  if (anyFlash) return anyFlash;
+  return ids[0];
 }

@@ -2,11 +2,16 @@ import { DEFAULT_BASE_URLS, DEFAULT_MODELS } from "./llm-defaults";
 import {
   migrateStaleModelId,
   normalizeGeminiModelId,
+  preferGeminiFlashModel,
 } from "./llm-model-ids";
 import { getDecryptedApiKey, readLlmSettings } from "./llm-store";
 import { LlmProvider } from "./types";
 
-export { migrateStaleModelId, normalizeGeminiModelId } from "./llm-model-ids";
+export {
+  migrateStaleModelId,
+  normalizeGeminiModelId,
+  preferGeminiFlashModel,
+} from "./llm-model-ids";
 
 export type LlmModelOption = {
   id: string;
@@ -203,7 +208,15 @@ export async function listProviderModels(opts?: {
       models = [{ id: defaultModel, label: defaultModel }];
     }
 
-    return { provider, models, defaultModel };
+    const preferred =
+      provider === "gemini"
+        ? preferGeminiFlashModel(
+            models.map((m) => m.id),
+            defaultModel
+          )
+        : defaultModel;
+
+    return { provider, models, defaultModel: preferred };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Failed to list models";
     const safe = msg

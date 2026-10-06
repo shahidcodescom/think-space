@@ -80,8 +80,14 @@ export default function ProfilePage() {
       }));
       setModelOptions(opts);
       if (data.error) setModelsError(data.error);
+      const staleGemini =
+        provider === "gemini" &&
+        preferModel &&
+        /^(models\/)?gemini-(3\.8|2\.0)-flash/i.test(preferModel);
       const pick =
-        (preferModel && opts.some((o) => o.value === preferModel)
+        (!staleGemini &&
+        preferModel &&
+        opts.some((o) => o.value === preferModel)
           ? preferModel
           : null) ||
         data.defaultModel ||

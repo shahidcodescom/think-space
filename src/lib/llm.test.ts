@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { buildCompactContext, callLlm, type LlmResolved } from "./llm";
 import { DEFAULT_MODELS, LLM_PROVIDERS } from "./llm-defaults";
-import { migrateStaleModelId, normalizeGeminiModelId } from "./llm-model-ids";
+import {
+  migrateStaleModelId,
+  normalizeGeminiModelId,
+  preferGeminiFlashModel,
+} from "./llm-model-ids";
 import type { Project, StoreData } from "./types";
 
 const emptyStore: StoreData = {
@@ -66,11 +70,29 @@ async function main() {
   assert.ok(LLM_PROVIDERS.includes("openai"));
   assert.ok(LLM_PROVIDERS.includes("ollama"));
   assert.equal(DEFAULT_MODELS.openai, "gpt-4o-mini");
-  assert.equal(DEFAULT_MODELS.gemini, "gemini-3.8-flash");
-  assert.equal(normalizeGeminiModelId("models/gemini-3.8-flash"), "gemini-3.8-flash");
+  assert.equal(DEFAULT_MODELS.gemini, "gemini-2.5-flash");
+  assert.equal(
+    normalizeGeminiModelId("models/gemini-2.5-flash"),
+    "gemini-2.5-flash"
+  );
   assert.equal(
     migrateStaleModelId("gemini", "gemini-2.0-flash"),
-    "gemini-3.8-flash"
+    "gemini-2.5-flash"
+  );
+  assert.equal(
+    migrateStaleModelId("gemini", "gemini-3.8-flash"),
+    "gemini-2.5-flash"
+  );
+  assert.equal(
+    migrateStaleModelId("gemini", "models/gemini-3.8-flash"),
+    "gemini-2.5-flash"
+  );
+  assert.equal(
+    preferGeminiFlashModel(
+      ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-1.5-flash"],
+      "gemini-2.5-flash"
+    ),
+    "gemini-2.5-flash"
   );
 
   const ctx = buildCompactContext(emptyStore, {
