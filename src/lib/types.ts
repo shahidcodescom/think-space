@@ -61,6 +61,8 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   html?: string;
+  /** Structured Open/Go-to redirects for Thinking space chips. */
+  links?: { href: string; label: string }[];
   createdAt: string;
 }
 
@@ -463,6 +465,31 @@ export interface LlmSettingsStored {
   /** Base URL for ollama / custom openrouter / openai-compatible. */
   baseUrl: string;
   apiKeyCiphertext: string | null;
+  /** Sampling temperature 0–2 (provider-dependent). */
+  temperature: number;
+  /** Max output tokens for the completion. */
+  maxTokens: number;
+  /** Optional system prompt override (empty = built-in default). */
+  systemPrompt: string;
+  /** When true, retrieve top-k workspace chunks for the query. */
+  ragEnabled: boolean;
+  /** How many RAG chunks to include. */
+  ragTopK: number;
+  /** Max characters per retrieved chunk. */
+  ragChunkSize: number;
+  /** Hard cap on total context characters sent to the model. */
+  contextCharLimit: number;
+  /** Modules included in RAG retrieval. */
+  ragModules: string[];
+  /** Use PostgreSQL + pgvector for RAG when configured. */
+  pgEnabled: boolean;
+  /** Full connection URI (optional if host fields set). Stored as-is; prefer env in prod. */
+  pgConnectionString: string;
+  pgHost: string;
+  pgPort: number;
+  pgDatabase: string;
+  pgUser: string;
+  pgPasswordCiphertext: string | null;
   updatedAt: string;
 }
 
@@ -476,5 +503,51 @@ export interface LlmSettingsPublic {
   /** True when env provides a key for the selected provider. */
   envKeyAvailable: boolean;
   source: "settings" | "env" | "off";
+  temperature: number;
+  maxTokens: number;
+  systemPrompt: string;
+  ragEnabled: boolean;
+  ragTopK: number;
+  ragChunkSize: number;
+  contextCharLimit: number;
+  ragModules: string[];
+  pgEnabled: boolean;
+  pgConnectionString: string;
+  pgHost: string;
+  pgPort: number;
+  pgDatabase: string;
+  pgUser: string;
+  /** True when a Postgres password is stored encrypted. */
+  hasPgPassword: boolean;
+}
+
+export type IntentAction =
+  | "list_notes"
+  | "list_tasks"
+  | "list_meetings"
+  | "list_thoughts"
+  | "list_memories"
+  | "list_secrets"
+  | "list_assets"
+  | "list_projects"
+  | "list_clients"
+  | "list_recurrings"
+  | "list_finance"
+  | "list_belongings"
+  | "list_calendar"
+  | "list_jobs"
+  | "list_skills"
+  | "list_library"
+  | "glance"
+  | "help";
+
+export interface IntentDef {
+  id: string;
+  name: string;
+  enabled: boolean;
+  /** Regex pattern sources (OR). Case-insensitive. */
+  patterns: string[];
+  action: IntentAction;
+  updatedAt: string;
 }
 

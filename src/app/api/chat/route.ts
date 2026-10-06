@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { answerQuery, AiExtras, renderAnswerMarkdown } from "@/lib/ai";
+import { answerQuery, AiExtras, enrichAnswer, renderAnswerMarkdown } from "@/lib/ai";
 import { readAssetsFile } from "@/lib/assets-store";
 import { readClientsFile } from "@/lib/clients-store";
 import { readProjectsFile } from "@/lib/projects-store";
@@ -11,11 +11,13 @@ import { readJobsFile } from "@/lib/jobs-store";
 import { readSkillsFile } from "@/lib/skills-store";
 import { readLibraryFile } from "@/lib/library-store";
 import { readSecretsFile } from "@/lib/secrets-store";
+import { listIntents, matchIntentQuery } from "@/lib/intents";
 import {
   buildCompactContext,
   callLlm,
   resolveLlmConfig,
 } from "@/lib/llm";
+import { buildThinkingRagContext } from "@/lib/rag";
 import { nowIso, readStore, uid, writeStore } from "@/lib/store";
 import { SecretPublic } from "@/lib/types";
 
@@ -66,6 +68,7 @@ export async function POST(req: NextRequest) {
     jobsFile,
     skillsFile,
     libraryFile,
+    intents,
   ] = await Promise.all([
     readStore(),
     readAssetsFile(),
@@ -79,6 +82,7 @@ export async function POST(req: NextRequest) {
     readJobsFile(),
     readSkillsFile(),
     readLibraryFile(),
+    listIntents(),
   ]);
 
   const extras: AiExtras = {
@@ -97,6 +101,9 @@ export async function POST(req: NextRequest) {
     library: libraryFile.items,
   };
 
+  const matched = matchIntentQuery(message, intents);
+  const ruleQuery = matched?.canonicalQuery || message;
+
   const userMsg = {
     id: uid("msg"),
     role: "user" as const,
@@ -106,20 +113,37 @@ export async function POST(req: NextRequest) {
 
   let title: string | undefined;
   let text: string;
+  let links: { href: string; label: string }[] | undefined;
   let mode: "llm" | "rules" = "rules";
 
   const llmConfig = await resolveLlmConfig();
   if (llmConfig.enabled) {
-    const context = buildCompactContext(store, extras);
+    const compact = buildCompactContext(store, extras);
+    const rag = await buildThinkingRagContext(message, store, extras, llmConfig);
+    let context = compact;
+    if (rag.context) {
+      context = `${rag.context}\n\n---\nWorkspace overview:\n${compact}`;
+    }
+    if (context.length > llmConfig.contextCharLimit) {
+      context = context.slice(0, llmConfig.contextCharLimit) + "\n…";
+    }
     const llm = await callLlm({ message, context, config: llmConfig });
     if (llm.ok && llm.text.trim()) {
+      const enriched = enrichAnswer(
+        { text: llm.text.trim() },
+        message,
+        store,
+        extras
+      );
       title = undefined;
-      text = llm.text.trim();
+      text = enriched.text;
+      links = enriched.links;
       mode = "llm";
     } else {
-      const fallback = answerQuery(message, store, extras);
+      const fallback = answerQuery(ruleQuery, store, extras);
       title = fallback.title;
       text = fallback.text;
+      links = fallback.links;
       const err = !llm.ok ? llm.error : "Empty model response";
       if (err && err !== "LLM disabled") {
         const hint = err.replace(/\s+/g, " ").slice(0, 160);
@@ -127,9 +151,10 @@ export async function POST(req: NextRequest) {
       }
     }
   } else {
-    const answer = answerQuery(message, store, extras);
+    const answer = answerQuery(ruleQuery, store, extras);
     title = answer.title;
     text = answer.text;
+    links = answer.links;
   }
 
   const html = renderAnswerMarkdown(title, text);
@@ -138,6 +163,7 @@ export async function POST(req: NextRequest) {
     role: "assistant" as const,
     content: title ? `${title}\n${text}` : text,
     html,
+    links,
     createdAt: nowIso(),
   };
 

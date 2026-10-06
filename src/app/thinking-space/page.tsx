@@ -217,6 +217,19 @@ export default function ThinkingSpacePage() {
                         `<p>${msg.content.replace(/\n/g, "<br/>")}</p>`,
                     }}
                   />
+                  {msg.links && msg.links.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {msg.links.map((link) => (
+                        <Link
+                          key={link.href + link.label}
+                          href={link.href}
+                          className="inline-flex items-center rounded-full bg-sage-muted px-2.5 py-1 text-xs font-medium text-forest hover:bg-sage-light transition-colors"
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex flex-wrap justify-end gap-2 mt-3 pt-2 border-t border-forest/5">
                     <button
                       type="button"

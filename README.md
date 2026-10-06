@@ -266,3 +266,40 @@ LLM_MODEL=gpt-4o-mini
 
 Settings persist in `data/llm-settings.json` (`apiKeyCiphertext` only — never plaintext). UI: `/profile`. API: `GET/PUT /api/llm/settings` (public fields only; PUT may send `apiKey` once to encrypt, or `clearApiKey: true`).
 
+## LLM, RAG & Postgres (pgvector)
+
+Thinking space can use an optional LLM with retrieval-augmented context.
+
+### Profile → Thinking space LLM
+
+- **LLM** — provider, live model list, temperature, max tokens, system prompt, API key
+- **RAG** — on/off, top-k, chunk size, context cap, module filters (in-memory keyword retrieval by default)
+- **PostgreSQL + pgvector** — optional vector store; test connection, migrate, reindex
+- **Intents** — enable/edit regex patterns that map to built-in actions
+
+### Environment variables
+
+| Variable | Purpose |
+|----------|---------|
+| `SECRETS_MASTER_KEY` | AES key for encrypted secrets & stored API/DB passwords |
+| `LLM_ENABLED` | Force-enable LLM (`true` / `1`) |
+| `LLM_PROVIDER` | `openai` \| `gemini` \| `claude` \| `openrouter` \| `ollama` |
+| `LLM_MODEL` | Override model id |
+| `LLM_BASE_URL` | Override provider base URL |
+| `LLM_API_KEY` / `OPENAI_API_KEY` / `GEMINI_API_KEY` / `ANTHROPIC_API_KEY` / `OPENROUTER_API_KEY` | Provider keys (env fallback) |
+| `DATABASE_URL` | Postgres connection URI for pgvector RAG |
+| `DATABASE_HOST` / `DATABASE_PORT` / `DATABASE_NAME` / `DATABASE_USER` / `DATABASE_PASSWORD` | Discrete Postgres fields |
+| `DATABASE_SSL` | Set `true` to enable SSL |
+
+When Postgres/pgvector is disabled or unreachable, Thinking space falls back to JSON/in-memory RAG. App CRUD remains on local JSON files under `data/`.
+
+### pgvector setup (sketch)
+
+```bash
+# Example
+createdb bipolar
+psql bipolar -c 'CREATE EXTENSION vector;'
+# In Profile: enable Postgres RAG, save connection, Test → Migrate → Reindex
+```
+
+Embeddings use OpenAI `text-embedding-3-small` when an OpenAI key is available; otherwise a local deterministic embedding is used so reindex still works offline.

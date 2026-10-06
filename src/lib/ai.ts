@@ -1,7 +1,27 @@
+import {
+  AnswerLink,
+  appendGoToFooter,
+  buildCatalog,
+  dedupeLinks,
+  inferItemLinksFromText,
+  linksFromMarkdown,
+  mdOpen,
+  modulesFromTitleOrQuery,
+  sectionLink,
+} from "./ai-links";
 import { stripHtml } from "./sanitize";
 import { Asset, Belonging, CalendarEvent, Client, FinanceFixedItem,
   FinanceTransaction, JobApplication, LibraryItem, Project, Recurring, SecretPublic, Skill, StoreData, Subscription } from "./types";
 import { summarizeMonth } from "./finance-store";
+
+
+export type { AnswerLink } from "./ai-links";
+
+export type AiAnswer = {
+  text: string;
+  title?: string;
+  links?: AnswerLink[];
+};
 
 /** Extra workspace data for the rule-based assistant (secrets = metadata only). */
 export type AiExtras = {
@@ -42,27 +62,57 @@ function formatAssetLine(a: Asset): string {
     a.serial ? `ID ${a.serial}` : null,
     a.location || null,
   ].filter(Boolean);
-  return bits.join(" · ");
+  return `${bits.join(" · ")} — ${mdOpen("assets", a.id)}`;
 }
 
 function formatSecretLine(s: SecretPublic): string {
   const tags = s.tags.length ? ` · ${s.tags.join(", ")}` : "";
   const notes = s.notes ? `: ${s.notes}` : "";
   // Metadata only + redirect into Secrets UI (never values)
-  return `**${s.name}** (${s.category})${tags}${notes} — [Open in Secrets](/secrets?id=${s.id})`;
+  return `**${s.name}** (${s.category})${tags}${notes} — ${mdOpen("secrets", s.id, "Open in Secrets")}`;
 }
 
 function formatProjectLine(p: Project): string {
   const label = p.status === "live" ? "Live / Released" : "In progress";
   const tags = p.tags.length ? ` · ${p.tags.join(", ")}` : "";
-  return `**${p.name}** — ${label}${tags}: ${p.description || "No description"}`;
+  return `**${p.name}** — ${label}${tags}: ${p.description || "No description"} — ${mdOpen("projects", p.id)}`;
+}
+
+export function enrichAnswer(
+  answer: AiAnswer,
+  query: string,
+  store: StoreData,
+  extras: AiExtras = {}
+): AiAnswer {
+  const modules = modulesFromTitleOrQuery(answer.title, query);
+  const catalog = buildCatalog(store, extras);
+  const sectionLinks = modules.map(sectionLink);
+  const links = dedupeLinks([
+    ...(answer.links || []),
+    ...linksFromMarkdown(answer.text),
+    ...inferItemLinksFromText(answer.text, catalog),
+    ...sectionLinks,
+  ]).slice(0, 16);
+  return {
+    ...answer,
+    text: appendGoToFooter(answer.text, sectionLinks),
+    links,
+  };
 }
 
 export function answerQuery(
   query: string,
   store: StoreData,
   extras: AiExtras = {}
-): { text: string; title?: string } {
+): AiAnswer {
+  return enrichAnswer(computeAnswer(query, store, extras), query, store, extras);
+}
+
+function computeAnswer(
+  query: string,
+  store: StoreData,
+  extras: AiExtras = {}
+): AiAnswer {
   const q = query.toLowerCase().trim();
   const assets = extras.assets || [];
   const secrets = extras.secrets || [];
@@ -693,7 +743,7 @@ export function renderAnswerMarkdown(title: string | undefined, text: string): s
       // Safe internal markdown links e.g. [Open in Secrets](/secrets?id=...)
       withBold = withBold.replace(
         /\[([^\]]+)\]\((\/(?:secrets|notes|assets|tasks|meetings|thoughts|memories|projects|clients|recurrings|finance|belongings|calendar|jobs|skills|library|thinking-space|profile|book)[^)]*)\)/g,
-        '<a href="$2" class="text-forest font-medium underline decoration-sage-dark/50 hover:decoration-forest whitespace-nowrap">$1</a>'
+        '<a href="$2" class="inline-flex items-center rounded-full bg-sage-muted px-2.5 py-0.5 text-xs font-medium text-forest hover:bg-sage-light whitespace-nowrap no-underline">$1</a>'
       );
       if (withBold.startsWith("- ")) {
         return `<li>${withBold.slice(2)}</li>`;
@@ -701,8 +751,8 @@ export function renderAnswerMarkdown(title: string | undefined, text: string): s
       if (withBold.includes(": ") && withBold.includes("<strong>")) {
         return `<li>${withBold}</li>`;
       }
-      // Secret/asset list lines without leading dash still get list treatment when they have Open link
-      if (withBold.includes('href="/secrets?id=')) {
+      // Item lines with Open deep-links become list items
+      if (/href="\/(?:notes|tasks|meetings|thoughts|memories|secrets|assets|projects|clients|recurrings|finance|belongings|calendar|jobs|skills|library)\?id=/.test(withBold)) {
         return `<li>${withBold}</li>`;
       }
       return `<p>${withBold}</p>`;

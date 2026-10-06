@@ -463,6 +463,8 @@ assertNoSecretLeak(secretHit.text, "keyword secret");
 
 const html = renderAnswerMarkdown(secretsAns.title, secretsAns.text);
 assert(html.includes('href="/secrets?id=secret-1"'), "rendered clickable secret link");
+assert(secretsAns.links && secretsAns.links.some((l) => l.href.startsWith("/secrets")), "structured secrets links");
+assert(notes.text.includes("Go to:") || (notes.links && notes.links.length > 0), "notes redirects");
 assertNoSecretLeak(html, "rendered html");
 
 const projectsAns = answerQuery("List my projects", sample, extras);

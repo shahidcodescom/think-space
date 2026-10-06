@@ -11,6 +11,14 @@ export type LlmResolved = {
   model: string;
   baseUrl: string;
   apiKey: string | null;
+  temperature: number;
+  maxTokens: number;
+  systemPrompt: string;
+  ragEnabled: boolean;
+  ragTopK: number;
+  ragChunkSize: number;
+  contextCharLimit: number;
+  ragModules: string[];
 };
 
 /**
@@ -48,7 +56,21 @@ export async function resolveLlmConfig(): Promise<LlmResolved> {
 
   const apiKey = enabled ? await getDecryptedApiKey({ ...settings, provider }) : null;
 
-  return { enabled, provider, model, baseUrl, apiKey };
+  return {
+    enabled,
+    provider,
+    model,
+    baseUrl,
+    apiKey,
+    temperature: settings.temperature,
+    maxTokens: settings.maxTokens,
+    systemPrompt: settings.systemPrompt || "",
+    ragEnabled: settings.ragEnabled,
+    ragTopK: settings.ragTopK,
+    ragChunkSize: settings.ragChunkSize,
+    contextCharLimit: settings.contextCharLimit,
+    ragModules: settings.ragModules || [],
+  };
 }
 
 /** Compact workspace snapshot for the model — never includes secret values. */
@@ -210,11 +232,12 @@ export function buildCompactContext(
   return text.length > 12000 ? text.slice(0, 12000) + "\n…" : text;
 }
 
-const SYSTEM_PROMPT = `You are the Thinking space assistant for Bi-Polar, a personal workspace app.
+const DEFAULT_SYSTEM_PROMPT = `You are the Thinking space assistant for Bi-Polar, a personal workspace app.
 Answer helpfully and concisely using the workspace context provided.
 Rules:
 - Never invent secret values, passwords, or API keys. Secrets are listed by name only; tell the user to open Secrets in the app to reveal values.
 - Prefer concrete references to items in the context (notes, tasks, jobs, etc.).
+- When you mention a workspace item, add a markdown link so the user can open it, e.g. [Open](/notes?id=NOTE_ID) or [Open Notes](/notes). Only use app paths: /notes /tasks /meetings /thoughts /memories /secrets /assets /projects /clients /recurrings /finance /belongings /calendar /jobs /skills /library.
 - If context is insufficient, say what you know and suggest which section to check.
 - Use plain text with light markdown (**bold**, lists). No HTML.`;
 
@@ -228,6 +251,7 @@ async function chatCompletionsStyle(
   model: string,
   system: string,
   user: string,
+  opts: { temperature: number; maxTokens: number },
   extraHeaders: Record<string, string> = {}
 ): Promise<string> {
   const headers: Record<string, string> = {
@@ -241,7 +265,8 @@ async function chatCompletionsStyle(
     headers,
     body: JSON.stringify({
       model,
-      temperature: 0.4,
+      temperature: opts.temperature,
+      max_tokens: opts.maxTokens,
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
@@ -267,6 +292,7 @@ async function callOpenAiCompatible(
   model: string,
   system: string,
   user: string,
+  opts: { temperature: number; maxTokens: number },
   extraHeaders: Record<string, string> = {}
 ): Promise<string> {
   const root = baseUrl.replace(/\/$/, "");
@@ -274,7 +300,7 @@ async function callOpenAiCompatible(
     /\/v1$/i.test(root) || /\/api\/v1$/i.test(root)
       ? `${root}/chat/completions`
       : `${root}/v1/chat/completions`;
-  return chatCompletionsStyle(url, apiKey, model, system, user, extraHeaders);
+  return chatCompletionsStyle(url, apiKey, model, system, user, opts, extraHeaders);
 }
 
 async function callClaude(
@@ -282,7 +308,8 @@ async function callClaude(
   apiKey: string,
   model: string,
   system: string,
-  user: string
+  user: string,
+  opts: { temperature: number; maxTokens: number }
 ): Promise<string> {
   const root = baseUrl.replace(/\/$/, "");
   const res = await fetch(`${root}/v1/messages`, {
@@ -294,7 +321,8 @@ async function callClaude(
     },
     body: JSON.stringify({
       model,
-      max_tokens: 1024,
+      max_tokens: opts.maxTokens,
+      temperature: opts.temperature,
       system,
       messages: [{ role: "user", content: user }],
     }),
@@ -316,7 +344,8 @@ async function callGemini(
   apiKey: string,
   model: string,
   system: string,
-  user: string
+  user: string,
+  opts: { temperature: number; maxTokens: number }
 ): Promise<string> {
   const root = baseUrl.replace(/\/$/, "");
   const modelId = normalizeGeminiModelId(model);
@@ -331,7 +360,10 @@ async function callGemini(
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
       contents: [{ role: "user", parts: [{ text: user }] }],
-      generationConfig: { temperature: 0.4 },
+      generationConfig: {
+        temperature: opts.temperature,
+        maxOutputTokens: opts.maxTokens,
+      },
     }),
   });
   if (!res.ok) {
@@ -377,7 +409,8 @@ async function callOllama(
   baseUrl: string,
   model: string,
   system: string,
-  user: string
+  user: string,
+  opts: { temperature: number; maxTokens: number }
 ): Promise<string> {
   const root = baseUrl.replace(/\/$/, "");
   // Prefer OpenAI-compatible endpoint when available
@@ -387,7 +420,8 @@ async function callOllama(
       null,
       model,
       system,
-      user
+      user,
+      opts
     );
   } catch {
     const res = await fetch(`${root}/api/chat`, {
@@ -431,26 +465,33 @@ export async function callLlm(opts: {
   }
 
   const userContent = `Workspace context:\n${context}\n\nUser question:\n${message}`;
+  const system = (config.systemPrompt || "").trim() || DEFAULT_SYSTEM_PROMPT;
+  const genOpts = {
+    temperature: config.temperature ?? 0.4,
+    maxTokens: config.maxTokens ?? 1024,
+  };
 
   try {
-    let text: string;
+    let textOut: string;
     switch (config.provider) {
       case "openai":
-        text = await callOpenAiCompatible(
+        textOut = await callOpenAiCompatible(
           config.baseUrl,
           config.apiKey,
           config.model,
-          SYSTEM_PROMPT,
-          userContent
+          system,
+          userContent,
+          genOpts
         );
         break;
       case "openrouter":
-        text = await callOpenAiCompatible(
+        textOut = await callOpenAiCompatible(
           config.baseUrl,
           config.apiKey,
           config.model,
-          SYSTEM_PROMPT,
+          system,
           userContent,
+          genOpts,
           {
             "HTTP-Referer": "https://second-brain.local",
             "X-Title": "Bi-Polar",
@@ -459,30 +500,33 @@ export async function callLlm(opts: {
         break;
       case "claude":
         if (!config.apiKey) return { ok: false, error: "No API key configured" };
-        text = await callClaude(
+        textOut = await callClaude(
           config.baseUrl,
           config.apiKey,
           config.model,
-          SYSTEM_PROMPT,
-          userContent
+          system,
+          userContent,
+          genOpts
         );
         break;
       case "gemini":
         if (!config.apiKey) return { ok: false, error: "No API key configured" };
-        text = await callGemini(
+        textOut = await callGemini(
           config.baseUrl,
           config.apiKey,
           migrateStaleModelId("gemini", config.model),
-          SYSTEM_PROMPT,
-          userContent
+          system,
+          userContent,
+          genOpts
         );
         break;
       case "ollama":
-        text = await callOllama(
+        textOut = await callOllama(
           config.baseUrl,
           config.model,
-          SYSTEM_PROMPT,
-          userContent
+          system,
+          userContent,
+          genOpts
         );
         break;
       default:
@@ -490,13 +534,12 @@ export async function callLlm(opts: {
     }
     return {
       ok: true,
-      text,
+      text: textOut,
       provider: config.provider,
       model: config.model,
     };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "LLM request failed";
-    // Strip anything that looks like a bearer token from error text
     const safe = msg.replace(/Bearer\s+\S+/gi, "Bearer ***").replace(/key=[^&\s]+/gi, "key=***");
     return { ok: false, error: safe };
   }

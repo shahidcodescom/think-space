@@ -62,6 +62,14 @@ function baseConfig(over: Partial<LlmResolved> = {}): LlmResolved {
     model: "gpt-4o-mini",
     baseUrl: "https://api.openai.com/v1",
     apiKey: null,
+    temperature: 0.4,
+    maxTokens: 1024,
+    systemPrompt: "",
+    ragEnabled: true,
+    ragTopK: 8,
+    ragChunkSize: 280,
+    contextCharLimit: 12000,
+    ragModules: ["notes", "tasks"],
     ...over,
   };
 }
