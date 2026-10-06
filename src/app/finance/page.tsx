@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import {
   FinanceIcon,
@@ -111,6 +112,7 @@ function shiftMonth(ym: string, delta: number) {
 }
 
 export default function FinancePage() {
+  const confirm = useConfirm();
   const [all, setAll] = useState<FinanceTransaction[]>([]);
   const [recurrings, setRecurrings] = useState<Recurring[]>([]);
   const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
@@ -250,7 +252,7 @@ export default function FinancePage() {
   }
 
   async function remove(t: FinanceTransaction) {
-    if (!confirm(`Delete this ${t.type}?`)) return;
+    if (!(await confirm({ title: "Delete transaction?", message: `Delete this ${t.type}?`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/finance/${t.id}`, { method: "DELETE" });
     if (selectedId === t.id) setSelectedId(null);
     setMobileDetail(false);

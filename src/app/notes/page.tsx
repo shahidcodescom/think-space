@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Modal } from "@/components/Modal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { SafeHtml } from "@/components/SafeHtml";
 import { MobileBackButton } from "@/components/MobileBackButton";
@@ -11,6 +12,7 @@ import { stripHtml } from "@/lib/sanitize";
 import { Note } from "@/lib/types";
 
 function NotesInner() {
+  const confirm = useConfirm();
   const search = useSearchParams();
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -85,7 +87,7 @@ function NotesInner() {
   }
 
   async function remove(note: Note) {
-    if (!confirm(`Delete “${note.title}”?`)) return;
+    if (!(await confirm({ title: "Delete note?", message: `Delete “${note.title}”?`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/notes/${note.id}`, { method: "DELETE" });
     setNotes((prev) => prev.filter((n) => n.id !== note.id));
     if (selectedId === note.id) setSelectedId(null);

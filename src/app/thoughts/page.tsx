@@ -5,11 +5,13 @@ import { ActionItems } from "@/components/ActionItems";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { LinkedNotes } from "@/components/LinkedNotes";
 import { Modal } from "@/components/Modal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import { PencilIcon, PlusIcon, TrashIcon } from "@/components/Icons";
 import { Note, Task, Thought } from "@/lib/types";
 
 export default function ThoughtsPage() {
+  const confirm = useConfirm();
   const [thoughts, setThoughts] = useState<Thought[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -83,7 +85,7 @@ export default function ThoughtsPage() {
   }
 
   async function remove(t: Thought) {
-    if (!confirm(`Delete “${t.title}”?`)) return;
+    if (!(await confirm({ title: "Delete thought?", message: `Delete “${t.title}”?`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/thoughts/${t.id}`, { method: "DELETE" });
     setThoughts((prev) => prev.filter((x) => x.id !== t.id));
     if (selectedId === t.id) setSelectedId(null);

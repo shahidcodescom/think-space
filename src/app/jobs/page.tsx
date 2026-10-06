@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { SafeHtml } from "@/components/SafeHtml";
@@ -79,6 +80,7 @@ function fromLocalInput(local: string) {
 }
 
 export default function JobsPage() {
+  const confirm = useConfirm();
   const [jobs, setJobs] = useState<JobApplication[]>([]);
   const [view, setView] = useState<ViewMode>("board");
   const [statusFilter, setStatusFilter] = useState("");
@@ -205,7 +207,7 @@ export default function JobsPage() {
   }
 
   async function remove(j: JobApplication) {
-    if (!confirm(`Delete application at ${j.company}?`)) return;
+    if (!(await confirm({ title: "Delete application?", message: `Delete application at ${j.company}?`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/jobs/${j.id}`, { method: "DELETE" });
     if (selectedId === j.id) setSelectedId(null);
     setMobileDetail(false);
@@ -239,7 +241,7 @@ export default function JobsPage() {
   }
 
   async function deleteResume(j: JobApplication) {
-    if (!confirm("Remove resume file?")) return;
+    if (!(await confirm({ title: "Remove resume?", message: "Remove resume file?", confirmLabel: "Remove" }))) return;
     await fetch(`/api/jobs/${j.id}/resume`, { method: "DELETE" });
     await load();
   }

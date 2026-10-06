@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import {
   PencilIcon,
   PlusIcon,
@@ -34,6 +35,7 @@ const emptyForm: FormState = {
 };
 
 export default function ProjectsPage() {
+  const confirm = useConfirm();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -130,7 +132,7 @@ export default function ProjectsPage() {
   }
 
   async function remove(project: Project) {
-    if (!confirm(`Delete project “${project.name}”?`)) return;
+    if (!(await confirm({ title: "Delete project?", message: `Delete project “${project.name}”?`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/projects/${project.id}`, { method: "DELETE" });
     if (selectedId === project.id) setSelectedId(null);
     await load();

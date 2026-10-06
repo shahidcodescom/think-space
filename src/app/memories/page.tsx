@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import { PencilIcon, PlusIcon, TrashIcon } from "@/components/Icons";
 import { formatDisplayDate } from "@/lib/format";
 import { Memory } from "@/lib/types";
 
 export default function MemoriesPage() {
+  const confirm = useConfirm();
   const [memories, setMemories] = useState<Memory[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileDetail, setMobileDetail] = useState(false);
@@ -64,7 +66,7 @@ export default function MemoriesPage() {
   }
 
   async function remove(m: Memory) {
-    if (!confirm(`Delete “${m.title}”?`)) return;
+    if (!(await confirm({ title: "Delete memory?", message: `Delete “${m.title}”?`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/memories/${m.id}`, { method: "DELETE" });
     setMemories((prev) => prev.filter((x) => x.id !== m.id));
     if (selectedId === m.id) setSelectedId(null);

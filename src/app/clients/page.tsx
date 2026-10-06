@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import {
   ClientsIcon,
   PencilIcon,
@@ -53,6 +54,7 @@ function subTone(status: SubscriptionStatus, renewalDate: string) {
 }
 
 export default function ClientsPage() {
+  const confirm = useConfirm();
   const [clients, setClients] = useState<Client[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -223,7 +225,7 @@ export default function ClientsPage() {
   }
 
   async function deleteClient(c: Client) {
-    if (!confirm(`Delete client “${c.name}” and related subscriptions/payments?`)) return;
+    if (!(await confirm({ title: "Delete client?", message: `Delete client “${c.name}” and related subscriptions/payments?`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/clients/${c.id}`, { method: "DELETE" });
     if (selectedId === c.id) setSelectedId(null);
     await load();

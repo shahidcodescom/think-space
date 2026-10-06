@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import {
   AssetIcon,
   PencilIcon,
@@ -71,6 +72,7 @@ function formatMoney(value: number | null): string {
 }
 
 export default function AssetsPage() {
+  const confirm = useConfirm();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileDetail, setMobileDetail] = useState(false);
@@ -175,7 +177,7 @@ export default function AssetsPage() {
   }
 
   async function remove(asset: Asset) {
-    if (!confirm(`Delete asset “${asset.name}”?`)) return;
+    if (!(await confirm({ title: "Delete asset?", message: `Delete asset “${asset.name}”?`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/assets/${asset.id}`, { method: "DELETE" });
     if (selectedId === asset.id) setSelectedId(null);
     await load();

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import {
   LibraryIcon,
@@ -38,6 +39,7 @@ function typeTone(t: LibraryItemType) {
 }
 
 export default function LibraryPage() {
+  const confirm = useConfirm();
   const [items, setItems] = useState<LibraryItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileDetail, setMobileDetail] = useState(false);
@@ -151,7 +153,7 @@ export default function LibraryPage() {
   }
 
   async function remove(item: LibraryItem) {
-    if (!confirm(`Delete “${item.title}”?`)) return;
+    if (!(await confirm({ title: "Delete library item?", message: `Delete “${item.title}”?`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/library/${item.id}`, { method: "DELETE" });
     if (selectedId === item.id) setSelectedId(null);
     setMobileDetail(false);
@@ -176,7 +178,7 @@ export default function LibraryPage() {
   }
 
   async function deleteFile(item: LibraryItem) {
-    if (!confirm("Remove attached file?")) return;
+    if (!(await confirm({ title: "Remove file?", message: "Remove attached file?", confirmLabel: "Remove" }))) return;
     await fetch(`/api/library/${item.id}/file`, { method: "DELETE" });
     await load();
   }

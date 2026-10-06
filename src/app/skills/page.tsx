@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import {
   PencilIcon,
@@ -65,6 +66,7 @@ function statusTone(s: SkillStatus) {
 }
 
 export default function SkillsPage() {
+  const confirm = useConfirm();
   const [items, setItems] = useState<Skill[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileDetail, setMobileDetail] = useState(false);
@@ -199,7 +201,7 @@ export default function SkillsPage() {
   }
 
   async function remove(s: Skill) {
-    if (!confirm(`Delete “${s.name}”?`)) return;
+    if (!(await confirm({ title: "Delete skill?", message: `Delete “${s.name}”?`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/skills/${s.id}`, { method: "DELETE" });
     if (selectedId === s.id) setSelectedId(null);
     setMobileDetail(false);

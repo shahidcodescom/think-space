@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import {
   BelongingIcon,
@@ -70,6 +71,7 @@ function statusTone(s: BelongingStatus) {
 }
 
 export default function BelongingsPage() {
+  const confirm = useConfirm();
   const [items, setItems] = useState<Belonging[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -219,7 +221,7 @@ export default function BelongingsPage() {
   }
 
   async function remove(b: Belonging) {
-    if (!confirm(`Delete “${b.name}”?`)) return;
+    if (!(await confirm({ title: "Delete belonging?", message: `Delete “${b.name}”?`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/belongings/${b.id}`, { method: "DELETE" });
     if (selectedId === b.id) setSelectedId(null);
     setMobileDetail(false);

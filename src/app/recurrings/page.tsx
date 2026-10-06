@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import {
   PencilIcon,
@@ -90,6 +91,7 @@ function dueTone(r: Recurring) {
 }
 
 export default function RecurringsPage() {
+  const confirm = useConfirm();
   const [items, setItems] = useState<Recurring[]>([]);
   const [secrets, setSecrets] = useState<SecretPublic[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -216,7 +218,7 @@ export default function RecurringsPage() {
   }
 
   async function remove(r: Recurring) {
-    if (!confirm(`Delete “${r.name}”?`)) return;
+    if (!(await confirm({ title: "Delete recurring?", message: `Delete “${r.name}”?`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/recurrings/${r.id}`, { method: "DELETE" });
     if (selectedId === r.id) setSelectedId(null);
     setMobileDetail(false);

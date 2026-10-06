@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/Modal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { MobileBackButton } from "@/components/MobileBackButton";
 import {
   CalendarIcon,
@@ -103,6 +104,7 @@ function monthMatrix(year: number, month: number) {
 }
 
 export default function CalendarPage() {
+  const confirm = useConfirm();
   const [tab, setTab] = useState<Tab>("schedule");
   const [view, setView] = useState<ViewMode>("month");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -277,7 +279,7 @@ export default function CalendarPage() {
   }
 
   async function remove(ev: CalendarEvent) {
-    if (!confirm(`Delete “${ev.title}”?`)) return;
+    if (!(await confirm({ title: "Delete event?", message: `Delete “${ev.title}”?`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/calendar/events/${ev.id}`, { method: "DELETE" });
     if (selectedId === ev.id) setSelectedId(null);
     setMobileDetail(false);

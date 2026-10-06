@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Modal } from "@/components/Modal";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import {
   CopyIcon,
@@ -39,6 +40,7 @@ const emptyForm: FormState = {
 };
 
 function SecretsInner() {
+  const confirm = useConfirm();
   const search = useSearchParams();
   const [secrets, setSecrets] = useState<SecretPublic[]>([]);
   const [categories, setCategories] = useState<SecretCategory[]>([]);
@@ -209,7 +211,7 @@ function SecretsInner() {
   }
 
   async function remove(secret: SecretPublic) {
-    if (!confirm(`Delete secret “${secret.name}”? This cannot be undone.`)) return;
+    if (!(await confirm({ title: "Delete secret?", message: `Delete secret “${secret.name}”? This cannot be undone.`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/secrets/${secret.id}`, { method: "DELETE" });
     setSecrets((prev) => prev.filter((s) => s.id !== secret.id));
     if (selectedId === secret.id) setSelectedId(null);
@@ -337,9 +339,11 @@ function SecretsInner() {
 
   async function deleteCategory(cat: SecretCategory) {
     if (
-      !confirm(
-        `Delete category “${cat.name}”? Secrets keep their category label.`
-      )
+      !(await confirm({
+        title: "Delete category?",
+        message: `Delete category “${cat.name}”? Secrets keep their category label.`,
+        confirmLabel: "Delete",
+      }))
     ) {
       return;
     }
