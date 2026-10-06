@@ -388,7 +388,24 @@ const skillsSample = [
   },
 ];
 
-const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs, recurrings, finance: financeTx, belongings: belongingsSample, calendarEvents: calendarSample, jobs: jobsSample, skills: skillsSample };
+
+const librarySample = [
+  {
+    id: "lib-1",
+    title: "Grokking the System Design Interview",
+    type: "link",
+    url: "https://example.com/grokking",
+    notes: "Study later",
+    tags: ["system-design"],
+    filePath: null,
+    fileName: null,
+    mimeType: null,
+    createdAt: "2026-09-15T10:00:00.000Z",
+    updatedAt: "2026-09-15T10:00:00.000Z",
+  },
+];
+
+const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs, recurrings, finance: financeTx, belongings: belongingsSample, calendarEvents: calendarSample, jobs: jobsSample, skills: skillsSample, library: librarySample };
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);
@@ -542,6 +559,14 @@ assert(skillsAns.text.includes("Rust"), "skill learn");
 
 assert(glance.text.includes("Skills:** 2"), "glance skills");
 assert(help.text.toLowerCase().includes("skills"), "help skills");
+
+
+const libAns = answerQuery("List my library", sample, extras);
+assert(libAns.title === "Your library", "library title");
+assert(libAns.text.includes("Grokking"), "library item");
+
+assert(glance.text.includes("Library:** 1"), "glance library");
+assert(help.text.toLowerCase().includes("library"), "help library");
 
 console.log("ai.test.ts: all assertions passed");
 

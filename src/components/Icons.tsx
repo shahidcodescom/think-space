@@ -363,3 +363,13 @@ export function SkillsIcon(props: IconProps) {
   );
 }
 
+export function LibraryIcon(props: IconProps) {
+  return (
+    <svg {...base(props)} viewBox="0 0 24 24">
+      <path d="M4 4h7v16H4z" />
+      <path d="M13 4h7v16h-7z" />
+      <path d="M7 8h1M16 8h1" />
+    </svg>
+  );
+}
+

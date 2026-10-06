@@ -1,0 +1,52 @@
+{
+  "items": [
+    {
+      "id": "lib-1",
+      "title": "Grokking the System Design Interview",
+      "type": "link",
+      "url": "https://www.educative.io/courses/grokking-the-system-design-interview",
+      "notes": "Study later for staff-level loops.",
+      "tags": [
+        "system-design",
+        "career"
+      ],
+      "filePath": null,
+      "fileName": null,
+      "mimeType": null,
+      "createdAt": "2026-09-15T10:00:00.000Z",
+      "updatedAt": "2026-09-15T10:00:00.000Z"
+    },
+    {
+      "id": "lib-2",
+      "title": "Next.js App Router docs",
+      "type": "link",
+      "url": "https://nextjs.org/docs/app",
+      "notes": "Reference for Second Brain patterns.",
+      "tags": [
+        "nextjs",
+        "engineering"
+      ],
+      "filePath": null,
+      "fileName": null,
+      "mimeType": null,
+      "createdAt": "2026-08-01T10:00:00.000Z",
+      "updatedAt": "2026-08-01T10:00:00.000Z"
+    },
+    {
+      "id": "lib-3",
+      "title": "Interview rubric notes",
+      "type": "pdf",
+      "url": "",
+      "notes": "Placeholder — upload PDF of personal rubric.",
+      "tags": [
+        "interview",
+        "career"
+      ],
+      "filePath": "data/uploads/library/lib-3-1791303812506.pdf",
+      "fileName": "lib-demo.pdf",
+      "mimeType": "application/pdf",
+      "createdAt": "2026-10-01T10:00:00.000Z",
+      "updatedAt": "2026-10-06T16:23:32.507Z"
+    }
+  ]
+}

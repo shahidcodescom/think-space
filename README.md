@@ -221,3 +221,12 @@ Track skills you have vs skills to learn.
 - Persist: `data/skills.json`
 - Thinking space: “List my skills”
 
+## Library
+
+Save links, screenshots, PDFs, and documents to study later.
+
+- Page: `/library` — CRUD, tags, type filter, preview/download
+- Files: `data/uploads/library/` via `POST/GET/DELETE /api/library/[id]/file`
+- Persist: `data/library.json` · `/api/library`
+- Thinking space: “List my library”
+

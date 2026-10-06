@@ -25,6 +25,7 @@ import {
   CalendarIcon,
   JobsIcon,
   SkillsIcon,
+  LibraryIcon,
 } from "@/components/Icons";
 import { ChatMessage, Profile } from "@/lib/types";
 import { plainFromHtml } from "@/lib/format";
@@ -46,6 +47,7 @@ type Stats = {
   jobsActive?: number;
   skills?: number;
   skillsHave?: number;
+  library?: number;
   openLends?: number;
   openDues?: number;
   upcomingRenewals?: number;
@@ -331,6 +333,12 @@ export default function ThinkingSpacePage() {
             icon={<SkillsIcon size={22} />}
             label={`${stats.skills ?? 0} Skills`}
             tone="bg-sage-muted/50"
+          />
+          <GlanceCard
+            href="/library"
+            icon={<LibraryIcon size={22} />}
+            label={`${stats.library ?? 0} Library`}
+            tone="bg-teal-soft/50"
           />
         </div>
       </aside>

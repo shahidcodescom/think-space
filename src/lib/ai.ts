@@ -1,5 +1,5 @@
 import { stripHtml } from "./sanitize";
-import { Asset, Belonging, CalendarEvent, Client, FinanceTransaction, JobApplication, Project, Recurring, SecretPublic, Skill, StoreData, Subscription } from "./types";
+import { Asset, Belonging, CalendarEvent, Client, FinanceTransaction, JobApplication, LibraryItem, Project, Recurring, SecretPublic, Skill, StoreData, Subscription } from "./types";
 
 /** Extra workspace data for the rule-based assistant (secrets = metadata only). */
 export type AiExtras = {
@@ -15,6 +15,7 @@ export type AiExtras = {
   calendarEvents?: CalendarEvent[];
   jobs?: JobApplication[];
   skills?: Skill[];
+  library?: LibraryItem[];
 };
 
 function formatDate(isoDate: string): string {
@@ -71,6 +72,7 @@ export function answerQuery(
   const calendarEvents = extras.calendarEvents || [];
   const jobs = extras.jobs || [];
   const skills = extras.skills || [];
+  const library = extras.library || [];
 
   if (/list.*notes|my notes|show.*notes|what.*notes/.test(q)) {
     if (store.notes.length === 0) {
@@ -423,6 +425,21 @@ export function answerQuery(
     return { text: lines.join("\n"), title: "Your skills" };
   }
 
+  if (/list.*library|my library|saved (links|references)|study later|show.*library/.test(q)) {
+    if (library.length === 0) {
+      return {
+        text: "Your library is empty. Save a link or upload a file from Library.",
+        title: "Your library",
+      };
+    }
+    const lines = library.map((i) => {
+      const tags = i.tags.length ? ` · ${i.tags.join(", ")}` : "";
+      const link = i.url ? ` — ${i.url}` : i.fileName ? ` — file: ${i.fileName}` : "";
+      return `**${i.title}** (${i.type})${tags}${link}`;
+    });
+    return { text: lines.join("\n"), title: "Your library" };
+  }
+
     if (/product planning|meeting.*product/.test(q)) {
     const m = store.meetings.find((x) => /product planning/i.test(x.title));
     if (m) {
@@ -459,6 +476,7 @@ export function answerQuery(
         `**Calendar:** ${calendarEvents.filter((e) => e.status !== "cancelled").length}`,
         `**Jobs:** ${jobs.length}`,
         `**Skills:** ${skills.length}`,
+        `**Library:** ${library.length}`,
       ].join("\n"),
     };
   }
@@ -466,7 +484,7 @@ export function answerQuery(
   if (/hello|hi\b|hey|good morning|good evening/.test(q)) {
     return {
       title: "Hello",
-      text: `Hi ${store.profile.name.split(" ")[0]}. Ask me to list notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, finance, belongings, calendar, jobs, or skills — or summarise your workspace.`,
+      text: `Hi ${store.profile.name.split(" ")[0]}. Ask me to list notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, finance, belongings, calendar, jobs, skills, or library — or summarise your workspace.`,
     };
   }
 
@@ -494,6 +512,7 @@ export function answerQuery(
         "- Upcoming appointments",
         "- Job applications",
         "- List my skills",
+        "- List my library",
         "- At a glance",
         "- Tell me about Product planning",
       ].join("\n"),
@@ -591,6 +610,12 @@ export function answerQuery(
       hits.push(`Skill · **${sk.name}** · ${sk.status}`);
     }
   }
+  for (const li of library) {
+    const hay = `${li.title} ${li.notes} ${li.url} ${li.tags.join(" ")} ${li.type}`.toLowerCase();
+    if (hay.includes(q)) {
+      hits.push(`Library · **${li.title}** · ${li.type}`);
+    }
+  }
 
   if (hits.length) {
     return { title: "I found this", text: hits.join("\n") };
@@ -598,7 +623,7 @@ export function answerQuery(
 
   return {
     title: "Thinking…",
-    text: `I searched your notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, finance, belongings, calendar, jobs, and skills but did not find a match for “${query}”. Try “List my notes”, “List my assets”, or “At a glance”.`,
+    text: `I searched your notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, recurrings, finance, belongings, calendar, jobs, skills, and library but did not find a match for “${query}”. Try “List my notes”, “List my assets”, or “At a glance”.`,
   };
 }
 
@@ -609,7 +634,7 @@ export function renderAnswerMarkdown(title: string | undefined, text: string): s
       let withBold = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
       // Safe internal markdown links e.g. [Open in Secrets](/secrets?id=...)
       withBold = withBold.replace(
-        /\[([^\]]+)\]\((\/(?:secrets|notes|assets|tasks|meetings|thoughts|memories|projects|clients|recurrings|finance|belongings|calendar|jobs|skills|thinking-space|profile|book)[^)]*)\)/g,
+        /\[([^\]]+)\]\((\/(?:secrets|notes|assets|tasks|meetings|thoughts|memories|projects|clients|recurrings|finance|belongings|calendar|jobs|skills|library|thinking-space|profile|book)[^)]*)\)/g,
         '<a href="$2" class="text-forest font-medium underline decoration-sage-dark/50 hover:decoration-forest whitespace-nowrap">$1</a>'
       );
       if (withBold.startsWith("- ")) {

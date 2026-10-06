@@ -405,3 +405,21 @@ export interface Skill {
   updatedAt: string;
 }
 
+export type LibraryItemType = "link" | "image" | "pdf" | "document" | "other";
+
+export interface LibraryItem {
+  id: string;
+  title: string;
+  type: LibraryItemType;
+  /** External URL for link-type items (also optional reference for files). */
+  url: string;
+  notes: string;
+  tags: string[];
+  /** Relative path under data/uploads/library/ when a file is stored. */
+  filePath: string | null;
+  fileName: string | null;
+  mimeType: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
