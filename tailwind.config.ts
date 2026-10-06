@@ -9,16 +9,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Token names kept (forest/sage) — values remapped to a red/rose palette.
         forest: {
-          DEFAULT: "#1B3022",
-          soft: "#243D2C",
-          deep: "#142419",
+          DEFAULT: "#7C2430",
+          soft: "#933445",
+          deep: "#5C1A24",
         },
         sage: {
-          DEFAULT: "#A8C3A0",
-          light: "#D4E5CE",
-          muted: "#E8F0E4",
-          dark: "#6B8F63",
+          DEFAULT: "#D4A0A6",
+          light: "#EFD4D8",
+          muted: "#F7E9EB",
+          dark: "#B06B74",
         },
         cream: {
           DEFAULT: "#F7F4EF",
@@ -30,7 +31,8 @@ const config: Config = {
           soft: "#F8EEE4",
         },
         teal: {
-          soft: "#D9E8E4",
+          // Soft mauve companion (was mint) so chips stay distinct in the red theme.
+          soft: "#E6DDE8",
         },
       },
       fontFamily: {
@@ -38,8 +40,8 @@ const config: Config = {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
       },
       boxShadow: {
-        card: "0 2px 12px rgba(27, 48, 34, 0.06)",
-        soft: "0 1px 4px rgba(27, 48, 34, 0.05)",
+        card: "0 2px 12px rgba(124, 36, 48, 0.07)",
+        soft: "0 1px 4px rgba(124, 36, 48, 0.06)",
       },
     },
   },
