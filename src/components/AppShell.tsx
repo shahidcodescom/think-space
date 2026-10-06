@@ -1,7 +1,6 @@
 "use client";
 
 import { Sidebar } from "./Sidebar";
-import { ConfirmProvider } from "./ConfirmDialog";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { LeafIcon } from "./Icons";
 import { usePathname } from "next/navigation";
@@ -14,7 +13,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (isPublicBook) {
     return (
-      <ConfirmProvider>
       <div className="min-h-[100dvh] flex flex-col bg-cream overflow-x-hidden">
         <header
           className="sticky top-0 z-30 flex items-center gap-2 px-4 py-3 bg-cream/95 backdrop-blur-lg border-b border-forest/5"
@@ -25,12 +23,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 min-w-0 w-full">{children}</main>
       </div>
-      </ConfirmProvider>
     );
   }
 
   return (
-    <ConfirmProvider>
     <div className="h-[100dvh] flex bg-cream overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full md:pl-56 lg:pl-60">
@@ -63,6 +59,5 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
       <MobileBottomNav />
     </div>
-    </ConfirmProvider>
   );
 }
