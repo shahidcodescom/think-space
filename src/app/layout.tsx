@@ -14,11 +14,11 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Second Brain AI — Think. Capture. Act.",
+  title: "Bi-Polar — Think. Capture. Act.",
   description: "A calmer mind & brighter tomorrow.",
   appleWebApp: {
     capable: true,
-    title: "Second Brain",
+    title: "Bi-Polar",
     statusBarStyle: "default",
   },
 };

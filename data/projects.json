@@ -2,7 +2,7 @@
   "projects": [
     {
       "id": "project-1",
-      "name": "Second Brain AI",
+      "name": "Bi-Polar",
       "description": "Calm personal workspace — notes, meetings, secrets, and assets in one botanical UI.",
       "status": "in_progress",
       "url": "http://localhost:3000",

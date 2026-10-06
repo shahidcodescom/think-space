@@ -186,8 +186,7 @@ export default function ThinkingSpacePage() {
                   <p className="text-sm text-forest/70 leading-relaxed">
                     Try asking <em>“List my notes”</em>,{" "}
                     <em>“List my projects”</em>, <em>“List my secrets”</em>, or{" "}
-                    <em>“At a glance”</em>. I answer from your local Second
-                    Brain data.
+                    <em>“At a glance”</em>. I answer from your local Bi-Polar data.
                   </p>
                 </div>
               </div>

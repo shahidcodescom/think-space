@@ -87,7 +87,7 @@ const secrets: SecretPublic[] = [
 const projects: Project[] = [
   {
     id: "project-1",
-    name: "Second Brain AI",
+    name: "Bi-Polar",
     description: "Calm workspace app",
     status: "in_progress",
     url: "http://localhost:3000",
@@ -469,7 +469,7 @@ const projectsAns = answerQuery("List my projects", sample, extras);
 assert(projectsAns.title === "Your projects", "projects title");
 assert(projectsAns.text.includes("In progress"), "projects in progress section");
 assert(projectsAns.text.includes("Live / Released"), "projects live section");
-assert(projectsAns.text.includes("Second Brain AI"), "in-progress project");
+assert(projectsAns.text.includes("Bi-Polar"), "in-progress project");
 assert(projectsAns.text.includes("RuneRail"), "live project");
 
 assert(glance.text.includes("Projects:** 2"), "glance project count");

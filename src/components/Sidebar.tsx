@@ -19,7 +19,7 @@ export function Sidebar() {
         <Link href="/thinking-space" className="flex items-center gap-2 min-w-0">
           <LeafIcon size={20} className="text-sage-light shrink-0" />
           <span className="font-serif text-lg lowercase tracking-tight truncate">
-            second brain.
+            bi-polar.
           </span>
         </Link>
       </div>

@@ -208,7 +208,7 @@ export function buildCompactContext(
   return text.length > 12000 ? text.slice(0, 12000) + "\n…" : text;
 }
 
-const SYSTEM_PROMPT = `You are the Thinking space assistant for Second Brain AI, a personal workspace app.
+const SYSTEM_PROMPT = `You are the Thinking space assistant for Bi-Polar, a personal workspace app.
 Answer helpfully and concisely using the workspace context provided.
 Rules:
 - Never invent secret values, passwords, or API keys. Secrets are listed by name only; tell the user to open Secrets in the app to reveal values.
@@ -421,7 +421,7 @@ export async function callLlm(opts: {
           userContent,
           {
             "HTTP-Referer": "https://second-brain.local",
-            "X-Title": "Second Brain AI",
+            "X-Title": "Bi-Polar",
           }
         );
         break;

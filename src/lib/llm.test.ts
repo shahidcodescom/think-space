@@ -38,7 +38,7 @@ const emptyStore: StoreData = {
 
 const sampleProject: Project = {
   id: "p1",
-  name: "Think Space",
+  name: "Bi-Polar",
   description: "",
   status: "in_progress",
   url: "",
@@ -87,7 +87,7 @@ async function main() {
   assert.match(ctx, /Update docs/);
   assert.match(ctx, /Demo API key/);
   assert.match(ctx, /names only/);
-  assert.match(ctx, /Think Space/);
+  assert.match(ctx, /Bi-Polar/);
   assert.doesNotMatch(ctx, /sk-live|password123|secret-value/i);
 
   const disabled = await callLlm({

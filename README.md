@@ -1,8 +1,8 @@
-# Second Brain AI
+# Bi-Polar
 
 **Think. Capture. Act.** · *A calmer mind & brighter tomorrow.*
 
-A calm productivity workspace matching the botanical mockups: Thinking space (rule-based AI over local data), Notes, Tasks, Meetings / MOM, Thoughts, Memories, and Profile.
+Bi-Polar is a calm productivity workspace matching the botanical mockups: Thinking space (rule-based AI over local data), Notes, Tasks, Meetings / MOM, Thoughts, Memories, and Profile.
 
 ## Stack
 

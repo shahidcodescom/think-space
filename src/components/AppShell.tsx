@@ -46,7 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <LeafIcon size={18} className="text-forest shrink-0" />
             <div className="min-w-0">
               <p className="font-serif text-base lowercase leading-none truncate">
-                second brain.
+                bi-polar.
               </p>
               {current && (
                 <p className="text-[11px] text-forest/45 mt-0.5 truncate">
