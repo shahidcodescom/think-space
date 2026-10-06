@@ -7,7 +7,9 @@ import { CloseIcon, MoreIcon } from "./Icons";
 import {
   isNavActive,
   MOBILE_TAB_HREFS,
+  NAV_GROUPS,
   NAV_ITEMS,
+  navItemsInGroup,
 } from "@/lib/nav";
 
 export function MobileBottomNav() {
@@ -94,29 +96,44 @@ export function MobileBottomNav() {
                 <CloseIcon size={20} />
               </button>
             </div>
-            <ul className="px-3 pb-3 grid grid-cols-2 gap-2">
-              {moreItems.map(({ href, label, icon: Icon }) => {
-                const active = isNavActive(pathname, href);
+            <div className="px-3 pb-3 space-y-4 overflow-y-auto">
+              {NAV_GROUPS.map((group) => {
+                const items = navItemsInGroup(group.id).filter(
+                  (n) => !(MOBILE_TAB_HREFS as readonly string[]).includes(n.href)
+                );
+                if (!items.length) return null;
                 return (
-                  <li key={href}>
-                    <Link
-                      href={href}
-                      onClick={() => setMoreOpen(false)}
-                      className={`tap-target flex items-center gap-3 rounded-2xl px-3 py-3 border transition-colors ${
-                        active
-                          ? "bg-sage-muted border-sage text-forest"
-                          : "bg-white border-forest/5 text-forest/80 active:bg-sage-muted/50"
-                      }`}
-                    >
-                      <span className="w-10 h-10 rounded-xl bg-cream flex items-center justify-center shrink-0">
-                        <Icon size={20} />
-                      </span>
-                      <span className="text-sm font-medium leading-tight">{label}</span>
-                    </Link>
-                  </li>
+                  <div key={group.id}>
+                    <p className="px-1 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-forest/40">
+                      {group.label}
+                    </p>
+                    <ul className="grid grid-cols-2 gap-2">
+                      {items.map(({ href, label, icon: Icon }) => {
+                        const active = isNavActive(pathname, href);
+                        return (
+                          <li key={href}>
+                            <Link
+                              href={href}
+                              onClick={() => setMoreOpen(false)}
+                              className={`tap-target flex items-center gap-3 rounded-2xl px-3 py-3 border transition-colors ${
+                                active
+                                  ? "bg-sage-muted border-sage text-forest"
+                                  : "bg-white border-forest/5 text-forest/80 active:bg-sage-muted/50"
+                              }`}
+                            >
+                              <span className="w-10 h-10 rounded-xl bg-cream flex items-center justify-center shrink-0">
+                                <Icon size={20} />
+                              </span>
+                              <span className="text-sm font-medium leading-tight">{label}</span>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
                 );
               })}
-            </ul>
+            </div>
           </div>
         </div>
       )}
