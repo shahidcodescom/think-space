@@ -198,3 +198,15 @@ Personal items and **where they are kept** — distinct from Assets (inventory/v
 - Public APIs return open slots only (never private `notes`)
 - Thinking space: “Upcoming appointments”
 
+## Job Hunt
+
+Track applications through interview rounds to offer/accept.
+
+- Page: `/jobs` — board + list, status moves, TipTap JD, resume upload
+- Statuses: applied, enquired, abandoned, scheduled, failed, first_round…fifth_round, job_offer, accepted, rejected
+- API: `GET/POST /api/jobs`, `GET/PUT/DELETE /api/jobs/[id]`
+- Resume: `POST/GET/DELETE /api/jobs/[id]/resume` → files in `data/uploads/resumes/`
+- Optional link interview → Calendar event (`linkToCalendar: true`)
+- Persist: `data/jobs.json`
+- Thinking space: “Job applications”
+

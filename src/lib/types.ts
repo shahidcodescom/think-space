@@ -329,3 +329,57 @@ export interface PublicSlot {
   end: string;
 }
 
+export type JobStatus =
+  | "applied"
+  | "enquired"
+  | "abandoned"
+  | "scheduled"
+  | "failed"
+  | "first_round"
+  | "second_round"
+  | "third_round"
+  | "fourth_round"
+  | "fifth_round"
+  | "job_offer"
+  | "accepted"
+  | "rejected";
+
+export const JOB_STATUSES: JobStatus[] = [
+  "applied",
+  "enquired",
+  "abandoned",
+  "scheduled",
+  "failed",
+  "first_round",
+  "second_round",
+  "third_round",
+  "fourth_round",
+  "fifth_round",
+  "job_offer",
+  "accepted",
+  "rejected",
+];
+
+export interface JobApplication {
+  id: string;
+  company: string;
+  role: string;
+  location: string;
+  remote: boolean;
+  sourceUrl: string;
+  /** Job description HTML (TipTap). */
+  jdHtml: string;
+  status: JobStatus;
+  appliedDate: string;
+  nextInterviewAt: string;
+  salaryNotes: string;
+  contacts: string;
+  notes: string;
+  /** Relative path under project, e.g. data/uploads/resumes/…. */
+  resumePath: string | null;
+  resumeName: string | null;
+  linkedCalendarEventId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+

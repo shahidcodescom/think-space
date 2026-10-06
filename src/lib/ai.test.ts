@@ -316,7 +316,51 @@ const calendarSample = [
   },
 ];
 
-const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs, recurrings, finance: financeTx, belongings: belongingsSample, calendarEvents: calendarSample };
+
+const jobsSample = [
+  {
+    id: "job-1",
+    company: "RuneRail Labs",
+    role: "Senior Full-Stack Engineer",
+    location: "Bengaluru",
+    remote: true,
+    sourceUrl: "",
+    jdHtml: "<p>Build</p>",
+    status: "first_round",
+    appliedDate: "2026-09-28",
+    nextInterviewAt: "2026-10-09T11:00:00.000+05:30",
+    salaryNotes: "",
+    contacts: "",
+    notes: "",
+    resumePath: null,
+    resumeName: null,
+    linkedCalendarEventId: null,
+    createdAt: "2026-09-28T08:00:00.000Z",
+    updatedAt: "2026-10-05T10:00:00.000Z",
+  },
+  {
+    id: "job-2",
+    company: "Greenfield AI",
+    role: "Product Engineer",
+    location: "Remote",
+    remote: true,
+    sourceUrl: "",
+    jdHtml: "",
+    status: "applied",
+    appliedDate: "2026-10-02",
+    nextInterviewAt: "",
+    salaryNotes: "",
+    contacts: "",
+    notes: "",
+    resumePath: null,
+    resumeName: null,
+    linkedCalendarEventId: null,
+    createdAt: "2026-10-02T12:00:00.000Z",
+    updatedAt: "2026-10-02T12:00:00.000Z",
+  },
+];
+
+const extras = { assets, secrets, projects, clients: billingClients, subscriptions: billingSubs, recurrings, finance: financeTx, belongings: belongingsSample, calendarEvents: calendarSample, jobs: jobsSample };
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);
@@ -452,6 +496,15 @@ assert(!apptAns.text.includes("secret note"), "private notes not in chat listing
 
 assert(glance.text.includes("Calendar:** 2"), "glance calendar");
 assert(help.text.toLowerCase().includes("appointment") || help.text.toLowerCase().includes("calendar"), "help calendar");
+
+
+const jobsAns = answerQuery("job applications", sample, extras);
+assert(jobsAns.title === "Job applications", "jobs title");
+assert(jobsAns.text.includes("RuneRail"), "job company");
+assert(jobsAns.text.includes("first round") || jobsAns.text.includes("first_round"), "job status");
+
+assert(glance.text.includes("Jobs:** 2"), "glance jobs");
+assert(help.text.toLowerCase().includes("job"), "help jobs");
 
 console.log("ai.test.ts: all assertions passed");
 
