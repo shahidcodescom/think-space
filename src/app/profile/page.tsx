@@ -1,19 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LockIcon } from "@/components/Icons";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
-import { LlmSettingsPanel } from "@/components/LlmSettingsPanel";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { Profile } from "@/lib/types";
-
-type VaultStatus = { configured: boolean; source: string; hint: string };
+import Link from "next/link";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [vault, setVault] = useState<VaultStatus | null>(null);
   const [account, setAccount] = useState<{ username: string; email: string } | null>(null);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -26,10 +22,6 @@ export default function ProfilePage() {
     fetch("/api/profile")
       .then((r) => r.json())
       .then(setProfile);
-    fetch("/api/secrets/status")
-      .then((r) => r.json())
-      .then(setVault)
-      .catch(() => setVault(null));
     fetch("/api/auth/me")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
@@ -84,7 +76,6 @@ export default function ProfilePage() {
     setTimeout(() => setSaved(false), 2000);
   }
 
-
   if (!profile) {
     return (
       <div className="page-shell">
@@ -98,7 +89,11 @@ export default function ProfilePage() {
       <header className="mb-6">
         <h1 className="section-title">Profile.</h1>
         <p className="text-forest/55 mt-1 text-sm">
-          Account, preferences, Thinking-space LLM / RAG / intents, and vault.
+          Personal preferences, password, and sign out. App configuration lives in{" "}
+          <Link href="/settings" className="text-forest/70 underline-offset-2 hover:underline">
+            Settings
+          </Link>
+          .
         </p>
       </header>
 
@@ -163,18 +158,20 @@ export default function ProfilePage() {
         </div>
       </form>
 
-            <div className="mt-4">
-        <LlmSettingsPanel />
-      </div>
-
       <div className="card p-5 mt-4 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="font-serif text-lg text-forest">Account</h2>
             <p className="text-sm text-forest/55 mt-0.5">
-              {account
-                ? <>Signed in as <span className="font-medium text-forest/80">{account.username}</span> · {account.email}</>
-                : "Local owner account"}
+              {account ? (
+                <>
+                  Signed in as{" "}
+                  <span className="font-medium text-forest/80">{account.username}</span> ·{" "}
+                  {account.email}
+                </>
+              ) : (
+                "Local owner account"
+              )}
             </p>
           </div>
           <button
@@ -229,38 +226,6 @@ export default function ProfilePage() {
             {pwBusy ? "Updating…" : "Update password"}
           </button>
         </form>
-      </div>
-
-      <div className="card p-5 mt-4 space-y-2">
-        <div className="flex items-center gap-2 text-forest">
-          <LockIcon size={18} />
-          <h2 className="font-serif text-lg">Secret vault</h2>
-        </div>
-        {vault ? (
-          <>
-            <p className="text-sm text-forest/75">
-              Master key:{" "}
-              <span className="font-medium capitalize">
-                {vault.source.replace("-", " ")}
-              </span>
-              {vault.configured ? " · configured" : " · missing"}
-            </p>
-            <p className="text-xs text-forest/50">{vault.hint}</p>
-            <p className="text-xs text-forest/40">
-              Set{" "}
-              <code className="bg-sage-muted px-1 rounded">
-                SECRETS_MASTER_KEY
-              </code>{" "}
-              (64 hex chars) or rely on the gitignored file at{" "}
-              <code className="bg-sage-muted px-1 rounded">
-                data/.secrets-master-key
-              </code>
-              . Same vault encrypts LLM API keys.
-            </p>
-          </>
-        ) : (
-          <p className="text-sm text-forest/50">Loading vault status…</p>
-        )}
       </div>
 
       <p className="mt-6 text-xs text-forest/40 tracking-wide uppercase">

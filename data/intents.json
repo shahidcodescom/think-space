@@ -1,0 +1,132 @@
+{
+  "intents": [
+    {
+      "id": "intent-notes",
+      "name": "List notes",
+      "enabled": true,
+      "patterns": [
+        "list.*notes",
+        "my notes",
+        "show.*notes",
+        "what.*notes"
+      ],
+      "action": "list_notes",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "intent-tasks",
+      "name": "List tasks",
+      "enabled": true,
+      "patterns": [
+        "list.*tasks",
+        "my tasks",
+        "show.*tasks",
+        "open tasks",
+        "pending"
+      ],
+      "action": "list_tasks",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "intent-meetings",
+      "name": "List meetings",
+      "enabled": true,
+      "patterns": [
+        "list.*meetings",
+        "my meetings",
+        "show.*meetings",
+        "upcoming meetings"
+      ],
+      "action": "list_meetings",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "intent-secrets",
+      "name": "List secrets",
+      "enabled": true,
+      "patterns": [
+        "list.*secrets",
+        "my secrets",
+        "show.*secrets",
+        "what.*secrets"
+      ],
+      "action": "list_secrets",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "intent-projects",
+      "name": "List projects",
+      "enabled": true,
+      "patterns": [
+        "list.*projects",
+        "my projects",
+        "show.*projects",
+        "list.*products"
+      ],
+      "action": "list_projects",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "intent-jobs",
+      "name": "Job applications",
+      "enabled": true,
+      "patterns": [
+        "job applications",
+        "list.*jobs",
+        "my jobs",
+        "show.*jobs"
+      ],
+      "action": "list_jobs",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "intent-finance",
+      "name": "Finance summary",
+      "enabled": true,
+      "patterns": [
+        "finance summary",
+        "money summary",
+        "cashflow"
+      ],
+      "action": "list_finance",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "intent-calendar",
+      "name": "Upcoming appointments",
+      "enabled": true,
+      "patterns": [
+        "upcoming appointments",
+        "my calendar",
+        "upcoming events"
+      ],
+      "action": "list_calendar",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "intent-glance",
+      "name": "At a glance",
+      "enabled": true,
+      "patterns": [
+        "at a glance",
+        "workspace (summary|overview)",
+        "summarise( my)? workspace",
+        "summarize( my)? workspace",
+        "\\boverview\\b"
+      ],
+      "action": "glance",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "intent-help",
+      "name": "Help",
+      "enabled": true,
+      "patterns": [
+        "help",
+        "what can you"
+      ],
+      "action": "help",
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    }
+  ]
+}

@@ -17,6 +17,7 @@ import {
   JobsIcon,
   SkillsIcon,
   LibraryIcon,
+  SettingsIcon,
 } from "@/components/Icons";
 
 export type NavItem = {
@@ -60,6 +61,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/jobs", label: "Jobs", shortLabel: "Jobs", icon: JobsIcon, group: "growth" },
   { href: "/skills", label: "Skills", shortLabel: "Skills", icon: SkillsIcon, group: "growth" },
   { href: "/library", label: "Library", shortLabel: "Library", icon: LibraryIcon, group: "growth" },
+  { href: "/settings", label: "Settings", shortLabel: "Settings", icon: SettingsIcon, group: "you" },
   { href: "/profile", label: "Profile", shortLabel: "Profile", icon: ProfileIcon, group: "you" },
 ];
 

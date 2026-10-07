@@ -30,6 +30,24 @@ npm start
 
 
 
+
+## Settings & system reset
+
+- **`/settings`** — Thinking-space LLM / RAG / intents / Postgres, vault status, and **System reset**.
+- **`/profile`** — name/language/voice, change password, sign out only.
+
+### System reset
+
+Authenticated `POST /api/system/reset` with `{ "confirmPhrase": "RESET" }` (UI requires typing `RESET`).
+
+| Action | Details |
+|--------|---------|
+| **Wiped** | All module JSON (`store`, assets, secrets, projects, clients, recurrings, finance, belongings, calendar, jobs, skills, library), uploads, `auth.json` (account), `llm-settings.json` (stored API/DB password ciphertexts), chat history |
+| **Reseeded** | Built-in secret categories; built-in intents |
+| **Kept** | `data/.secrets-master-key`, env vars (`SECRETS_MASTER_KEY`, `SESSION_SECRET`, `LLM_*`, `DATABASE_*`); external Postgres/pgvector is **not** cleared |
+
+After reset: session cleared → redirect to `/setup`.
+
 ## Account & login
 
 Single local owner account (no multi-user signup).
@@ -90,7 +108,7 @@ This starts `app` and `db` (`pgvector/pgvector:pg16`). Default URL:
 
 `postgresql://bipolar:bipolar@db:5432/bipolar`
 
-Then in **Profile → Thinking space LLM**, enable Postgres RAG → Test → Migrate → Reindex. If Postgres is down, Thinking space falls back to in-memory/JSON RAG.
+Then in **Settings → Thinking space LLM**, enable Postgres RAG → Test → Migrate → Reindex. If Postgres is down, Thinking space falls back to in-memory/JSON RAG.
 
 ### Important env vars
 
@@ -109,7 +127,7 @@ Do **not** bake `data/.secrets-master-key` into the image (excluded by `.dockeri
 2. **Meetings / MOM** — Open **Product planning** (12 October 2026 · Alex, Maya, Jordan). Check Agenda / Minutes / Decisions, linked **Release notes**, and action items (*Review voice flow* done, *Update documentation* open). Try **+ Add meeting**, **+ Add note**, **+ Add task**.
 3. **Notes / Tasks / Thoughts / Memories** — Full CRUD. Linked notes and action items embed on meeting & thought detail.
 4. **Secrets** — Reveal/copy the Demo API key (encrypted at rest).
-5. **Profile** — Preferences, optional Thinking-space LLM, vault master-key status.
+5. **Profile** — Preferences, password, sign out. **Settings** — LLM / RAG / vault / system reset.
 
 ## Seed data
 
@@ -310,7 +328,7 @@ Save links, screenshots, PDFs, and documents to study later.
 
 **Default:** rule-based assistant covering all modules (notes, tasks, meetings, thoughts, memories, secrets metadata only, assets, projects, clients/subscriptions/renewals, recurrings, finance, belongings, calendar, jobs, skills, library). List / summary / upcoming intents, keyword search, and at-a-glance counts. Never returns secret values.
 
-**Optional LLM:** enable in **Profile → Thinking space LLM** (or via env). When on, chat sends the user message plus a compact workspace context (names/titles/counts — **never secret values**) to the chosen provider. On missing key, provider error, or empty reply, the app falls back to the rule-based engine. API keys are AES-256-GCM encrypted with the same vault master key as Secrets and are never logged or returned by the settings API.
+**Optional LLM:** enable in **Settings → Thinking space LLM** (or via env). When on, chat sends the user message plus a compact workspace context (names/titles/counts — **never secret values**) to the chosen provider. On missing key, provider error, or empty reply, the app falls back to the rule-based engine. API keys are AES-256-GCM encrypted with the same vault master key as Secrets and are never logged or returned by the settings API.
 
 ### LLM environment variables
 
@@ -345,7 +363,7 @@ Settings persist in `data/llm-settings.json` (`apiKeyCiphertext` only — never 
 
 Thinking space can use an optional LLM with retrieval-augmented context.
 
-### Profile → Thinking space LLM
+### Settings → Thinking space LLM
 
 - **LLM** — provider, live model list, temperature, max tokens, system prompt, API key
 - **RAG** — on/off, top-k, chunk size, context cap, module filters (in-memory keyword retrieval by default)

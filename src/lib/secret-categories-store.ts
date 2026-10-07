@@ -16,7 +16,7 @@ export const DEFAULT_SECRET_CATEGORIES = [
 
 export type SecretCategoriesFile = { categories: SecretCategory[] };
 
-function seedCategories(): SecretCategory[] {
+export function seedCategories(): SecretCategory[] {
   const ts = nowIso();
   return DEFAULT_SECRET_CATEGORIES.map((name) => ({
     id: uid("sec-cat"),
@@ -24,6 +24,13 @@ function seedCategories(): SecretCategory[] {
     createdAt: ts,
     updatedAt: ts,
   }));
+}
+
+/** Replace categories with the built-in default list. */
+export async function reseedSecretCategories(): Promise<SecretCategoriesFile> {
+  const seeded: SecretCategoriesFile = { categories: seedCategories() };
+  await writeSecretCategoriesFile(seeded);
+  return seeded;
 }
 
 export async function readSecretCategoriesFile(): Promise<SecretCategoriesFile> {

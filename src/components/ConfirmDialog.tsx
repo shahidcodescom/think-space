@@ -18,6 +18,8 @@ export type ConfirmOptions = {
   cancelLabel?: string;
   /** When true, confirm button uses destructive (red) styling. Default true. */
   destructive?: boolean;
+  /** When set, user must type this exact string before Confirm enables. */
+  confirmText?: string;
 };
 
 type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>;
@@ -66,6 +68,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           confirmLabel={pending.confirmLabel ?? "Delete"}
           cancelLabel={pending.cancelLabel ?? "Cancel"}
           destructive={pending.destructive !== false}
+          confirmText={pending.confirmText}
           onCancel={() => settle(false)}
           onConfirm={() => settle(true)}
         />
@@ -80,6 +83,7 @@ function ConfirmDialogView({
   confirmLabel,
   cancelLabel,
   destructive,
+  confirmText,
   onCancel,
   onConfirm,
 }: {
@@ -88,6 +92,7 @@ function ConfirmDialogView({
   confirmLabel: string;
   cancelLabel: string;
   destructive: boolean;
+  confirmText?: string;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
@@ -96,6 +101,8 @@ function ConfirmDialogView({
   const panelRef = useRef<HTMLDivElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
+  const [typed, setTyped] = useState("");
+  const typedOk = !confirmText || typed === confirmText;
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -174,6 +181,22 @@ function ConfirmDialogView({
             {message}
           </p>
         </div>
+        {confirmText && (
+          <div className="px-4 sm:px-5 pt-1 pb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
+              Type <span className="font-mono text-forest/80">{confirmText}</span> to confirm
+            </label>
+            <input
+              className="input-field"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              aria-label={`Type ${confirmText} to confirm`}
+            />
+          </div>
+        )}
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 px-4 sm:px-5 pt-3 pb-4">
           <button
             ref={cancelRef}
@@ -186,10 +209,11 @@ function ConfirmDialogView({
           <button
             ref={confirmRef}
             type="button"
+            disabled={!typedOk}
             className={
               destructive
-                ? "inline-flex items-center justify-center gap-2 rounded-xl bg-red-700 text-white px-4 py-2.5 min-h-[44px] text-sm font-medium hover:bg-red-800 active:bg-red-900 transition-colors w-full sm:w-auto"
-                : "btn-primary w-full sm:w-auto"
+                ? "inline-flex items-center justify-center gap-2 rounded-xl bg-red-700 text-white px-4 py-2.5 min-h-[44px] text-sm font-medium hover:bg-red-800 active:bg-red-900 transition-colors w-full sm:w-auto disabled:opacity-40 disabled:pointer-events-none"
+                : "btn-primary w-full sm:w-auto disabled:opacity-40 disabled:pointer-events-none"
             }
             onClick={onConfirm}
           >
