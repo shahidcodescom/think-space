@@ -26,7 +26,7 @@ export default function SettingsPage() {
     const ok = await confirm({
       title: "Reset entire system?",
       message:
-        "This permanently deletes notes, tasks, secrets, uploads, chat history, LLM keys stored in settings, and your login account.\n\nYou will be signed out and sent to first-run setup.\n\nSecret category names are restored to defaults. The vault master-key file and environment variables are kept.",
+        "This permanently deletes notes, tasks, secrets, uploads, chat history, LLM keys stored in settings, and your login account.\n\nYou will be signed out and sent to first-run setup.\n\nSecret category names are restored to defaults. The vault master-key file and environment variables (including DATABASE_URL) are kept. App data in Postgres is wiped.",
       confirmLabel: "Reset system",
       cancelLabel: "Keep my data",
       destructive: true,
@@ -59,7 +59,7 @@ export default function SettingsPage() {
       <header className="mb-6">
         <h1 className="section-title">Settings.</h1>
         <p className="text-forest/55 mt-1 text-sm">
-          Thinking-space LLM, RAG, intents, Postgres, vault, and system reset.
+          Thinking-space LLM, RAG, intents, vault, and system reset. Database is configured via DATABASE_URL only.
         </p>
       </header>
 
@@ -109,7 +109,7 @@ export default function SettingsPage() {
         <ul className="text-xs text-forest/50 list-disc pl-5 space-y-1">
           <li>Wiped: all modules, secrets, chat, auth, LLM settings, uploads</li>
           <li>Reseeded: default secret categories &amp; built-in intents</li>
-          <li>Kept: vault key file &amp; environment variables; Postgres not cleared</li>
+          <li>Kept: vault key file &amp; env vars (including DATABASE_URL)</li>
         </ul>
         {resetError && (
           <p className="text-sm text-red-700/90 bg-red-50 border border-red-100 rounded-xl px-3 py-2">

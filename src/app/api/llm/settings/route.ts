@@ -40,15 +40,6 @@ export async function PUT(req: NextRequest) {
   if (body.contextCharLimit !== undefined)
     patch.contextCharLimit = Number(body.contextCharLimit);
   if (Array.isArray(body.ragModules)) patch.ragModules = body.ragModules.map(String);
-  if (body.pgEnabled !== undefined) patch.pgEnabled = Boolean(body.pgEnabled);
-  if (typeof body.pgConnectionString === "string")
-    patch.pgConnectionString = body.pgConnectionString;
-  if (typeof body.pgHost === "string") patch.pgHost = body.pgHost;
-  if (body.pgPort !== undefined) patch.pgPort = Number(body.pgPort);
-  if (typeof body.pgDatabase === "string") patch.pgDatabase = body.pgDatabase;
-  if (typeof body.pgUser === "string") patch.pgUser = body.pgUser;
-  if (body.clearPgPassword === true) patch.clearPgPassword = true;
-  else if (typeof body.pgPassword === "string") patch.pgPassword = body.pgPassword;
 
   const updated = await updateLlmSettings(patch);
   const pub = await toPublicSettings(updated);

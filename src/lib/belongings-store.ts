@@ -1,34 +1,22 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { Belonging } from "./types";
+import { getOrInitDoc, setDoc } from "./db-docs";
+import { readLegacyJson } from "./json-import";
 
-const DATA_PATH = path.join(process.cwd(), "data", "belongings.json");
+const KEY = "belongings";
 
 export type BelongingsFile = { belongings: Belonging[] };
 
 export async function readBelongingsFile(): Promise<BelongingsFile> {
-  try {
-    const raw = await fs.readFile(DATA_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as BelongingsFile;
-    return {
-      belongings: Array.isArray(parsed.belongings) ? parsed.belongings : [],
-    };
-  } catch (err: unknown) {
-    const code = (err as NodeJS.ErrnoException)?.code;
-    if (code === "ENOENT") {
-      const empty: BelongingsFile = { belongings: [] };
-      await writeBelongingsFile(empty);
-      return empty;
-    }
-    throw err;
-  }
+  return getOrInitDoc(KEY, async () => {
+    const legacy = await readLegacyJson<BelongingsFile>("belongings.json");
+    return { belongings: Array.isArray(legacy?.belongings) ? legacy!.belongings : [] };
+  });
 }
 
 export async function writeBelongingsFile(data: BelongingsFile): Promise<void> {
-  await fs.writeFile(DATA_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  await setDoc(KEY, data);
 }
 
-/** Group belongings by location for "where is" views. */
 export function groupByLocation(items: Belonging[]): Record<string, Belonging[]> {
   const map: Record<string, Belonging[]> = {};
   for (const b of items) {

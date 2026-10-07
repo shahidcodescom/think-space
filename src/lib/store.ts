@@ -1,16 +1,33 @@
-import { promises as fs } from "fs";
-import path from "path";
+import { getOrInitDoc, setDoc } from "./db-docs";
+import { readLegacyJson } from "./json-import";
 import { StoreData } from "./types";
 
-const DATA_PATH = path.join(process.cwd(), "data", "store.json");
+const KEY = "store";
+
+const EMPTY_STORE: StoreData = {
+  notes: [],
+  tasks: [],
+  meetings: [],
+  thoughts: [],
+  memories: [],
+  profile: {
+    name: "",
+    language: "English (India)",
+    voice: "Default voice",
+    readAloud: false,
+  },
+  chatHistory: [],
+};
 
 export async function readStore(): Promise<StoreData> {
-  const raw = await fs.readFile(DATA_PATH, "utf-8");
-  return JSON.parse(raw) as StoreData;
+  return getOrInitDoc(KEY, async () => {
+    const legacy = await readLegacyJson<StoreData>("store.json");
+    return legacy ?? { ...EMPTY_STORE, profile: { ...EMPTY_STORE.profile } };
+  });
 }
 
 export async function writeStore(data: StoreData): Promise<void> {
-  await fs.writeFile(DATA_PATH, JSON.stringify(data, null, 2), "utf-8");
+  await setDoc(KEY, data);
 }
 
 export function uid(prefix: string): string {
@@ -20,3 +37,5 @@ export function uid(prefix: string): string {
 export function nowIso(): string {
   return new Date().toISOString();
 }
+
+export { EMPTY_STORE };

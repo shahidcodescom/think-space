@@ -1,20 +1,18 @@
-import { promises as fs } from "fs";
-import path from "path";
 import {
   CalendarEvent,
   CalendarFile,
   PublicSlot,
   TempBookingLink,
 } from "./types";
-
-const DATA_PATH = path.join(process.cwd(), "data", "calendar.json");
+import { getOrInitDoc, setDoc } from "./db-docs";
+import { readLegacyJson } from "./json-import";
 
 export const DEFAULT_CALENDAR: CalendarFile = {
   settings: {
     permanentSlug: "me",
     permanentEnabled: true,
     slotMinutes: 30,
-    ownerDisplayName: "Mohammed Shahid",
+    ownerDisplayName: "",
     timezone: "Asia/Kolkata",
   },
   events: [],
@@ -23,31 +21,26 @@ export const DEFAULT_CALENDAR: CalendarFile = {
   tempLinks: [],
 };
 
+const KEY = "calendar";
+
 export async function readCalendarFile(): Promise<CalendarFile> {
-  try {
-    const raw = await fs.readFile(DATA_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as CalendarFile;
+  return getOrInitDoc(KEY, async () => {
+    const legacy = await readLegacyJson<CalendarFile>("calendar.json");
+    if (!legacy) return structuredClone(DEFAULT_CALENDAR);
     return {
-      settings: { ...DEFAULT_CALENDAR.settings, ...(parsed.settings || {}) },
-      events: Array.isArray(parsed.events) ? parsed.events : [],
-      weeklyAvailability: Array.isArray(parsed.weeklyAvailability)
-        ? parsed.weeklyAvailability
+      settings: { ...DEFAULT_CALENDAR.settings, ...(legacy.settings || {}) },
+      events: Array.isArray(legacy.events) ? legacy.events : [],
+      weeklyAvailability: Array.isArray(legacy.weeklyAvailability)
+        ? legacy.weeklyAvailability
         : [],
-      dateWindows: Array.isArray(parsed.dateWindows) ? parsed.dateWindows : [],
-      tempLinks: Array.isArray(parsed.tempLinks) ? parsed.tempLinks : [],
+      dateWindows: Array.isArray(legacy.dateWindows) ? legacy.dateWindows : [],
+      tempLinks: Array.isArray(legacy.tempLinks) ? legacy.tempLinks : [],
     };
-  } catch (err: unknown) {
-    const code = (err as NodeJS.ErrnoException)?.code;
-    if (code === "ENOENT") {
-      await writeCalendarFile(DEFAULT_CALENDAR);
-      return structuredClone(DEFAULT_CALENDAR);
-    }
-    throw err;
-  }
+  });
 }
 
 export async function writeCalendarFile(data: CalendarFile): Promise<void> {
-  await fs.writeFile(DATA_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  await setDoc(KEY, data);
 }
 
 export function stripNotes(e: CalendarEvent) {

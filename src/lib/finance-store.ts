@@ -1,9 +1,9 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { FinanceFixedItem, FinanceTransaction } from "./types";
+import { getOrInitDoc, setDoc } from "./db-docs";
+import { readLegacyJson } from "./json-import";
 import { nowIso, uid } from "./store";
 
-const DATA_PATH = path.join(process.cwd(), "data", "finance.json");
+const KEY = "finance";
 
 export type FinanceFile = {
   transactions: FinanceTransaction[];
@@ -57,7 +57,6 @@ function normalizeFile(parsed: Partial<FinanceFile> | null): FinanceFile {
     ? parsed!.transactions
     : [];
   let fixedItems = Array.isArray(parsed?.fixedItems) ? parsed!.fixedItems : [];
-  // First migration: if key missing entirely, seed defaults once
   if (!parsed || !("fixedItems" in parsed)) {
     fixedItems = seedFixedItems();
   }
@@ -65,27 +64,10 @@ function normalizeFile(parsed: Partial<FinanceFile> | null): FinanceFile {
 }
 
 export async function readFinanceFile(): Promise<FinanceFile> {
-  try {
-    const raw = await fs.readFile(DATA_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as Partial<FinanceFile>;
-    const hadFixed = parsed && "fixedItems" in parsed;
-    const file = normalizeFile(parsed);
-    if (!hadFixed) {
-      await writeFinanceFile(file);
-    }
-    return file;
-  } catch (err: unknown) {
-    const code = (err as NodeJS.ErrnoException)?.code;
-    if (code === "ENOENT") {
-      const empty: FinanceFile = {
-        transactions: [],
-        fixedItems: seedFixedItems(),
-      };
-      await writeFinanceFile(empty);
-      return empty;
-    }
-    throw err;
-  }
+  return getOrInitDoc(KEY, async () => {
+    const legacy = await readLegacyJson<Partial<FinanceFile>>("finance.json");
+    return normalizeFile(legacy);
+  });
 }
 
 export async function writeFinanceFile(data: FinanceFile): Promise<void> {
@@ -93,10 +75,9 @@ export async function writeFinanceFile(data: FinanceFile): Promise<void> {
     transactions: Array.isArray(data.transactions) ? data.transactions : [],
     fixedItems: Array.isArray(data.fixedItems) ? data.fixedItems : [],
   };
-  await fs.writeFile(DATA_PATH, JSON.stringify(payload, null, 2) + "\n", "utf-8");
+  await setDoc(KEY, payload);
 }
 
-/** Remaining balance on a lend/due. */
 export function remainingAmount(tx: FinanceTransaction): number {
   if (tx.type !== "lend" && tx.type !== "due") return 0;
   return Math.max(0, tx.amount - (tx.amountSettled || 0));
@@ -104,7 +85,7 @@ export function remainingAmount(tx: FinanceTransaction): number {
 
 export function summarizeMonth(
   transactions: FinanceTransaction[],
-  month: string, // YYYY-MM
+  month: string,
   fixedItems: FinanceFixedItem[] = []
 ) {
   const inMonth = transactions.filter((t) => t.date.startsWith(month));

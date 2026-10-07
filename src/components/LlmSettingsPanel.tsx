@@ -21,7 +21,6 @@ type ActionOpt = { value: IntentAction; label: string; query: string };
 export function LlmSettingsPanel() {
   const [llm, setLlm] = useState<LlmSettingsPublic | null>(null);
   const [apiKeyDraft, setApiKeyDraft] = useState("");
-  const [pgPasswordDraft, setPgPasswordDraft] = useState("");
   const [llmSaved, setLlmSaved] = useState(false);
   const [llmBusy, setLlmBusy] = useState(false);
   const [modelOptions, setModelOptions] = useState<
@@ -29,7 +28,6 @@ export function LlmSettingsPanel() {
   >([]);
   const [modelsLoading, setModelsLoading] = useState(false);
   const [modelsError, setModelsError] = useState<string | null>(null);
-  const [pgMsg, setPgMsg] = useState<string | null>(null);
   const [intents, setIntents] = useState<IntentDef[]>([]);
   const [actions, setActions] = useState<ActionOpt[]>([]);
   const [intentForm, setIntentForm] = useState({
@@ -119,15 +117,8 @@ export function LlmSettingsPanel() {
       ragChunkSize: llm.ragChunkSize,
       contextCharLimit: llm.contextCharLimit,
       ragModules: llm.ragModules,
-      pgEnabled: llm.pgEnabled,
-      pgConnectionString: llm.pgConnectionString,
-      pgHost: llm.pgHost,
-      pgPort: llm.pgPort,
-      pgDatabase: llm.pgDatabase,
-      pgUser: llm.pgUser,
     };
     if (apiKeyDraft.trim()) body.apiKey = apiKeyDraft.trim();
-    if (pgPasswordDraft.trim()) body.pgPassword = pgPasswordDraft.trim();
     const res = await fetch("/api/llm/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -136,23 +127,12 @@ export function LlmSettingsPanel() {
     const saved = (await res.json()) as LlmSettingsPublic;
     setLlm(saved);
     setApiKeyDraft("");
-    setPgPasswordDraft("");
     setLlmBusy(false);
     setLlmSaved(true);
     setTimeout(() => setLlmSaved(false), 2000);
     await loadModels(saved.provider, saved.baseUrl, saved.model);
   }
 
-  async function pgAction(action: "test" | "migrate" | "reindex") {
-    setPgMsg("Working…");
-    const res = await fetch("/api/llm/pgvector", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
-    });
-    const data = await res.json();
-    setPgMsg(data.message || (data.ok ? "OK" : "Failed"));
-  }
 
   async function saveIntent(e: FormEvent) {
     e.preventDefault();
@@ -189,7 +169,7 @@ export function LlmSettingsPanel() {
         <div>
           <h2 className="font-serif text-lg text-forest">Thinking space LLM</h2>
           <p className="text-xs text-forest/50 mt-1">
-            Provider, model, sampling, system prompt, RAG, and Postgres/pgvector.
+            Provider, model, sampling, system prompt, and RAG (pgvector uses DATABASE_URL).
             Secret values are never sent to the model.
           </p>
         </div>
@@ -422,107 +402,6 @@ export function LlmSettingsPanel() {
           </div>
         </div>
 
-        <div className="border-t border-forest/10 pt-4 space-y-3">
-          <h3 className="font-serif text-base text-forest">
-            PostgreSQL + pgvector
-          </h3>
-          <p className="text-xs text-forest/50">
-            Optional production RAG store. Falls back to in-memory keyword RAG when
-            unset or unreachable. CRUD data stays on JSON.
-          </p>
-          <ToggleSwitch
-            checked={llm.pgEnabled}
-            onChange={(pgEnabled) => setLlm({ ...llm, pgEnabled })}
-            label="Use Postgres/pgvector for RAG"
-          />
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-              Connection string
-            </label>
-            <input
-              className="input-field"
-              value={llm.pgConnectionString}
-              onChange={(e) =>
-                setLlm({ ...llm, pgConnectionString: e.target.value })
-              }
-              placeholder="postgres://user:pass@host:5432/bipolar"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-                Host
-              </label>
-              <input
-                className="input-field"
-                value={llm.pgHost}
-                onChange={(e) => setLlm({ ...llm, pgHost: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-                Port
-              </label>
-              <input
-                type="number"
-                className="input-field"
-                value={llm.pgPort}
-                onChange={(e) =>
-                  setLlm({ ...llm, pgPort: Number(e.target.value) || 5432 })
-                }
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-                Database
-              </label>
-              <input
-                className="input-field"
-                value={llm.pgDatabase}
-                onChange={(e) => setLlm({ ...llm, pgDatabase: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-                User
-              </label>
-              <input
-                className="input-field"
-                value={llm.pgUser}
-                onChange={(e) => setLlm({ ...llm, pgUser: e.target.value })}
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-              Password
-            </label>
-            <input
-              type="password"
-              className="input-field"
-              autoComplete="off"
-              value={pgPasswordDraft}
-              onChange={(e) => setPgPasswordDraft(e.target.value)}
-              placeholder={
-                llm.hasPgPassword
-                  ? "•••• saved — paste to replace"
-                  : "Optional if in connection string / env"
-              }
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" className="btn-ghost text-sm" onClick={() => pgAction("test")}>
-              Test connection
-            </button>
-            <button type="button" className="btn-ghost text-sm" onClick={() => pgAction("migrate")}>
-              Run migrations
-            </button>
-            <button type="button" className="btn-ghost text-sm" onClick={() => pgAction("reindex")}>
-              Reindex embeddings
-            </button>
-          </div>
-          {pgMsg && <p className="text-xs text-forest/60">{pgMsg}</p>}
-        </div>
 
         <div className="flex items-center gap-3 pt-1">
           <button type="submit" className="btn-primary" disabled={llmBusy}>

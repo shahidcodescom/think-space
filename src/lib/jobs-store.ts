@@ -1,30 +1,23 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { JobApplication } from "./types";
+import { getOrInitDoc, setDoc } from "./db-docs";
+import { readLegacyJson } from "./json-import";
 
-const DATA_PATH = path.join(process.cwd(), "data", "jobs.json");
+const KEY = "jobs";
 export const RESUMES_DIR = path.join(process.cwd(), "data", "uploads", "resumes");
 
 export type JobsFile = { jobs: JobApplication[] };
 
 export async function readJobsFile(): Promise<JobsFile> {
-  try {
-    const raw = await fs.readFile(DATA_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as JobsFile;
-    return { jobs: Array.isArray(parsed.jobs) ? parsed.jobs : [] };
-  } catch (err: unknown) {
-    const code = (err as NodeJS.ErrnoException)?.code;
-    if (code === "ENOENT") {
-      const empty: JobsFile = { jobs: [] };
-      await writeJobsFile(empty);
-      return empty;
-    }
-    throw err;
-  }
+  return getOrInitDoc(KEY, async () => {
+    const legacy = await readLegacyJson<JobsFile>("jobs.json");
+    return { jobs: Array.isArray(legacy?.jobs) ? legacy!.jobs : [] };
+  });
 }
 
 export async function writeJobsFile(data: JobsFile): Promise<void> {
-  await fs.writeFile(DATA_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  await setDoc(KEY, data);
 }
 
 export async function ensureResumesDir(): Promise<void> {

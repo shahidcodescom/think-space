@@ -1,32 +1,22 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { Recurring, RecurringPeriod } from "./types";
+import { getOrInitDoc, setDoc } from "./db-docs";
+import { readLegacyJson } from "./json-import";
 
-const DATA_PATH = path.join(process.cwd(), "data", "recurrings.json");
+const KEY = "recurrings";
 
 export type RecurringsFile = { recurrings: Recurring[] };
 
 export async function readRecurringsFile(): Promise<RecurringsFile> {
-  try {
-    const raw = await fs.readFile(DATA_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as RecurringsFile;
-    return { recurrings: Array.isArray(parsed.recurrings) ? parsed.recurrings : [] };
-  } catch (err: unknown) {
-    const code = (err as NodeJS.ErrnoException)?.code;
-    if (code === "ENOENT") {
-      const empty: RecurringsFile = { recurrings: [] };
-      await writeRecurringsFile(empty);
-      return empty;
-    }
-    throw err;
-  }
+  return getOrInitDoc(KEY, async () => {
+    const legacy = await readLegacyJson<RecurringsFile>("recurrings.json");
+    return { recurrings: Array.isArray(legacy?.recurrings) ? legacy!.recurrings : [] };
+  });
 }
 
 export async function writeRecurringsFile(data: RecurringsFile): Promise<void> {
-  await fs.writeFile(DATA_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  await setDoc(KEY, data);
 }
 
-/** Advance next due date by billing period. */
 export function bumpDueDate(
   isoDate: string,
   period: RecurringPeriod,

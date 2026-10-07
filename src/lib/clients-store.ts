@@ -1,8 +1,8 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { Client, Payment, Subscription } from "./types";
+import { getOrInitDoc, setDoc } from "./db-docs";
+import { readLegacyJson } from "./json-import";
 
-const DATA_PATH = path.join(process.cwd(), "data", "clients.json");
+const KEY = "clients";
 
 export type ClientsFile = {
   clients: Client[];
@@ -11,30 +11,22 @@ export type ClientsFile = {
 };
 
 export async function readClientsFile(): Promise<ClientsFile> {
-  try {
-    const raw = await fs.readFile(DATA_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as ClientsFile;
+  return getOrInitDoc(KEY, async () => {
+    const legacy = await readLegacyJson<ClientsFile>("clients.json");
     return {
-      clients: Array.isArray(parsed.clients) ? parsed.clients : [],
-      subscriptions: Array.isArray(parsed.subscriptions) ? parsed.subscriptions : [],
-      payments: Array.isArray(parsed.payments) ? parsed.payments : [],
+      clients: Array.isArray(legacy?.clients) ? legacy!.clients : [],
+      subscriptions: Array.isArray(legacy?.subscriptions)
+        ? legacy!.subscriptions
+        : [],
+      payments: Array.isArray(legacy?.payments) ? legacy!.payments : [],
     };
-  } catch (err: unknown) {
-    const code = (err as NodeJS.ErrnoException)?.code;
-    if (code === "ENOENT") {
-      const empty: ClientsFile = { clients: [], subscriptions: [], payments: [] };
-      await writeClientsFile(empty);
-      return empty;
-    }
-    throw err;
-  }
+  });
 }
 
 export async function writeClientsFile(data: ClientsFile): Promise<void> {
-  await fs.writeFile(DATA_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  await setDoc(KEY, data);
 }
 
-/** Add months/years to an ISO date (YYYY-MM-DD). */
 export function bumpRenewalDate(
   isoDate: string,
   period: "monthly" | "yearly" | "custom",

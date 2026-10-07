@@ -1,9 +1,9 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { SecretCategory } from "./types";
+import { getOrInitDoc, setDoc } from "./db-docs";
+import { readLegacyJson } from "./json-import";
 import { nowIso, uid } from "./store";
 
-const DATA_PATH = path.join(process.cwd(), "data", "secret-categories.json");
+const KEY = "secret-categories";
 
 export const DEFAULT_SECRET_CATEGORIES = [
   "API Keys",
@@ -26,7 +26,6 @@ export function seedCategories(): SecretCategory[] {
   }));
 }
 
-/** Replace categories with the built-in default list. */
 export async function reseedSecretCategories(): Promise<SecretCategoriesFile> {
   const seeded: SecretCategoriesFile = { categories: seedCategories() };
   await writeSecretCategoriesFile(seeded);
@@ -34,29 +33,20 @@ export async function reseedSecretCategories(): Promise<SecretCategoriesFile> {
 }
 
 export async function readSecretCategoriesFile(): Promise<SecretCategoriesFile> {
-  try {
-    const raw = await fs.readFile(DATA_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as SecretCategoriesFile;
-    const categories = Array.isArray(parsed.categories) ? parsed.categories : [];
+  return getOrInitDoc(KEY, async () => {
+    const legacy = await readLegacyJson<SecretCategoriesFile>(
+      "secret-categories.json"
+    );
+    const categories = Array.isArray(legacy?.categories) ? legacy!.categories : [];
     if (categories.length === 0) {
-      const seeded: SecretCategoriesFile = { categories: seedCategories() };
-      await writeSecretCategoriesFile(seeded);
-      return seeded;
+      return { categories: seedCategories() };
     }
     return { categories };
-  } catch (err: unknown) {
-    const code = (err as NodeJS.ErrnoException)?.code;
-    if (code === "ENOENT") {
-      const seeded: SecretCategoriesFile = { categories: seedCategories() };
-      await writeSecretCategoriesFile(seeded);
-      return seeded;
-    }
-    throw err;
-  }
+  });
 }
 
 export async function writeSecretCategoriesFile(
   data: SecretCategoriesFile
 ): Promise<void> {
-  await fs.writeFile(DATA_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  await setDoc(KEY, data);
 }

@@ -1,6 +1,6 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { encryptSecret, decryptSecret } from "./crypto";
+import { getOrInitDoc, setDoc } from "./db-docs";
+import { readLegacyJson } from "./json-import";
 import { DEFAULT_MODELS } from "./llm-defaults";
 import { migrateStaleModelId } from "./llm-model-ids";
 import { RAG_MODULE_IDS } from "./rag-modules";
@@ -9,7 +9,7 @@ import { LlmProvider, LlmSettingsPublic, LlmSettingsStored } from "./types";
 
 export { DEFAULT_BASE_URLS, DEFAULT_MODELS } from "./llm-defaults";
 
-const DATA_PATH = path.join(process.cwd(), "data", "llm-settings.json");
+const KEY = "llm-settings";
 
 export const DEFAULT_LLM_SETTINGS: LlmSettingsStored = {
   enabled: false,
@@ -25,13 +25,6 @@ export const DEFAULT_LLM_SETTINGS: LlmSettingsStored = {
   ragChunkSize: 280,
   contextCharLimit: 12000,
   ragModules: [...RAG_MODULE_IDS],
-  pgEnabled: false,
-  pgConnectionString: "",
-  pgHost: "127.0.0.1",
-  pgPort: 5432,
-  pgDatabase: "bipolar",
-  pgUser: "postgres",
-  pgPasswordCiphertext: null,
   updatedAt: new Date(0).toISOString(),
 };
 
@@ -99,40 +92,24 @@ function normalizeSettings(
       DEFAULT_LLM_SETTINGS.contextCharLimit
     ),
     ragModules: ragModules.length ? ragModules : [...RAG_MODULE_IDS],
-    pgEnabled: Boolean(parsed.pgEnabled),
-    pgConnectionString:
-      typeof parsed.pgConnectionString === "string"
-        ? parsed.pgConnectionString
-        : "",
-    pgHost: typeof parsed.pgHost === "string" ? parsed.pgHost : "127.0.0.1",
-    pgPort: clamp(Number(parsed.pgPort), 1, 65535, 5432),
-    pgDatabase:
-      typeof parsed.pgDatabase === "string" ? parsed.pgDatabase : "bipolar",
-    pgUser: typeof parsed.pgUser === "string" ? parsed.pgUser : "postgres",
-    pgPasswordCiphertext: parsed.pgPasswordCiphertext || null,
     updatedAt: parsed.updatedAt || DEFAULT_LLM_SETTINGS.updatedAt,
   };
 }
 
 export async function readLlmSettings(): Promise<LlmSettingsStored> {
-  try {
-    const raw = await fs.readFile(DATA_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as Partial<LlmSettingsStored>;
-    return normalizeSettings(parsed);
-  } catch (err: unknown) {
-    const code = (err as NodeJS.ErrnoException)?.code;
-    if (code === "ENOENT") {
-      await writeLlmSettings(DEFAULT_LLM_SETTINGS);
-      return { ...DEFAULT_LLM_SETTINGS, ragModules: [...RAG_MODULE_IDS] };
-    }
-    throw err;
-  }
+  return getOrInitDoc(KEY, async () => {
+    const legacy = await readLegacyJson<Partial<LlmSettingsStored>>(
+      "llm-settings.json"
+    );
+    if (legacy) return normalizeSettings(legacy);
+    return { ...DEFAULT_LLM_SETTINGS, ragModules: [...RAG_MODULE_IDS] };
+  }).then((parsed) => normalizeSettings(parsed));
 }
 
 export async function writeLlmSettings(
   data: LlmSettingsStored
 ): Promise<void> {
-  await fs.writeFile(DATA_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  await setDoc(KEY, normalizeSettings(data));
 }
 
 export function envKeyForProvider(provider: LlmProvider): string | undefined {
@@ -199,13 +176,6 @@ export async function toPublicSettings(
     ragChunkSize: n.ragChunkSize,
     contextCharLimit: n.contextCharLimit,
     ragModules: n.ragModules,
-    pgEnabled: n.pgEnabled,
-    pgConnectionString: n.pgConnectionString,
-    pgHost: n.pgHost,
-    pgPort: n.pgPort,
-    pgDatabase: n.pgDatabase,
-    pgUser: n.pgUser,
-    hasPgPassword: Boolean(n.pgPasswordCiphertext),
   };
 }
 
@@ -224,14 +194,6 @@ export async function updateLlmSettings(body: {
   ragChunkSize?: number;
   contextCharLimit?: number;
   ragModules?: string[];
-  pgEnabled?: boolean;
-  pgConnectionString?: string;
-  pgHost?: string;
-  pgPort?: number;
-  pgDatabase?: string;
-  pgUser?: string;
-  pgPassword?: string | null;
-  clearPgPassword?: boolean;
 }): Promise<LlmSettingsStored> {
   const current = await readLlmSettings();
   const providers: LlmProvider[] = [
@@ -266,34 +228,9 @@ export async function updateLlmSettings(body: {
   if (body.contextCharLimit !== undefined)
     current.contextCharLimit = body.contextCharLimit;
   if (Array.isArray(body.ragModules)) current.ragModules = body.ragModules;
-  if (body.pgEnabled !== undefined) current.pgEnabled = Boolean(body.pgEnabled);
-  if (typeof body.pgConnectionString === "string")
-    current.pgConnectionString = body.pgConnectionString.trim();
-  if (typeof body.pgHost === "string") current.pgHost = body.pgHost.trim();
-  if (body.pgPort !== undefined) current.pgPort = body.pgPort;
-  if (typeof body.pgDatabase === "string")
-    current.pgDatabase = body.pgDatabase.trim();
-  if (typeof body.pgUser === "string") current.pgUser = body.pgUser.trim();
-  if (body.clearPgPassword) current.pgPasswordCiphertext = null;
-  else if (typeof body.pgPassword === "string" && body.pgPassword.trim()) {
-    current.pgPasswordCiphertext = await encryptSecret(body.pgPassword.trim());
-  }
   current.updatedAt = nowIso();
   const normalized = normalizeSettings(current);
   await writeLlmSettings(normalized);
   return normalized;
 }
 
-export async function getDecryptedPgPassword(
-  settings: LlmSettingsStored
-): Promise<string | null> {
-  if (!settings.pgPasswordCiphertext) {
-    return process.env.DATABASE_PASSWORD?.trim() || null;
-  }
-  try {
-    const v = await decryptSecret(settings.pgPasswordCiphertext);
-    return v.trim() || null;
-  } catch {
-    return process.env.DATABASE_PASSWORD?.trim() || null;
-  }
-}

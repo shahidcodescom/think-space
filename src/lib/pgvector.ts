@@ -1,82 +1,34 @@
-import { Pool } from "pg";
-import { EMBEDDING_DIM, embedQuery, embedTexts } from "./embeddings";
-import {
-  getDecryptedPgPassword,
-  readLlmSettings,
-} from "./llm-store";
+import { embedQuery, embedTexts } from "./embeddings";
 import { collectWorkspaceChunks } from "./rag";
 import type { AiExtras } from "./ai";
-import type { LlmSettingsStored, StoreData } from "./types";
+import type { StoreData } from "./types";
 import { RagChunk } from "./rag";
+import {
+  DatabaseConfigError,
+  ensureDatabase,
+  getPool,
+  requireDatabaseUrl,
+  resetPool,
+} from "./db";
 
-let pool: Pool | null = null;
-let poolKey = "";
-
-export function buildPgConfig(settings: LlmSettingsStored, password: string | null) {
-  const envUrl = process.env.DATABASE_URL?.trim();
-  if (settings.pgConnectionString.trim()) {
-    return { connectionString: settings.pgConnectionString.trim() };
-  }
-  if (envUrl && settings.pgEnabled) {
-    return { connectionString: envUrl };
-  }
-  return {
-    host: settings.pgHost || process.env.DATABASE_HOST || "127.0.0.1",
-    port: settings.pgPort || Number(process.env.DATABASE_PORT) || 5432,
-    database: settings.pgDatabase || process.env.DATABASE_NAME || "bipolar",
-    user: settings.pgUser || process.env.DATABASE_USER || "postgres",
-    password: password || process.env.DATABASE_PASSWORD || undefined,
-    ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: false } : undefined,
-  };
-}
-
-async function getPool(): Promise<Pool | null> {
-  const settings = await readLlmSettings();
-  if (!settings.pgEnabled) return null;
-  const password = await getDecryptedPgPassword(settings);
-  const cfg = buildPgConfig(settings, password);
-  const key = JSON.stringify(cfg);
-  if (pool && poolKey === key) return pool;
-  if (pool) {
-    await pool.end().catch(() => undefined);
-    pool = null;
-  }
-  pool = new Pool({ ...cfg, max: 4, idleTimeoutMillis: 10_000 });
-  poolKey = key;
-  return pool;
-}
+export { resetPool as resetPgPool };
 
 export async function testPgConnection(): Promise<{
   ok: boolean;
   message: string;
   vectorReady?: boolean;
 }> {
-  const settings = await readLlmSettings();
-  if (!settings.pgEnabled && !process.env.DATABASE_URL) {
-    return { ok: false, message: "Postgres RAG is disabled and DATABASE_URL is unset." };
-  }
   try {
-    const p = await getPool();
-    if (!p) return { ok: false, message: "Could not create pool (enable pg in settings)." };
+    requireDatabaseUrl();
+    await ensureDatabase();
+    const p = getPool();
     const client = await p.connect();
     try {
       await client.query("SELECT 1");
-      let vectorReady = false;
-      try {
-        await client.query("CREATE EXTENSION IF NOT EXISTS vector");
-        const r = await client.query(
-          "SELECT extname FROM pg_extension WHERE extname = 'vector'"
-        );
-        vectorReady = r.rowCount !== null && r.rowCount > 0;
-      } catch (err) {
-        return {
-          ok: true,
-          message: `Connected, but pgvector extension unavailable: ${
-            err instanceof Error ? err.message : "error"
-          }`,
-          vectorReady: false,
-        };
-      }
+      const r = await client.query(
+        "SELECT extname FROM pg_extension WHERE extname = 'vector'"
+      );
+      const vectorReady = (r.rowCount ?? 0) > 0;
       return {
         ok: true,
         message: vectorReady
@@ -90,53 +42,27 @@ export async function testPgConnection(): Promise<{
   } catch (err) {
     return {
       ok: false,
-      message: err instanceof Error ? err.message : "Connection failed",
+      message:
+        err instanceof DatabaseConfigError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Connection failed",
     };
   }
 }
 
-const MIGRATION_SQL = `
-CREATE EXTENSION IF NOT EXISTS vector;
-CREATE TABLE IF NOT EXISTS rag_embeddings (
-  id TEXT PRIMARY KEY,
-  module TEXT NOT NULL,
-  source_id TEXT,
-  title TEXT NOT NULL DEFAULT '',
-  content TEXT NOT NULL DEFAULT '',
-  embedding vector(${EMBEDDING_DIM}),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS rag_embeddings_module_idx ON rag_embeddings (module);
-`;
-
-export async function migratePgVector(): Promise<{ ok: boolean; message: string }> {
+/** Schema is migrated on boot via ensureDatabase — kept for scripts/API. */
+export async function migratePgVector(): Promise<{
+  ok: boolean;
+  message: string;
+}> {
   try {
-    const p = await getPool();
-    if (!p) return { ok: false, message: "Postgres not enabled" };
-    const client = await p.connect();
-    try {
-      await client.query(MIGRATION_SQL);
-      // IVFFlat / HNSW optional — skip if not supported
-      try {
-        await client.query(`
-          CREATE INDEX IF NOT EXISTS rag_embeddings_embedding_idx
-          ON rag_embeddings USING hnsw (embedding vector_cosine_ops);
-        `);
-      } catch {
-        try {
-          await client.query(`
-            CREATE INDEX IF NOT EXISTS rag_embeddings_embedding_idx
-            ON rag_embeddings USING ivfflat (embedding vector_cosine_ops)
-            WITH (lists = 100);
-          `);
-        } catch {
-          /* sequential scan fine for small corpora */
-        }
-      }
-      return { ok: true, message: "Schema migrated (rag_embeddings + vector)." };
-    } finally {
-      client.release();
-    }
+    await ensureDatabase();
+    return {
+      ok: true,
+      message: "Schema ready (app_documents + rag_embeddings + vector).",
+    };
   } catch (err) {
     return {
       ok: false,
@@ -156,8 +82,7 @@ export async function reindexWorkspace(
 ): Promise<{ ok: boolean; message: string; count?: number; provider?: string }> {
   const migrated = await migratePgVector();
   if (!migrated.ok) return migrated;
-  const p = await getPool();
-  if (!p) return { ok: false, message: "No pool" };
+  const p = getPool();
 
   const chunks = collectWorkspaceChunks(store, extras, modules);
   if (!chunks.length) {
@@ -213,11 +138,9 @@ export async function searchPgVector(
   query: string,
   opts: { topK: number; modules?: string[] }
 ): Promise<RagChunk[] | null> {
-  const settings = await readLlmSettings();
-  if (!settings.pgEnabled) return null;
   try {
-    const p = await getPool();
-    if (!p) return null;
+    await ensureDatabase();
+    const p = getPool();
     const qVec = await embedQuery(query);
     const modules = opts.modules?.length ? opts.modules : null;
     const client = await p.connect();
@@ -251,14 +174,6 @@ export async function searchPgVector(
       client.release();
     }
   } catch {
-    return null; // fall back to JSON RAG
-  }
-}
-
-export async function resetPgPool() {
-  if (pool) {
-    await pool.end().catch(() => undefined);
-    pool = null;
-    poolKey = "";
+    return null; // fall back to in-memory keyword RAG
   }
 }

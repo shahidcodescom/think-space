@@ -1,27 +1,18 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { Asset } from "./types";
+import { getOrInitDoc, setDoc } from "./db-docs";
+import { readLegacyJson } from "./json-import";
 
-const ASSETS_PATH = path.join(process.cwd(), "data", "assets.json");
+const KEY = "assets";
 
 export type AssetsFile = { assets: Asset[] };
 
 export async function readAssetsFile(): Promise<AssetsFile> {
-  try {
-    const raw = await fs.readFile(ASSETS_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as AssetsFile;
-    return { assets: Array.isArray(parsed.assets) ? parsed.assets : [] };
-  } catch (err: unknown) {
-    const code = (err as NodeJS.ErrnoException)?.code;
-    if (code === "ENOENT") {
-      const empty: AssetsFile = { assets: [] };
-      await writeAssetsFile(empty);
-      return empty;
-    }
-    throw err;
-  }
+  return getOrInitDoc(KEY, async () => {
+    const legacy = await readLegacyJson<AssetsFile>("assets.json");
+    return { assets: Array.isArray(legacy?.assets) ? legacy!.assets : [] };
+  });
 }
 
 export async function writeAssetsFile(data: AssetsFile): Promise<void> {
-  await fs.writeFile(ASSETS_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  await setDoc(KEY, data);
 }

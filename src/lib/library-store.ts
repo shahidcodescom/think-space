@@ -1,30 +1,23 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { LibraryItem } from "./types";
+import { getOrInitDoc, setDoc } from "./db-docs";
+import { readLegacyJson } from "./json-import";
 
-const DATA_PATH = path.join(process.cwd(), "data", "library.json");
+const KEY = "library";
 export const LIBRARY_DIR = path.join(process.cwd(), "data", "uploads", "library");
 
 export type LibraryFile = { items: LibraryItem[] };
 
 export async function readLibraryFile(): Promise<LibraryFile> {
-  try {
-    const raw = await fs.readFile(DATA_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as LibraryFile;
-    return { items: Array.isArray(parsed.items) ? parsed.items : [] };
-  } catch (err: unknown) {
-    const code = (err as NodeJS.ErrnoException)?.code;
-    if (code === "ENOENT") {
-      const empty: LibraryFile = { items: [] };
-      await writeLibraryFile(empty);
-      return empty;
-    }
-    throw err;
-  }
+  return getOrInitDoc(KEY, async () => {
+    const legacy = await readLegacyJson<LibraryFile>("library.json");
+    return { items: Array.isArray(legacy?.items) ? legacy!.items : [] };
+  });
 }
 
 export async function writeLibraryFile(data: LibraryFile): Promise<void> {
-  await fs.writeFile(DATA_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  await setDoc(KEY, data);
 }
 
 export async function ensureLibraryDir(): Promise<void> {
@@ -40,7 +33,9 @@ export function resolveLibraryPath(relative: string): string | null {
     : path.join(process.cwd(), normalized);
   const root = path.resolve(LIBRARY_DIR);
   const resolved = path.resolve(abs);
-  if (!resolved.startsWith(root + path.sep) && resolved !== root) return null;
+  if (!resolved.startsWith(root + path.sep) && resolved !== root) {
+    return null;
+  }
   return resolved;
 }
 

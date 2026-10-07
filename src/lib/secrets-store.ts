@@ -1,29 +1,18 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { SecretRecord } from "./types";
+import { getOrInitDoc, setDoc } from "./db-docs";
+import { readLegacyJson } from "./json-import";
 
-const SECRETS_PATH = path.join(process.cwd(), "data", "secrets.json");
+const KEY = "secrets";
 
-export type SecretsFile = {
-  secrets: SecretRecord[];
-};
+export type SecretsFile = { secrets: SecretRecord[] };
 
 export async function readSecretsFile(): Promise<SecretsFile> {
-  try {
-    const raw = await fs.readFile(SECRETS_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as SecretsFile;
-    return { secrets: Array.isArray(parsed.secrets) ? parsed.secrets : [] };
-  } catch (err: unknown) {
-    const code = (err as NodeJS.ErrnoException)?.code;
-    if (code === "ENOENT") {
-      const empty: SecretsFile = { secrets: [] };
-      await writeSecretsFile(empty);
-      return empty;
-    }
-    throw err;
-  }
+  return getOrInitDoc(KEY, async () => {
+    const legacy = await readLegacyJson<SecretsFile>("secrets.json");
+    return { secrets: Array.isArray(legacy?.secrets) ? legacy!.secrets : [] };
+  });
 }
 
 export async function writeSecretsFile(data: SecretsFile): Promise<void> {
-  await fs.writeFile(SECRETS_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  await setDoc(KEY, data);
 }

@@ -1,29 +1,17 @@
-import { promises as fs } from "fs";
-import path from "path";
 import type { AuthFile, AuthUserPublic, AuthUserRecord } from "./auth-types";
+import { getOrInitDoc, setDoc } from "./db-docs";
+import { readLegacyJson } from "./json-import";
 
-const DATA_PATH = path.join(process.cwd(), "data", "auth.json");
-
-const empty: AuthFile = { user: null };
-
+const KEY = "auth";
 export async function readAuthFile(): Promise<AuthFile> {
-  try {
-    const raw = await fs.readFile(DATA_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as AuthFile;
-    return { user: parsed?.user ?? null };
-  } catch (err: unknown) {
-    const code = (err as NodeJS.ErrnoException)?.code;
-    if (code === "ENOENT") {
-      await writeAuthFile(empty);
-      return { ...empty };
-    }
-    throw err;
-  }
+  return getOrInitDoc(KEY, async () => {
+    const legacy = await readLegacyJson<AuthFile>("auth.json");
+    return { user: legacy?.user ?? null };
+  });
 }
 
 export async function writeAuthFile(data: AuthFile): Promise<void> {
-  await fs.mkdir(path.dirname(DATA_PATH), { recursive: true });
-  await fs.writeFile(DATA_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8");
+  await setDoc(KEY, data);
 }
 
 export function toPublicUser(u: AuthUserRecord): AuthUserPublic {

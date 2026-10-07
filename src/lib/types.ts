@@ -481,15 +481,6 @@ export interface LlmSettingsStored {
   contextCharLimit: number;
   /** Modules included in RAG retrieval. */
   ragModules: string[];
-  /** Use PostgreSQL + pgvector for RAG when configured. */
-  pgEnabled: boolean;
-  /** Full connection URI (optional if host fields set). Stored as-is; prefer env in prod. */
-  pgConnectionString: string;
-  pgHost: string;
-  pgPort: number;
-  pgDatabase: string;
-  pgUser: string;
-  pgPasswordCiphertext: string | null;
   updatedAt: string;
 }
 
@@ -511,14 +502,6 @@ export interface LlmSettingsPublic {
   ragChunkSize: number;
   contextCharLimit: number;
   ragModules: string[];
-  pgEnabled: boolean;
-  pgConnectionString: string;
-  pgHost: string;
-  pgPort: number;
-  pgDatabase: string;
-  pgUser: string;
-  /** True when a Postgres password is stored encrypted. */
-  hasPgPassword: boolean;
 }
 
 export type IntentAction =

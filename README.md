@@ -7,7 +7,7 @@ Bi-Polar is a calm productivity workspace matching the botanical mockups: Thinki
 ## Stack
 
 - **Next.js 14** (App Router) + TypeScript + Tailwind CSS
-- **Local JSON persistence** at `data/store.json` (no paid APIs / no cloud DB)
+- **Postgres** primary store (`DATABASE_URL` required) — JSONB documents + pgvector RAG
 - Thinking-space assistant: rule-based by default; optional LLM (OpenAI, Gemini, Claude, OpenRouter, Ollama)
 - **TipTap** rich-text notes (HTML persisted, sanitized on save/render)
 
@@ -15,7 +15,9 @@ Bi-Polar is a calm productivity workspace matching the botanical mockups: Thinki
 
 ```bash
 cd /workspace/second-brain-ai
+cp .env.example .env   # set DATABASE_URL (required)
 npm install
+npm run db:migrate     # creates app_documents + rag_embeddings
 npm run dev
 ```
 
@@ -42,9 +44,9 @@ Authenticated `POST /api/system/reset` with `{ "confirmPhrase": "RESET" }` (UI r
 
 | Action | Details |
 |--------|---------|
-| **Wiped** | All module JSON (`store`, assets, secrets, projects, clients, recurrings, finance, belongings, calendar, jobs, skills, library), uploads, `auth.json` (account), `llm-settings.json` (stored API/DB password ciphertexts), chat history |
-| **Reseeded** | Built-in secret categories; built-in intents |
-| **Kept** | `data/.secrets-master-key`, env vars (`SECRETS_MASTER_KEY`, `SESSION_SECRET`, `LLM_*`, `DATABASE_*`); external Postgres/pgvector is **not** cleared |
+| **Wiped** | All `app_documents` keys + `rag_embeddings`, uploads, account, stored LLM API key |
+| **Reseeded** | Built-in secret categories; built-in intents; empty module docs |
+| **Kept** | `data/.secrets-master-key`, env vars including `DATABASE_URL` |
 
 After reset: session cleared → redirect to `/setup`.
 
@@ -69,7 +71,7 @@ Production image uses Next.js **standalone** output (multi-stage Alpine build).
 | File | Purpose |
 |------|---------|
 | `Dockerfile` | Multi-stage build → `node server.js` |
-| `docker-compose.yml` | App + optional `pgvector` Postgres |
+| `docker-compose.yml` | App + required Postgres (`pgvector/pgvector`) |
 | `.dockerignore` | Keeps build context lean / excludes secrets |
 | `.env.example` | Env template for compose / runtime |
 | `docker-entrypoint.sh` | Seeds empty `data/` volume on first boot |
@@ -82,41 +84,32 @@ cp .env.example .env
 docker build -t bipolar:local .
 docker run --rm -p 3000:3000 \
   --env-file .env \
+  -e DATABASE_URL=postgresql://... \
   -v bipolar-data:/app/data \
   bipolar:local
 ```
 
+`DATABASE_URL` is **required**. Prefer `docker compose` so Postgres starts with the app.
+
 Open **http://localhost:3000**.
 
-### Compose (app only)
+### Compose (app + Postgres)
 
 ```bash
 cp .env.example .env
-# edit SECRETS_MASTER_KEY / LLM keys
+# edit SECRETS_MASTER_KEY / LLM keys; DATABASE_URL defaults to compose db
 docker compose up -d --build
 ```
 
-JSON store, uploads, and the vault key file live in the **`bipolar-data`** volume (`/app/data` in the container).
-
-### Compose + Postgres (pgvector)
-
-```bash
-docker compose --profile pgvector up -d --build
-```
-
-This starts `app` and `db` (`pgvector/pgvector:pg16`). Default URL:
-
-`postgresql://bipolar:bipolar@db:5432/bipolar`
-
-Then in **Settings → Thinking space LLM**, enable Postgres RAG → Test → Migrate → Reindex. If Postgres is down, Thinking space falls back to in-memory/JSON RAG.
+Postgres (`pgvector/pgvector:pg16`) is required. Uploads + vault key file live in **`bipolar-data`**; app documents live in Postgres. Schema migrates on boot.
 
 ### Important env vars
 
 | Variable | Notes |
 |----------|--------|
+| `DATABASE_URL` | **Required** — app data + pgvector |
 | `SECRETS_MASTER_KEY` | **Set in production** so vault keys survive container rebuilds |
 | `LLM_*` / provider API keys | Optional; see table under LLM / RAG |
-| `DATABASE_URL` | Used when pgvector profile (or external Postgres) is available |
 
 Do **not** bake `data/.secrets-master-key` into the image (excluded by `.dockerignore`). Prefer `SECRETS_MASTER_KEY` in `.env`.
 
@@ -157,7 +150,7 @@ src/
   app/                  # App Router pages + API routes
     thinking-space/
     notes/ tasks/ meetings/ thoughts/ memories/ profile/
-    api/                # REST over JSON store
+    api/                # REST over Postgres documents
   components/           # Sidebar, AppShell, ActionItems, …
   lib/                  # types, store, ai, format
 data/store.json         # Local persistence + seed
@@ -357,7 +350,7 @@ LLM_MODEL=gpt-4o-mini
 # OPENROUTER_API_KEY=...
 ```
 
-Settings persist in `data/llm-settings.json` (`apiKeyCiphertext` only — never plaintext). UI: `/profile`. API: `GET/PUT /api/llm/settings` (public fields only; PUT may send `apiKey` once to encrypt, or `clearApiKey: true`).
+Settings persist in Postgres `app_documents` key `llm-settings` (`apiKeyCiphertext` only — never plaintext). UI: `/settings`. API: `GET/PUT /api/llm/settings`.
 
 ## LLM, RAG & Postgres (pgvector)
 
@@ -367,32 +360,27 @@ Thinking space can use an optional LLM with retrieval-augmented context.
 
 - **LLM** — provider, live model list, temperature, max tokens, system prompt, API key
 - **RAG** — on/off, top-k, chunk size, context cap, module filters (in-memory keyword retrieval by default)
-- **PostgreSQL + pgvector** — optional vector store; test connection, migrate, reindex
+- **PostgreSQL + pgvector** — same `DATABASE_URL` as app data; schema migrates on boot (`npm run db:migrate`)
 - **Intents** — enable/edit regex patterns that map to built-in actions
 
 ### Environment variables
 
 | Variable | Purpose |
 |----------|---------|
-| `SECRETS_MASTER_KEY` | AES key for encrypted secrets & stored API/DB passwords |
+| `SECRETS_MASTER_KEY` | AES key for encrypted secrets & stored LLM API keys |
 | `LLM_ENABLED` | Force-enable LLM (`true` / `1`) |
 | `LLM_PROVIDER` | `openai` \| `gemini` \| `claude` \| `openrouter` \| `ollama` |
 | `LLM_MODEL` | Override model id |
 | `LLM_BASE_URL` | Override provider base URL |
 | `LLM_API_KEY` / `OPENAI_API_KEY` / `GEMINI_API_KEY` / `ANTHROPIC_API_KEY` / `OPENROUTER_API_KEY` | Provider keys (env fallback) |
-| `DATABASE_URL` | Postgres connection URI for pgvector RAG |
-| `DATABASE_HOST` / `DATABASE_PORT` / `DATABASE_NAME` / `DATABASE_USER` / `DATABASE_PASSWORD` | Discrete Postgres fields |
+| `DATABASE_URL` | **Required.** Postgres URI for all app data + pgvector RAG |
+| `DATABASE_HOST` / `DATABASE_PORT` / `DATABASE_NAME` / `DATABASE_USER` / `DATABASE_PASSWORD` | Alternative to URL |
 | `DATABASE_SSL` | Set `true` to enable SSL |
 
-When Postgres/pgvector is disabled or unreachable, Thinking space falls back to JSON/in-memory RAG. App CRUD remains on local JSON files under `data/`.
-
-### pgvector setup (sketch)
+App data is stored in `app_documents` (JSONB). RAG embeddings use `rag_embeddings` (pgvector) on the same database. If vector search is unreachable, Thinking space falls back to in-memory keyword RAG. Binary uploads remain under `data/uploads/`.
 
 ```bash
-# Example
-createdb bipolar
-psql bipolar -c 'CREATE EXTENSION vector;'
-# In Profile: enable Postgres RAG, save connection, Test → Migrate → Reindex
+npm run db:migrate
 ```
 
-Embeddings use OpenAI `text-embedding-3-small` when an OpenAI key is available; otherwise a local deterministic embedding is used so reindex still works offline.
+Embeddings use OpenAI `text-embedding-3-small` when an OpenAI key is available; otherwise a local deterministic embedding is used.

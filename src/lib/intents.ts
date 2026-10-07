@@ -1,9 +1,9 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { nowIso, uid } from "./store";
 import { IntentAction, IntentDef } from "./types";
+import { getOrInitDoc, setDoc } from "./db-docs";
+import { readLegacyJson } from "./json-import";
 
-const DATA_PATH = path.join(process.cwd(), "data", "intents.json");
+const KEY = "intents";
 
 export const INTENT_ACTIONS: { value: IntentAction; label: string; query: string }[] = [
   { value: "list_notes", label: "List notes", query: "list my notes" },
@@ -118,17 +118,11 @@ export const DEFAULT_INTENTS: IntentDef[] = [
 type IntentsFile = { intents: IntentDef[] };
 
 async function readFile(): Promise<IntentsFile> {
-  try {
-    const raw = await fs.readFile(DATA_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as IntentsFile;
-    if (!Array.isArray(parsed.intents)) throw new Error("bad intents file");
-    return parsed;
-  } catch {
-    const data = { intents: DEFAULT_INTENTS.map((i) => ({ ...i })) };
-    await fs.mkdir(path.dirname(DATA_PATH), { recursive: true });
-    await fs.writeFile(DATA_PATH, JSON.stringify(data, null, 2) + "\n");
-    return data;
-  }
+  return getOrInitDoc(KEY, async () => {
+    const legacy = await readLegacyJson<IntentsFile>("intents.json");
+    if (legacy && Array.isArray(legacy.intents)) return legacy;
+    return { intents: DEFAULT_INTENTS.map((i) => ({ ...i })) };
+  });
 }
 
 export async function listIntents(): Promise<IntentDef[]> {
@@ -138,13 +132,16 @@ export async function listIntents(): Promise<IntentDef[]> {
 
 export async function saveIntents(intents: IntentDef[]): Promise<IntentDef[]> {
   const data = { intents };
-  await fs.mkdir(path.dirname(DATA_PATH), { recursive: true });
-  await fs.writeFile(DATA_PATH, JSON.stringify(data, null, 2) + "\n");
+  await setDoc(KEY, data);
   return intents;
 }
 
 export async function upsertIntent(
-  patch: Partial<IntentDef> & { name: string; action: IntentAction; patterns: string[] }
+  patch: Partial<IntentDef> & {
+    name: string;
+    action: IntentAction;
+    patterns: string[];
+  }
 ): Promise<IntentDef> {
   const data = await readFile();
   const now = nowIso();
@@ -154,32 +151,32 @@ export async function upsertIntent(
       data.intents[idx] = {
         ...data.intents[idx],
         ...patch,
-        patterns: patch.patterns.map((p) => p.trim()).filter(Boolean),
-        enabled: patch.enabled ?? data.intents[idx].enabled,
+        patterns: patch.patterns,
         updatedAt: now,
       };
-      await saveIntents(data.intents);
+      await setDoc(KEY, data);
       return data.intents[idx];
     }
   }
   const created: IntentDef = {
     id: uid("intent"),
-    name: patch.name.trim(),
+    name: patch.name,
     enabled: patch.enabled !== false,
-    patterns: patch.patterns.map((p) => p.trim()).filter(Boolean),
+    patterns: patch.patterns,
     action: patch.action,
     updatedAt: now,
   };
   data.intents.push(created);
-  await saveIntents(data.intents);
+  await setDoc(KEY, data);
   return created;
 }
 
 export async function deleteIntent(id: string): Promise<boolean> {
   const data = await readFile();
-  const next = data.intents.filter((i) => i.id !== id);
-  if (next.length === data.intents.length) return false;
-  await saveIntents(next);
+  const before = data.intents.length;
+  data.intents = data.intents.filter((i) => i.id !== id);
+  if (data.intents.length === before) return false;
+  await setDoc(KEY, data);
   return true;
 }
 
@@ -197,6 +194,7 @@ export async function setIntentEnabled(
 }
 
 /** If an enabled intent matches, return the canonical query for rule handlers. */
+
 export function matchIntentQuery(
   userQuery: string,
   intents: IntentDef[]
