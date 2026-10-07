@@ -12,6 +12,7 @@ services:
       PORT: 3000
       HOSTNAME: 0.0.0.0
       SECRETS_MASTER_KEY: ${SECRETS_MASTER_KEY:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
       LLM_ENABLED: ${LLM_ENABLED:-false}
       LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
       LLM_MODEL: ${LLM_MODEL:-}

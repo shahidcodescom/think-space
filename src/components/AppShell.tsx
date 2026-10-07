@@ -10,6 +10,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const current = NAV_ITEMS.find((n) => isNavActive(pathname, n.href));
   const isPublicBook = pathname.startsWith("/book");
+  const isAuthShell = pathname === "/login" || pathname === "/setup";
+
+  if (isAuthShell) {
+    return (
+      <div className="min-h-[100dvh] flex flex-col bg-cream overflow-x-hidden">
+        <main className="flex-1 min-w-0 w-full">{children}</main>
+      </div>
+    );
+  }
 
   if (isPublicBook) {
     return (

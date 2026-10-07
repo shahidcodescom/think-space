@@ -14,6 +14,13 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [vault, setVault] = useState<VaultStatus | null>(null);
+  const [account, setAccount] = useState<{ username: string; email: string } | null>(null);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [pwBusy, setPwBusy] = useState(false);
+  const [logoutBusy, setLogoutBusy] = useState(false);
 
   useEffect(() => {
     fetch("/api/profile")
@@ -23,7 +30,44 @@ export default function ProfilePage() {
       .then((r) => r.json())
       .then(setVault)
       .catch(() => setVault(null));
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.user) setAccount({ username: d.user.username, email: d.user.email });
+      })
+      .catch(() => setAccount(null));
   }, []);
+
+  async function changePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPwMsg(null);
+    if (newPassword !== confirmPassword) {
+      setPwMsg({ ok: false, text: "New passwords do not match." });
+      return;
+    }
+    setPwBusy(true);
+    const res = await fetch("/api/auth/password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setPwBusy(false);
+    if (!res.ok) {
+      setPwMsg({ ok: false, text: data.error || "Could not change password" });
+      return;
+    }
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setPwMsg({ ok: true, text: "Password updated." });
+  }
+
+  async function logout() {
+    setLogoutBusy(true);
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/login";
+  }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -54,7 +98,7 @@ export default function ProfilePage() {
       <header className="mb-6">
         <h1 className="section-title">Profile.</h1>
         <p className="text-forest/55 mt-1 text-sm">
-          Name, voice, language, Thinking-space LLM / RAG / intents, and vault.
+          Account, preferences, Thinking-space LLM / RAG / intents, and vault.
         </p>
       </header>
 
@@ -121,6 +165,70 @@ export default function ProfilePage() {
 
             <div className="mt-4">
         <LlmSettingsPanel />
+      </div>
+
+      <div className="card p-5 mt-4 space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="font-serif text-lg text-forest">Account</h2>
+            <p className="text-sm text-forest/55 mt-0.5">
+              {account
+                ? <>Signed in as <span className="font-medium text-forest/80">{account.username}</span> · {account.email}</>
+                : "Local owner account"}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn-ghost shrink-0"
+            onClick={logout}
+            disabled={logoutBusy}
+          >
+            {logoutBusy ? "Signing out…" : "Sign out"}
+          </button>
+        </div>
+
+        <form onSubmit={changePassword} className="space-y-3 border-t border-forest/5 pt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-forest/50">
+            Change password
+          </p>
+          <input
+            type="password"
+            className="input-field"
+            placeholder="Current password"
+            autoComplete="current-password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            className="input-field"
+            placeholder="New password (min 8)"
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+            minLength={8}
+          />
+          <input
+            type="password"
+            className="input-field"
+            placeholder="Confirm new password"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            minLength={8}
+          />
+          {pwMsg && (
+            <p className={`text-sm ${pwMsg.ok ? "text-sage-dark" : "text-red-700/90"}`}>
+              {pwMsg.text}
+            </p>
+          )}
+          <button type="submit" className="btn-primary" disabled={pwBusy}>
+            {pwBusy ? "Updating…" : "Update password"}
+          </button>
+        </form>
       </div>
 
       <div className="card p-5 mt-4 space-y-2">

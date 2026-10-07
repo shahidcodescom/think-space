@@ -29,6 +29,19 @@ npm start
 ```
 
 
+
+## Account & login
+
+Single local owner account (no multi-user signup).
+
+1. **First run** — open the app → redirected to **`/setup`** → create username, email, password (bcrypt hash in `data/auth.json`).
+2. **Later visits** — **`/login`** with username or email + password. Session cookie `bp_session` (httpOnly, SameSite=Lax, Secure in production).
+3. **Protected** — all app pages and APIs require a valid session. Public: `/login`, `/setup`, `/book/*`, `/api/book/*`, `/api/auth/status|login|setup`.
+4. **Profile** — change password; **Sign out** clears the session.
+5. After setup, creating another account is rejected.
+
+Env: `SESSION_SECRET` (optional; falls back to `SECRETS_MASTER_KEY`).
+
 ## Docker
 
 Production image uses Next.js **standalone** output (multi-stage Alpine build).

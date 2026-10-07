@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "npx tsx src/lib/ai.test.ts && npx tsx src/lib/crypto.test.ts && npx tsx src/lib/llm.test.ts"
+    "test": "npx tsx src/lib/ai.test.ts && npx tsx src/lib/crypto.test.ts && npx tsx src/lib/llm.test.ts && npx tsx src/lib/auth.test.ts"
   },
   "dependencies": {
     "@tiptap/extension-link": "^3.31.4",
@@ -15,12 +15,14 @@
     "@tiptap/pm": "^3.31.4",
     "@tiptap/react": "^3.31.4",
     "@tiptap/starter-kit": "^3.31.4",
+    "bcryptjs": "^3.0.3",
     "next": "14.2.35",
     "pg": "^8.23.1",
     "react": "^18",
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "^20",
     "@types/pg": "^8.23.1",
     "@types/react": "^18",
@@ -32,5 +34,5 @@
     "tsx": "^4.23.15",
     "typescript": "^5"
   },
-  "description": "Bi-Polar — Think. Capture. Act."
+  "description": "Bi-Polar \u2014 Think. Capture. Act."
 }
