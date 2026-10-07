@@ -20,6 +20,12 @@ import {
 import { buildThinkingRagContext } from "@/lib/rag";
 import { nowIso, readStore, uid, writeStore } from "@/lib/store";
 import { toSecretContextMeta } from "@/lib/secret-safe";
+import {
+  clearChatMemory,
+  formatChatMemoryContext,
+  loadRecentChatMemory,
+  pushChatMemoryTurn,
+} from "@/lib/chat-memory";
 
 export async function GET() {
   const store = await readStore();
@@ -98,9 +104,17 @@ export async function POST(req: NextRequest) {
   if (llmConfig.enabled) {
     const compact = buildCompactContext(store, extras);
     const rag = await buildThinkingRagContext(message, store, extras, llmConfig);
+    const memory = await loadRecentChatMemory(
+      llmConfig.chatMemoryTurns,
+      store.chatHistory
+    );
+    const memoryBlock = formatChatMemoryContext(memory.turns);
     let context = compact;
     if (rag.context) {
       context = `${rag.context}\n\n---\nWorkspace overview:\n${compact}`;
+    }
+    if (memoryBlock) {
+      context = `${memoryBlock}\n\n---\n${context}`;
     }
     if (context.length > llmConfig.contextCharLimit) {
       context = context.slice(0, llmConfig.contextCharLimit) + "\n…";
@@ -151,6 +165,13 @@ export async function POST(req: NextRequest) {
   }
   await writeStore(store);
 
+  // Best-effort Redis memory for next LLM turn (ignored if Redis is down)
+  void pushChatMemoryTurn({
+    user: message,
+    assistant: title ? `${title}\n${text}` : text,
+    createdAt: assistantMsg.createdAt,
+  });
+
   return NextResponse.json({ user: userMsg, assistant: assistantMsg, mode });
 }
 
@@ -158,5 +179,6 @@ export async function DELETE() {
   const store = await readStore();
   store.chatHistory = [];
   await writeStore(store);
+  await clearChatMemory();
   return NextResponse.json({ ok: true });
 }

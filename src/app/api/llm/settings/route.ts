@@ -40,6 +40,8 @@ export async function PUT(req: NextRequest) {
   if (body.contextCharLimit !== undefined)
     patch.contextCharLimit = Number(body.contextCharLimit);
   if (Array.isArray(body.ragModules)) patch.ragModules = body.ragModules.map(String);
+  if (body.chatMemoryTurns !== undefined)
+    patch.chatMemoryTurns = Number(body.chatMemoryTurns);
 
   const updated = await updateLlmSettings(patch);
   const pub = await toPublicSettings(updated);

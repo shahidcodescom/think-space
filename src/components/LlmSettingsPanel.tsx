@@ -117,6 +117,7 @@ export function LlmSettingsPanel() {
       ragChunkSize: llm.ragChunkSize,
       contextCharLimit: llm.contextCharLimit,
       ragModules: llm.ragModules,
+      chatMemoryTurns: llm.chatMemoryTurns,
     };
     if (apiKeyDraft.trim()) body.apiKey = apiKeyDraft.trim();
     const res = await fetch("/api/llm/settings", {
@@ -370,6 +371,28 @@ export function LlmSettingsPanel() {
                 }
               />
             </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
+              Chat memory (turns)
+            </label>
+            <input
+              type="number"
+              className="input-field max-w-[8rem]"
+              min={0}
+              max={50}
+              value={llm.chatMemoryTurns ?? 5}
+              onChange={(e) =>
+                setLlm({
+                  ...llm,
+                  chatMemoryTurns: Number(e.target.value) || 0,
+                })
+              }
+            />
+            <p className="text-xs text-forest/45 mt-1">
+              Last N Thinking-space turns kept in Redis for LLM context (default 5).
+              Falls back to stored history if Redis is unavailable. Set 0 to disable.
+            </p>
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-forest/50 mb-2">

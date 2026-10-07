@@ -71,7 +71,7 @@ Production image uses Next.js **standalone** output (multi-stage Alpine build).
 | File | Purpose |
 |------|---------|
 | `Dockerfile` | Multi-stage build → `node server.js` |
-| `docker-compose.yml` | App + required Postgres (`pgvector/pgvector`) |
+| `docker-compose.yml` | App + required Postgres + Redis |
 | `.dockerignore` | Keeps build context lean / excludes secrets |
 | `.env.example` | Env template for compose / runtime |
 | `docker-entrypoint.sh` | Seeds empty `data/` volume on first boot |
@@ -108,6 +108,7 @@ Postgres (`pgvector/pgvector:pg16`) is required. Uploads + vault key file live i
 | Variable | Notes |
 |----------|--------|
 | `DATABASE_URL` | **Required** — app data + pgvector |
+| `REDIS_URL` | Optional — Thinking-space LLM chat memory (falls back to Postgres history) |
 | `SECRETS_MASTER_KEY` | **Set in production** so vault keys survive container rebuilds |
 | `LLM_*` / provider API keys | Optional; see table under LLM / RAG |
 
@@ -360,6 +361,7 @@ Thinking space can use an optional LLM with retrieval-augmented context.
 
 - **LLM** — provider, live model list, temperature, max tokens, system prompt, API key
 - **RAG** — on/off, top-k, chunk size, context cap, module filters (in-memory keyword retrieval by default)
+- **Chat memory** — last N Thinking-space turns (default 5) from Redis for LLM context; falls back to stored history if Redis is down
 - **PostgreSQL + pgvector** — same `DATABASE_URL` as app data; schema migrates on boot (`npm run db:migrate`)
 - **Intents** — enable/edit regex patterns that map to built-in actions
 
@@ -376,6 +378,7 @@ Thinking space can use an optional LLM with retrieval-augmented context.
 | `DATABASE_URL` | **Required.** Postgres URI for all app data + pgvector RAG |
 | `DATABASE_HOST` / `DATABASE_PORT` / `DATABASE_NAME` / `DATABASE_USER` / `DATABASE_PASSWORD` | Alternative to URL |
 | `DATABASE_SSL` | Set `true` to enable SSL |
+| `REDIS_URL` | Redis URI for recent chat memory (optional) |
 
 App data is stored in `app_documents` (JSONB). RAG embeddings use `rag_embeddings` (pgvector) on the same database. If vector search is unreachable, Thinking space falls back to in-memory keyword RAG. Binary uploads remain under `data/uploads/`.
 

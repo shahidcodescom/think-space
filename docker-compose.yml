@@ -47,14 +47,32 @@ services:
       DATABASE_USER: ${DATABASE_USER:-bipolar}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-bipolar}
       DATABASE_SSL: ${DATABASE_SSL:-false}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
     volumes:
       # Uploads + vault key file only (app JSON lives in Postgres)
       - bipolar-data:/app/data
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: bipolar-redis
+    ports:
+      - "${REDIS_PUBLISH_PORT:-6379}:6379"
+    volumes:
+      - bipolar-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
 
 volumes:
   bipolar-data:
   bipolar-pg:
+  bipolar-redis:

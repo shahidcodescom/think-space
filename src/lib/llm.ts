@@ -20,6 +20,7 @@ export type LlmResolved = {
   ragChunkSize: number;
   contextCharLimit: number;
   ragModules: string[];
+  chatMemoryTurns: number;
 };
 
 /**
@@ -71,6 +72,7 @@ export async function resolveLlmConfig(): Promise<LlmResolved> {
     ragChunkSize: settings.ragChunkSize,
     contextCharLimit: settings.contextCharLimit,
     ragModules: settings.ragModules || [],
+    chatMemoryTurns: settings.chatMemoryTurns ?? 5,
   };
 }
 

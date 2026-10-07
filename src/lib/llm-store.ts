@@ -25,6 +25,7 @@ export const DEFAULT_LLM_SETTINGS: LlmSettingsStored = {
   ragChunkSize: 280,
   contextCharLimit: 12000,
   ragModules: [...RAG_MODULE_IDS],
+  chatMemoryTurns: 5,
   updatedAt: new Date(0).toISOString(),
 };
 
@@ -92,6 +93,12 @@ function normalizeSettings(
       DEFAULT_LLM_SETTINGS.contextCharLimit
     ),
     ragModules: ragModules.length ? ragModules : [...RAG_MODULE_IDS],
+    chatMemoryTurns: clamp(
+      Number(parsed.chatMemoryTurns),
+      0,
+      50,
+      DEFAULT_LLM_SETTINGS.chatMemoryTurns
+    ),
     updatedAt: parsed.updatedAt || DEFAULT_LLM_SETTINGS.updatedAt,
   };
 }
@@ -176,6 +183,7 @@ export async function toPublicSettings(
     ragChunkSize: n.ragChunkSize,
     contextCharLimit: n.contextCharLimit,
     ragModules: n.ragModules,
+    chatMemoryTurns: n.chatMemoryTurns,
   };
 }
 
@@ -194,6 +202,7 @@ export async function updateLlmSettings(body: {
   ragChunkSize?: number;
   contextCharLimit?: number;
   ragModules?: string[];
+  chatMemoryTurns?: number;
 }): Promise<LlmSettingsStored> {
   const current = await readLlmSettings();
   const providers: LlmProvider[] = [
@@ -228,6 +237,8 @@ export async function updateLlmSettings(body: {
   if (body.contextCharLimit !== undefined)
     current.contextCharLimit = body.contextCharLimit;
   if (Array.isArray(body.ragModules)) current.ragModules = body.ragModules;
+  if (body.chatMemoryTurns !== undefined)
+    current.chatMemoryTurns = body.chatMemoryTurns;
   current.updatedAt = nowIso();
   const normalized = normalizeSettings(current);
   await writeLlmSettings(normalized);

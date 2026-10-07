@@ -481,6 +481,8 @@ export interface LlmSettingsStored {
   contextCharLimit: number;
   /** Modules included in RAG retrieval. */
   ragModules: string[];
+  /** Recent Thinking-space turns kept in Redis for LLM context (default 5). */
+  chatMemoryTurns: number;
   updatedAt: string;
 }
 
@@ -502,6 +504,8 @@ export interface LlmSettingsPublic {
   ragChunkSize: number;
   contextCharLimit: number;
   ragModules: string[];
+  /** Recent turns injected into LLM context (Redis; falls back to store). */
+  chatMemoryTurns: number;
 }
 
 export type IntentAction =

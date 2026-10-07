@@ -8,6 +8,7 @@ import { EMPTY_STORE } from "./store";
 import { SYSTEM_RESET_PHRASE } from "./system-reset-phrase";
 import { ensureDatabase, wipeAppData } from "./db";
 import { setDoc } from "./db-docs";
+import { clearChatMemory } from "./chat-memory";
 
 export { SYSTEM_RESET_PHRASE };
 
@@ -101,6 +102,10 @@ export async function performSystemReset(): Promise<SystemResetReport> {
   if (await emptyDir(path.join(dataDir, "uploads", "library"))) {
     clearedUploads.push("uploads/library/");
   }
+
+  const redisCleared = await clearChatMemory();
+  if (redisCleared) wipedFiles.push("redis thinking chat memory");
+  else kept.push("redis chat memory (unavailable or REDIS_URL unset)");
 
   return { wipedFiles, reseeded, clearedUploads, kept };
 }
