@@ -18,7 +18,7 @@ import {
 
 type ActionOpt = { value: IntentAction; label: string; query: string };
 
-export function LlmSettingsPanel() {
+export function LlmSettingsForm() {
   const [llm, setLlm] = useState<LlmSettingsPublic | null>(null);
   const [apiKeyDraft, setApiKeyDraft] = useState("");
   const [llmSaved, setLlmSaved] = useState(false);
@@ -28,15 +28,6 @@ export function LlmSettingsPanel() {
   >([]);
   const [modelsLoading, setModelsLoading] = useState(false);
   const [modelsError, setModelsError] = useState<string | null>(null);
-  const [intents, setIntents] = useState<IntentDef[]>([]);
-  const [actions, setActions] = useState<ActionOpt[]>([]);
-  const [intentForm, setIntentForm] = useState({
-    id: "",
-    name: "",
-    action: "list_notes" as IntentAction,
-    patterns: "",
-    enabled: true,
-  });
 
   const loadModels = useCallback(
     async (provider: LlmProvider, baseUrl: string, preferModel?: string) => {
@@ -82,13 +73,6 @@ export function LlmSettingsPanel() {
     []
   );
 
-  const loadIntents = useCallback(async () => {
-    const res = await fetch("/api/intents");
-    const data = await res.json();
-    setIntents(data.intents || []);
-    setActions(data.actions || []);
-  }, []);
-
   useEffect(() => {
     fetch("/api/llm/settings")
       .then((r) => r.json())
@@ -97,8 +81,7 @@ export function LlmSettingsPanel() {
         void loadModels(settings.provider, settings.baseUrl, settings.model);
       })
       .catch(() => setLlm(null));
-    void loadIntents();
-  }, [loadModels, loadIntents]);
+  }, [loadModels]);
 
   async function saveLlm(e: FormEvent) {
     e.preventDefault();
@@ -134,6 +117,303 @@ export function LlmSettingsPanel() {
     await loadModels(saved.provider, saved.baseUrl, saved.model);
   }
 
+  if (!llm) {
+    return <p className="text-sm text-forest/50">Loading LLM settings…</p>;
+  }
+
+  return (
+    <form onSubmit={saveLlm} className="card p-5 space-y-4">
+      <div>
+        <h2 className="font-serif text-lg text-forest">Thinking space LLM</h2>
+        <p className="text-xs text-forest/50 mt-1">
+          Provider, model, sampling, system prompt, and RAG (pgvector uses DATABASE_URL).
+          Secret values are never sent to the model.
+        </p>
+      </div>
+
+      <ToggleSwitch
+        checked={llm.enabled}
+        onChange={(enabled) => setLlm({ ...llm, enabled })}
+        label="Enable LLM for Thinking space"
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
+            Provider
+          </label>
+          <SearchableSelect
+            options={LLM_PROVIDERS.map((p) => ({
+              value: p,
+              label: PROVIDER_LABELS[p],
+            }))}
+            value={llm.provider}
+            onChange={(provider) => {
+              const next = provider as LlmProvider;
+              const nextLlm = {
+                ...llm,
+                provider: next,
+                model: DEFAULT_MODELS[next],
+              };
+              setLlm(nextLlm);
+              void loadModels(next, nextLlm.baseUrl, nextLlm.model);
+            }}
+            aria-label="Provider"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
+            Model
+          </label>
+          <SearchableSelect
+            options={
+              modelOptions.length
+                ? modelOptions
+                : [
+                    {
+                      value: llm.model || DEFAULT_MODELS[llm.provider],
+                      label: llm.model || DEFAULT_MODELS[llm.provider],
+                    },
+                  ]
+            }
+            value={llm.model || DEFAULT_MODELS[llm.provider]}
+            onChange={(model) => setLlm({ ...llm, model })}
+            placeholder={modelsLoading ? "Loading…" : DEFAULT_MODELS[llm.provider]}
+            aria-label="Model"
+            required
+          />
+          <p className="mt-1 text-xs text-forest/45">
+            {modelsLoading
+              ? "Fetching models…"
+              : modelsError
+                ? modelsError
+                : `${modelOptions.length} live models`}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
+            Temperature ({llm.temperature})
+          </label>
+          <input
+            type="range"
+            min={0}
+            max={2}
+            step={0.05}
+            className="w-full accent-forest"
+            value={llm.temperature}
+            onChange={(e) =>
+              setLlm({ ...llm, temperature: Number(e.target.value) })
+            }
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
+            Max tokens
+          </label>
+          <input
+            type="number"
+            className="input-field"
+            min={64}
+            max={8192}
+            value={llm.maxTokens}
+            onChange={(e) =>
+              setLlm({ ...llm, maxTokens: Number(e.target.value) || 1024 })
+            }
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
+          System prompt override
+        </label>
+        <textarea
+          className="input-field min-h-[88px]"
+          placeholder="Leave blank for Bi-Polar default (includes Open links guidance)"
+          value={llm.systemPrompt}
+          onChange={(e) => setLlm({ ...llm, systemPrompt: e.target.value })}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
+            Base URL
+          </label>
+          <input
+            className="input-field"
+            value={llm.baseUrl}
+            onChange={(e) => setLlm({ ...llm, baseUrl: e.target.value })}
+            placeholder="Leave blank for provider default"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
+            API key
+          </label>
+          <input
+            className="input-field"
+            type="password"
+            autoComplete="off"
+            value={apiKeyDraft}
+            onChange={(e) => setApiKeyDraft(e.target.value)}
+            placeholder={
+              llm.hasApiKey
+                ? "•••• saved — paste to replace"
+                : llm.envKeyAvailable
+                  ? "Env key available — or paste to store"
+                  : "Paste key (encrypted at rest)"
+            }
+          />
+        </div>
+      </div>
+
+      <div className="border-t border-forest/10 pt-4 space-y-3">
+        <h3 className="font-serif text-base text-forest">RAG</h3>
+        <ToggleSwitch
+          checked={llm.ragEnabled}
+          onChange={(ragEnabled) => setLlm({ ...llm, ragEnabled })}
+          label="Enable retrieval-augmented context"
+        />
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
+              Top-k
+            </label>
+            <input
+              type="number"
+              className="input-field"
+              min={1}
+              max={40}
+              value={llm.ragTopK}
+              onChange={(e) =>
+                setLlm({ ...llm, ragTopK: Number(e.target.value) || 8 })
+              }
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
+              Chunk size
+            </label>
+            <input
+              type="number"
+              className="input-field"
+              min={80}
+              max={2000}
+              value={llm.ragChunkSize}
+              onChange={(e) =>
+                setLlm({ ...llm, ragChunkSize: Number(e.target.value) || 280 })
+              }
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
+              Context cap
+            </label>
+            <input
+              type="number"
+              className="input-field"
+              min={1000}
+              max={100000}
+              value={llm.contextCharLimit}
+              onChange={(e) =>
+                setLlm({
+                  ...llm,
+                  contextCharLimit: Number(e.target.value) || 12000,
+                })
+              }
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
+            Chat memory (turns)
+          </label>
+          <input
+            type="number"
+            className="input-field max-w-[8rem]"
+            min={0}
+            max={50}
+            value={llm.chatMemoryTurns ?? 5}
+            onChange={(e) =>
+              setLlm({
+                ...llm,
+                chatMemoryTurns: Number(e.target.value) || 0,
+              })
+            }
+          />
+          <p className="text-xs text-forest/45 mt-1">
+            Last N Thinking-space turns kept in Redis for LLM context (default 5).
+            Falls back to stored history if Redis is unavailable. Set 0 to disable.
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-forest/50 mb-2">
+            Retrieve from modules
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {RAG_MODULE_IDS.map((mod) => {
+              const on = llm.ragModules?.includes(mod);
+              return (
+                <button
+                  key={mod}
+                  type="button"
+                  className={`rounded-full px-3 py-1 text-xs font-medium border transition ${
+                    on
+                      ? "bg-sage-muted border-sage text-forest"
+                      : "bg-white border-forest/10 text-forest/50"
+                  }`}
+                  onClick={() => {
+                    const set = new Set(llm.ragModules || []);
+                    if (set.has(mod)) set.delete(mod);
+                    else set.add(mod);
+                    setLlm({ ...llm, ragModules: [...set] });
+                  }}
+                >
+                  {mod === "belongings" ? "keep" : mod}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+
+      <div className="flex items-center gap-3 pt-1">
+        <button type="submit" className="btn-primary" disabled={llmBusy}>
+          {llmBusy ? "Saving…" : "Save LLM & RAG settings"}
+        </button>
+        {llmSaved && <span className="text-sm text-sage-dark">Saved</span>}
+      </div>
+    </form>
+  );
+}
+
+export function IntentsPanel() {
+  const [intents, setIntents] = useState<IntentDef[]>([]);
+  const [actions, setActions] = useState<ActionOpt[]>([]);
+  const [intentForm, setIntentForm] = useState({
+    id: "",
+    name: "",
+    action: "list_notes" as IntentAction,
+    patterns: "",
+    enabled: true,
+  });
+
+  const loadIntents = useCallback(async () => {
+    const res = await fetch("/api/intents");
+    const data = await res.json();
+    setIntents(data.intents || []);
+    setActions(data.actions || []);
+  }, []);
+
+  useEffect(() => {
+    void loadIntents();
+  }, [loadIntents]);
 
   async function saveIntent(e: FormEvent) {
     e.preventDefault();
@@ -160,404 +440,130 @@ export function LlmSettingsPanel() {
     }
   }
 
-  if (!llm) {
-    return <p className="text-sm text-forest/50">Loading LLM settings…</p>;
-  }
-
   return (
-    <div className="space-y-4">
-      <form onSubmit={saveLlm} className="card p-5 space-y-4">
-        <div>
-          <h2 className="font-serif text-lg text-forest">Thinking space LLM</h2>
-          <p className="text-xs text-forest/50 mt-1">
-            Provider, model, sampling, system prompt, and RAG (pgvector uses DATABASE_URL).
-            Secret values are never sent to the model.
-          </p>
-        </div>
+    <div className="card p-5 space-y-4">
+      <div>
+        <h2 className="font-serif text-lg text-forest">Intents</h2>
+        <p className="text-xs text-forest/50 mt-1">
+          Train rule-based patterns for Thinking space. Enabled intents rewrite
+          matching phrases to a built-in action before rules/LLM run.
+        </p>
+      </div>
 
-        <ToggleSwitch
-          checked={llm.enabled}
-          onChange={(enabled) => setLlm({ ...llm, enabled })}
-          label="Enable LLM for Thinking space"
-        />
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-              Provider
-            </label>
-            <SearchableSelect
-              options={LLM_PROVIDERS.map((p) => ({
-                value: p,
-                label: PROVIDER_LABELS[p],
-              }))}
-              value={llm.provider}
-              onChange={(provider) => {
-                const next = provider as LlmProvider;
-                const nextLlm = {
-                  ...llm,
-                  provider: next,
-                  model: DEFAULT_MODELS[next],
-                };
-                setLlm(nextLlm);
-                void loadModels(next, nextLlm.baseUrl, nextLlm.model);
-              }}
-              aria-label="Provider"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-              Model
-            </label>
-            <SearchableSelect
-              options={
-                modelOptions.length
-                  ? modelOptions
-                  : [
-                      {
-                        value: llm.model || DEFAULT_MODELS[llm.provider],
-                        label: llm.model || DEFAULT_MODELS[llm.provider],
-                      },
-                    ]
-              }
-              value={llm.model || DEFAULT_MODELS[llm.provider]}
-              onChange={(model) => setLlm({ ...llm, model })}
-              placeholder={modelsLoading ? "Loading…" : DEFAULT_MODELS[llm.provider]}
-              aria-label="Model"
-              required
-            />
-            <p className="mt-1 text-xs text-forest/45">
-              {modelsLoading
-                ? "Fetching models…"
-                : modelsError
-                  ? modelsError
-                  : `${modelOptions.length} live models`}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-              Temperature ({llm.temperature})
-            </label>
-            <input
-              type="range"
-              min={0}
-              max={2}
-              step={0.05}
-              className="w-full accent-forest"
-              value={llm.temperature}
-              onChange={(e) =>
-                setLlm({ ...llm, temperature: Number(e.target.value) })
-              }
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-              Max tokens
-            </label>
-            <input
-              type="number"
-              className="input-field"
-              min={64}
-              max={8192}
-              value={llm.maxTokens}
-              onChange={(e) =>
-                setLlm({ ...llm, maxTokens: Number(e.target.value) || 1024 })
-              }
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-            System prompt override
-          </label>
-          <textarea
-            className="input-field min-h-[88px]"
-            placeholder="Leave blank for Bi-Polar default (includes Open links guidance)"
-            value={llm.systemPrompt}
-            onChange={(e) => setLlm({ ...llm, systemPrompt: e.target.value })}
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-            Base URL
-          </label>
-          <input
-            className="input-field"
-            value={llm.baseUrl}
-            onChange={(e) => setLlm({ ...llm, baseUrl: e.target.value })}
-            placeholder="Leave blank for provider default"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-            API key
-          </label>
-          <input
-            className="input-field"
-            type="password"
-            autoComplete="off"
-            value={apiKeyDraft}
-            onChange={(e) => setApiKeyDraft(e.target.value)}
-            placeholder={
-              llm.hasApiKey
-                ? "•••• saved — paste to replace"
-                : llm.envKeyAvailable
-                  ? "Env key available — or paste to store"
-                  : "Paste key (encrypted at rest)"
-            }
-          />
-        </div>
-
-        <div className="border-t border-forest/10 pt-4 space-y-3">
-          <h3 className="font-serif text-base text-forest">RAG</h3>
-          <ToggleSwitch
-            checked={llm.ragEnabled}
-            onChange={(ragEnabled) => setLlm({ ...llm, ragEnabled })}
-            label="Enable retrieval-augmented context"
-          />
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-                Top-k
-              </label>
-              <input
-                type="number"
-                className="input-field"
-                min={1}
-                max={40}
-                value={llm.ragTopK}
-                onChange={(e) =>
-                  setLlm({ ...llm, ragTopK: Number(e.target.value) || 8 })
-                }
-              />
+      <ul className="space-y-2">
+        {intents.map((intent) => (
+          <li
+            key={intent.id}
+            className="rounded-xl border border-forest/10 bg-cream-soft/60 px-3 py-2.5 flex flex-wrap items-center gap-2 justify-between"
+          >
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-forest">{intent.name}</p>
+              <p className="text-xs text-forest/45 truncate">
+                {intent.action} · {intent.patterns.join(" | ")}
+              </p>
             </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-                Chunk size
-              </label>
-              <input
-                type="number"
-                className="input-field"
-                min={80}
-                max={2000}
-                value={llm.ragChunkSize}
-                onChange={(e) =>
-                  setLlm({ ...llm, ragChunkSize: Number(e.target.value) || 280 })
-                }
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-                Context cap
-              </label>
-              <input
-                type="number"
-                className="input-field"
-                min={1000}
-                max={100000}
-                value={llm.contextCharLimit}
-                onChange={(e) =>
-                  setLlm({
-                    ...llm,
-                    contextCharLimit: Number(e.target.value) || 12000,
-                  })
-                }
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
-              Chat memory (turns)
-            </label>
-            <input
-              type="number"
-              className="input-field max-w-[8rem]"
-              min={0}
-              max={50}
-              value={llm.chatMemoryTurns ?? 5}
-              onChange={(e) =>
-                setLlm({
-                  ...llm,
-                  chatMemoryTurns: Number(e.target.value) || 0,
-                })
-              }
-            />
-            <p className="text-xs text-forest/45 mt-1">
-              Last N Thinking-space turns kept in Redis for LLM context (default 5).
-              Falls back to stored history if Redis is unavailable. Set 0 to disable.
-            </p>
-          </div>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-forest/50 mb-2">
-              Retrieve from modules
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {RAG_MODULE_IDS.map((mod) => {
-                const on = llm.ragModules?.includes(mod);
-                return (
-                  <button
-                    key={mod}
-                    type="button"
-                    className={`rounded-full px-3 py-1 text-xs font-medium border transition ${
-                      on
-                        ? "bg-sage-muted border-sage text-forest"
-                        : "bg-white border-forest/10 text-forest/50"
-                    }`}
-                    onClick={() => {
-                      const set = new Set(llm.ragModules || []);
-                      if (set.has(mod)) set.delete(mod);
-                      else set.add(mod);
-                      setLlm({ ...llm, ragModules: [...set] });
-                    }}
-                  >
-                    {mod}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-
-        <div className="flex items-center gap-3 pt-1">
-          <button type="submit" className="btn-primary" disabled={llmBusy}>
-            {llmBusy ? "Saving…" : "Save LLM & RAG settings"}
-          </button>
-          {llmSaved && <span className="text-sm text-sage-dark">Saved</span>}
-        </div>
-      </form>
-
-      <div className="card p-5 space-y-4">
-        <div>
-          <h2 className="font-serif text-lg text-forest">Intents</h2>
-          <p className="text-xs text-forest/50 mt-1">
-            Train rule-based patterns for Thinking space. Enabled intents rewrite
-            matching phrases to a built-in action before rules/LLM run.
-          </p>
-        </div>
-
-        <ul className="space-y-2">
-          {intents.map((intent) => (
-            <li
-              key={intent.id}
-              className="rounded-xl border border-forest/10 bg-cream-soft/60 px-3 py-2.5 flex flex-wrap items-center gap-2 justify-between"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-forest">{intent.name}</p>
-                <p className="text-xs text-forest/45 truncate">
-                  {intent.action} · {intent.patterns.join(" | ")}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <ToggleSwitch
-                  checked={intent.enabled}
-                  onChange={async (enabled) => {
-                    await fetch("/api/intents", {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        id: intent.id,
-                        enabled,
-                        toggleOnly: true,
-                      }),
-                    });
-                    await loadIntents();
-                  }}
-                  label={intent.enabled ? "On" : "Off"}
-                  className="text-xs"
-                />
-                <button
-                  type="button"
-                  className="btn-ghost text-xs px-2"
-                  onClick={() =>
-                    setIntentForm({
+            <div className="flex items-center gap-2">
+              <ToggleSwitch
+                checked={intent.enabled}
+                onChange={async (enabled) => {
+                  await fetch("/api/intents", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
                       id: intent.id,
-                      name: intent.name,
-                      action: intent.action,
-                      patterns: intent.patterns.join("\n"),
-                      enabled: intent.enabled,
-                    })
-                  }
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  className="btn-ghost text-xs px-2 text-red-700"
-                  onClick={async () => {
-                    await fetch(`/api/intents?id=${encodeURIComponent(intent.id)}`, {
-                      method: "DELETE",
-                    });
-                    await loadIntents();
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-
-        <form onSubmit={saveIntent} className="space-y-3 border-t border-forest/10 pt-4">
-          <p className="text-sm font-medium text-forest">
-            {intentForm.id ? "Edit intent" : "Add / train intent"}
-          </p>
-          <input
-            className="input-field"
-            placeholder="Name"
-            value={intentForm.name}
-            onChange={(e) => setIntentForm({ ...intentForm, name: e.target.value })}
-            required
-          />
-          <SearchableSelect
-            options={actions.map((a) => ({ value: a.value, label: a.label }))}
-            value={intentForm.action}
-            onChange={(action) =>
-              setIntentForm({ ...intentForm, action: action as IntentAction })
-            }
-            aria-label="Intent action"
-            required
-          />
-          <textarea
-            className="input-field min-h-[80px]"
-            placeholder={"One regex pattern per line\ne.g. list.*notes"}
-            value={intentForm.patterns}
-            onChange={(e) =>
-              setIntentForm({ ...intentForm, patterns: e.target.value })
-            }
-            required
-          />
-          <div className="flex gap-2">
-            <button type="submit" className="btn-primary">
-              {intentForm.id ? "Update intent" : "Add intent"}
-            </button>
-            {intentForm.id && (
+                      enabled,
+                      toggleOnly: true,
+                    }),
+                  });
+                  await loadIntents();
+                }}
+                label={intent.enabled ? "On" : "Off"}
+                className="text-xs"
+              />
               <button
                 type="button"
-                className="btn-ghost"
+                className="btn-ghost text-xs px-2"
                 onClick={() =>
                   setIntentForm({
-                    id: "",
-                    name: "",
-                    action: "list_notes",
-                    patterns: "",
-                    enabled: true,
+                    id: intent.id,
+                    name: intent.name,
+                    action: intent.action,
+                    patterns: intent.patterns.join("\n"),
+                    enabled: intent.enabled,
                   })
                 }
               >
-                Cancel edit
+                Edit
               </button>
-            )}
-          </div>
-        </form>
-      </div>
+              <button
+                type="button"
+                className="btn-ghost text-xs px-2 text-red-700"
+                onClick={async () => {
+                  await fetch(`/api/intents?id=${encodeURIComponent(intent.id)}`, {
+                    method: "DELETE",
+                  });
+                  await loadIntents();
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <form onSubmit={saveIntent} className="space-y-3 border-t border-forest/10 pt-4">
+        <p className="text-sm font-medium text-forest">
+          {intentForm.id ? "Edit intent" : "Add / train intent"}
+        </p>
+        <input
+          className="input-field"
+          placeholder="Name"
+          value={intentForm.name}
+          onChange={(e) => setIntentForm({ ...intentForm, name: e.target.value })}
+          required
+        />
+        <SearchableSelect
+          options={actions.map((a) => ({ value: a.value, label: a.label }))}
+          value={intentForm.action}
+          onChange={(action) =>
+            setIntentForm({ ...intentForm, action: action as IntentAction })
+          }
+          aria-label="Intent action"
+          required
+        />
+        <textarea
+          className="input-field min-h-[80px]"
+          placeholder={"One regex pattern per line\ne.g. list.*notes"}
+          value={intentForm.patterns}
+          onChange={(e) =>
+            setIntentForm({ ...intentForm, patterns: e.target.value })
+          }
+          required
+        />
+        <div className="flex gap-2">
+          <button type="submit" className="btn-primary">
+            {intentForm.id ? "Update intent" : "Add intent"}
+          </button>
+          {intentForm.id && (
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() =>
+                setIntentForm({
+                  id: "",
+                  name: "",
+                  action: "list_notes",
+                  patterns: "",
+                  enabled: true,
+                })
+              }
+            >
+              Cancel edit
+            </button>
+          )}
+        </div>
+      </form>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readCalendarFile, writeCalendarFile } from "@/lib/calendar-store";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const file = await readCalendarFile();
   return NextResponse.json(file.settings);

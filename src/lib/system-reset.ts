@@ -69,6 +69,7 @@ export async function performSystemReset(): Promise<SystemResetReport> {
     ...EMPTY_STORE,
     profile: { ...EMPTY_STORE.profile },
   });
+  await setDoc("task-workspaces", { workspaces: [] });
   await setDoc("assets", { assets: [] });
   await setDoc("secrets", { secrets: [] });
   await setDoc("projects", { projects: [] });

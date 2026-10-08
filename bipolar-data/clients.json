@@ -1,0 +1,122 @@
+{
+  "clients": [
+    {
+      "id": "client-1",
+      "name": "Aisha Rahman",
+      "email": "aisha@northwind.dev",
+      "company": "Northwind Labs",
+      "notes": "Early RuneRail adopter. Prefers yearly billing.",
+      "createdAt": "2026-02-20T10:00:00.000Z",
+      "updatedAt": "2026-02-20T10:00:00.000Z"
+    },
+    {
+      "id": "client-2",
+      "name": "Leo Chen",
+      "email": "leo@brightpath.io",
+      "company": "Brightpath",
+      "notes": "Trial converted March 2026. Monthly plan.",
+      "createdAt": "2026-03-05T10:00:00.000Z",
+      "updatedAt": "2026-03-05T10:00:00.000Z"
+    },
+    {
+      "id": "client-3",
+      "name": "Sofia Mendes",
+      "email": "sofia@calmstudio.co",
+      "company": "Calm Studio",
+      "notes": "Uses Calmer Notes kit for client workshops.",
+      "createdAt": "2026-01-12T10:00:00.000Z",
+      "updatedAt": "2026-01-12T10:00:00.000Z"
+    }
+  ],
+  "subscriptions": [
+    {
+      "id": "sub-1",
+      "clientId": "client-1",
+      "projectId": "project-2",
+      "plan": "RuneRail Pro \u00b7 Yearly",
+      "status": "active",
+      "startDate": "2026-02-18",
+      "renewalDate": "2026-10-20",
+      "amount": 960,
+      "currency": "USD",
+      "billingPeriod": "yearly",
+      "notes": "Renewal within 30 days.",
+      "createdAt": "2026-02-18T10:00:00.000Z",
+      "updatedAt": "2026-02-18T10:00:00.000Z"
+    },
+    {
+      "id": "sub-2",
+      "clientId": "client-2",
+      "projectId": "project-2",
+      "plan": "RuneRail Starter \u00b7 Monthly",
+      "status": "past_due",
+      "startDate": "2026-03-10",
+      "renewalDate": "2026-09-28",
+      "amount": 49,
+      "currency": "USD",
+      "billingPeriod": "monthly",
+      "notes": "Card declined \u2014 follow up.",
+      "createdAt": "2026-03-10T10:00:00.000Z",
+      "updatedAt": "2026-10-06T05:47:09.567Z"
+    },
+    {
+      "id": "sub-3",
+      "clientId": "client-3",
+      "projectId": "project-3",
+      "plan": "Calmer Notes \u00b7 Team",
+      "status": "active",
+      "startDate": "2026-01-05",
+      "renewalDate": "2027-01-05",
+      "amount": 120,
+      "currency": "USD",
+      "billingPeriod": "yearly",
+      "notes": "Workshop license pack.",
+      "createdAt": "2026-01-05T10:00:00.000Z",
+      "updatedAt": "2026-01-05T10:00:00.000Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": "pay-1",
+      "clientId": "client-1",
+      "subscriptionId": "sub-1",
+      "amount": 960,
+      "currency": "USD",
+      "date": "2026-02-18",
+      "method": "Card \u00b7 Visa",
+      "status": "paid",
+      "reference": "ch_demo_rr_001",
+      "notes": "Initial yearly charge.",
+      "createdAt": "2026-02-18T10:00:00.000Z",
+      "updatedAt": "2026-02-18T10:00:00.000Z"
+    },
+    {
+      "id": "pay-2",
+      "clientId": "client-2",
+      "subscriptionId": "sub-2",
+      "amount": 49,
+      "currency": "USD",
+      "date": "2026-09-28",
+      "method": "Card \u00b7 Mastercard",
+      "status": "failed",
+      "reference": "ch_demo_rr_088",
+      "notes": "Insufficient funds.",
+      "createdAt": "2026-09-28T10:00:00.000Z",
+      "updatedAt": "2026-09-28T10:00:00.000Z"
+    },
+    {
+      "id": "pay-3",
+      "clientId": "client-3",
+      "subscriptionId": "sub-3",
+      "amount": 120,
+      "currency": "USD",
+      "date": "2026-01-05",
+      "method": "Invoice",
+      "status": "paid",
+      "reference": "inv_cn_014",
+      "notes": "Paid on net-15.",
+      "createdAt": "2026-01-05T10:00:00.000Z",
+      "updatedAt": "2026-01-05T10:00:00.000Z"
+    }
+  ]
+}

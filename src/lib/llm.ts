@@ -4,7 +4,7 @@ import { stripHtml } from "./sanitize";
 import { DEFAULT_BASE_URLS, DEFAULT_MODELS } from "./llm-defaults";
 import { migrateStaleModelId, normalizeGeminiModelId } from "./llm-model-ids";
 import { getDecryptedApiKey, readLlmSettings } from "./llm-store";
-import { LlmProvider, StoreData } from "./types";
+import { LlmProvider, LlmSettingsStored, StoreData } from "./types";
 
 export type LlmResolved = {
   enabled: boolean;
@@ -23,38 +23,61 @@ export type LlmResolved = {
   chatMemoryTurns: number;
 };
 
+export type LlmEnvOverrides = {
+  LLM_ENABLED?: string;
+  LLM_PROVIDER?: string;
+  LLM_MODEL?: string;
+  LLM_BASE_URL?: string;
+  [key: string]: string | undefined;
+};
+
 /**
- * Resolve effective LLM config. Never logs keys.
- * Env LLM_ENABLED=true can force enable; keys from encrypted settings or env.
+ * Pure enabled/provider/model/baseUrl resolution.
+ * Env vars drive the config only when LLM_ENABLED force-enables the LLM and no
+ * saved config is enabled — once configured in Settings, saved values win.
  */
-export async function resolveLlmConfig(): Promise<LlmResolved> {
-  const settings = await readLlmSettings();
-  const envForce =
-    process.env.LLM_ENABLED === "1" ||
-    process.env.LLM_ENABLED === "true";
+export function resolveLlmCore(
+  settings: Pick<
+    LlmSettingsStored,
+    "enabled" | "provider" | "model" | "baseUrl"
+  >,
+  env: LlmEnvOverrides = process.env
+): Pick<LlmResolved, "enabled" | "provider" | "model" | "baseUrl"> {
+  const envForce = env.LLM_ENABLED === "1" || env.LLM_ENABLED === "true";
   const enabled = settings.enabled || envForce;
+  const envManaged = envForce && !settings.enabled;
 
   let provider = settings.provider;
-  const envProvider = process.env.LLM_PROVIDER?.trim().toLowerCase();
+  const envProvider = env.LLM_PROVIDER?.trim().toLowerCase();
   if (
+    envManaged &&
     envProvider &&
     ["openai", "gemini", "claude", "openrouter", "ollama"].includes(envProvider)
   ) {
-    if (!settings.enabled && envForce) {
-      provider = envProvider as LlmProvider;
-    }
+    provider = envProvider as LlmProvider;
   }
 
   const rawModel =
-    process.env.LLM_MODEL?.trim() ||
+    (envManaged ? env.LLM_MODEL?.trim() : undefined) ||
     settings.model ||
     DEFAULT_MODELS[provider];
   const model = migrateStaleModelId(provider, rawModel);
 
   const baseUrl =
     settings.baseUrl.trim() ||
-    process.env.LLM_BASE_URL?.trim() ||
+    (envManaged ? env.LLM_BASE_URL?.trim() : undefined) ||
     DEFAULT_BASE_URLS[provider];
+
+  return { enabled, provider, model, baseUrl };
+}
+
+/**
+ * Resolve effective LLM config. Never logs keys.
+ * Env LLM_ENABLED=true can force enable; keys from encrypted settings or env.
+ */
+export async function resolveLlmConfig(): Promise<LlmResolved> {
+  const settings = await readLlmSettings();
+  const { enabled, provider, model, baseUrl } = resolveLlmCore(settings);
 
   const apiKey = enabled ? await getDecryptedApiKey({ ...settings, provider }) : null;
 
@@ -169,7 +192,7 @@ export function buildCompactContext(
   }
   if (belongings.length) {
     lines.push(
-      "Belongings: " +
+      "Keep: " +
         take(belongings, 8)
           .map((b) => `${b.name} @ ${b.location || "?"} (${b.status})`)
           .join(" | ")

@@ -56,6 +56,7 @@ function SecretsInner() {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [query, setQuery] = useState("");
 
   const [catModalOpen, setCatModalOpen] = useState(false);
   const [newCategory, setNewCategory] = useState("");
@@ -132,9 +133,20 @@ function SecretsInner() {
   }, [categories, secrets]);
 
   const visibleSecrets = useMemo(() => {
-    if (filterCategory === "all") return secrets;
-    return secrets.filter((s) => s.category === filterCategory);
-  }, [secrets, filterCategory]);
+    let list = secrets;
+    if (filterCategory !== "all") {
+      list = list.filter((s) => s.category === filterCategory);
+    }
+    const q = query.trim().toLowerCase();
+    if (q) {
+      list = list.filter((s) =>
+        `${s.name} ${s.category} ${s.tags.join(" ")} ${s.notes}`
+          .toLowerCase()
+          .includes(q)
+      );
+    }
+    return list;
+  }, [secrets, filterCategory, query]);
 
   const selected = secrets.find((s) => s.id === selectedId) || null;
 
@@ -400,6 +412,15 @@ function SecretsInner() {
         </div>
       )}
 
+      <div className="card p-3 mb-4">
+        <input
+          className="input-field"
+          placeholder="Search name, category, tags, notes…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+
       {filterChoices.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           <button
@@ -462,7 +483,11 @@ function SecretsInner() {
           ))}
           {visibleSecrets.length === 0 && (
             <p className="text-sm text-forest/40 p-3">
-              {secrets.length === 0 ? "No secrets yet." : "No secrets in this category."}
+              {secrets.length === 0
+                ? "No secrets yet."
+                : query.trim()
+                  ? "No secrets match your search."
+                  : "No secrets in this category."}
             </p>
           )}
         </div>

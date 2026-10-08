@@ -56,7 +56,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/clients", label: "Clients", shortLabel: "Clients", icon: ClientsIcon, group: "work" },
   { href: "/recurrings", label: "Recurrings", shortLabel: "Recurring", icon: RecurringIcon, group: "life" },
   { href: "/finance", label: "Finance", shortLabel: "Finance", icon: FinanceIcon, group: "life" },
-  { href: "/belongings", label: "Belongings", shortLabel: "Belongings", icon: BelongingIcon, group: "life" },
+  { href: "/belongings", label: "Keep", shortLabel: "Keep", icon: BelongingIcon, group: "life" },
   { href: "/calendar", label: "Calendar", shortLabel: "Calendar", icon: CalendarIcon, group: "life" },
   { href: "/jobs", label: "Jobs", shortLabel: "Jobs", icon: JobsIcon, group: "growth" },
   { href: "/skills", label: "Skills", shortLabel: "Skills", icon: SkillsIcon, group: "growth" },

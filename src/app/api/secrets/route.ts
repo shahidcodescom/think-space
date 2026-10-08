@@ -17,6 +17,8 @@ function toPublic(s: SecretRecord): SecretPublic {
   };
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const file = await readSecretsFile();
   // Never return ciphertext or plaintext in list

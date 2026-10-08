@@ -85,7 +85,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="page-shell min-h-[calc(100dvh-8rem)] md:min-h-screen max-w-xl">
+    <div className="page-shell min-h-[calc(100dvh-8rem)] md:min-h-screen">
       <header className="mb-6">
         <h1 className="section-title">Profile.</h1>
         <p className="text-forest/55 mt-1 text-sm">
@@ -97,7 +97,13 @@ export default function ProfilePage() {
         </p>
       </header>
 
+      <div className="grid gap-4 lg:grid-cols-2 items-start">
       <form onSubmit={save} className="card p-5 space-y-4">
+        <div>
+          <h2 className="font-serif text-lg text-forest">Preferences</h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wide text-forest/50 mb-1.5">
             Name
@@ -143,6 +149,7 @@ export default function ProfilePage() {
             required
           />
         </div>
+        </div>
 
         <ToggleSwitch
           checked={profile.readAloud}
@@ -158,7 +165,7 @@ export default function ProfilePage() {
         </div>
       </form>
 
-      <div className="card p-5 mt-4 space-y-4">
+      <div className="card p-5 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="font-serif text-lg text-forest">Account</h2>
@@ -197,26 +204,28 @@ export default function ProfilePage() {
             onChange={(e) => setCurrentPassword(e.target.value)}
             required
           />
-          <input
-            type="password"
-            className="input-field"
-            placeholder="New password (min 8)"
-            autoComplete="new-password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            required
-            minLength={8}
-          />
-          <input
-            type="password"
-            className="input-field"
-            placeholder="Confirm new password"
-            autoComplete="new-password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            minLength={8}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              type="password"
+              className="input-field"
+              placeholder="New password (min 8)"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              minLength={8}
+            />
+            <input
+              type="password"
+              className="input-field"
+              placeholder="Confirm new password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              minLength={8}
+            />
+          </div>
           {pwMsg && (
             <p className={`text-sm ${pwMsg.ok ? "text-sage-dark" : "text-red-700/90"}`}>
               {pwMsg.text}
@@ -226,6 +235,7 @@ export default function ProfilePage() {
             {pwBusy ? "Updating…" : "Update password"}
           </button>
         </form>
+      </div>
       </div>
 
       <p className="mt-6 text-xs text-forest/40 tracking-wide uppercase">

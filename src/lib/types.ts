@@ -14,6 +14,14 @@ export interface Task {
   done: boolean;
   meetingId?: string | null;
   thoughtId?: string | null;
+  workspaceId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TaskWorkspace {
+  id: string;
+  name: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -6,6 +6,8 @@ import {
 import { nowIso, uid } from "@/lib/store";
 import { SecretCategory } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const file = await readSecretCategoriesFile();
   const sorted = [...file.categories].sort((a, b) =>

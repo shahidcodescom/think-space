@@ -369,7 +369,7 @@ export default function ThinkingSpacePage() {
           <GlanceCard
             href="/belongings"
             icon={<BelongingIcon size={22} />}
-            label={`${stats.belongings ?? 0} Belongings`}
+            label={`${stats.belongings ?? 0} Keep`}
             tone="bg-teal-soft/60"
           />
           <GlanceCard

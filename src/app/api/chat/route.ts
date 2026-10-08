@@ -27,6 +27,8 @@ import {
   pushChatMemoryTurn,
 } from "@/lib/chat-memory";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const store = await readStore();
   return NextResponse.json(store.chatHistory);

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { ensureHtml } from "@/lib/sanitize";
 import { nowIso, readStore, uid, writeStore } from "@/lib/store";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const store = await readStore();
   return NextResponse.json(store.notes);

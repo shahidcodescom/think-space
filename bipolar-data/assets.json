@@ -1,0 +1,72 @@
+{
+  "assets": [
+    {
+      "id": "asset-1",
+      "name": "Framework Laptop 13",
+      "type": "Hardware",
+      "status": "Active",
+      "serial": "FW-13-2026-A4F2",
+      "purchaseDate": "2026-03-12",
+      "value": 1299,
+      "location": "Home desk",
+      "owner": "Mohammed Shahid",
+      "tags": ["laptop", "daily driver"],
+      "notes": "Primary machine for Bi-Polar work. Quiet fan profile preferred.",
+      "relatedSecretIds": [],
+      "relatedNoteIds": ["note-2"],
+      "createdAt": "2026-03-12T10:00:00.000Z",
+      "updatedAt": "2026-09-01T10:00:00.000Z"
+    },
+    {
+      "id": "asset-2",
+      "name": "Figma Professional",
+      "type": "Software",
+      "status": "Active",
+      "serial": "LIC-FIGMA-SB-8821",
+      "purchaseDate": "2026-01-15",
+      "value": 180,
+      "location": "Digital · team seat",
+      "owner": "Design",
+      "tags": ["license", "design"],
+      "notes": "Annual seat for mockups and botanical UI explorations.",
+      "relatedSecretIds": ["secret-1"],
+      "relatedNoteIds": [],
+      "createdAt": "2026-01-15T10:00:00.000Z",
+      "updatedAt": "2026-01-15T10:00:00.000Z"
+    },
+    {
+      "id": "asset-3",
+      "name": "Voice workflow MOM template",
+      "type": "Document",
+      "status": "Active",
+      "serial": "DOC-MOM-VOICE-01",
+      "purchaseDate": "2026-08-01",
+      "value": null,
+      "location": "Meetings / MOM",
+      "owner": "Product",
+      "tags": ["template", "mom"],
+      "notes": "Shared minutes template used before every release planning session.",
+      "relatedSecretIds": [],
+      "relatedNoteIds": ["note-3"],
+      "createdAt": "2026-08-01T10:00:00.000Z",
+      "updatedAt": "2026-10-01T10:00:00.000Z"
+    },
+    {
+      "id": "asset-4",
+      "name": "Desk plant · Calathea",
+      "type": "Other",
+      "status": "In repair",
+      "serial": "PLANT-DESK-01",
+      "purchaseDate": "2025-11-20",
+      "value": 35,
+      "location": "Wooden desk · right side",
+      "owner": "Mohammed Shahid",
+      "tags": ["botanical", "workspace"],
+      "notes": "Needs brighter indirect light. Matches the calm aesthetic.",
+      "relatedSecretIds": [],
+      "relatedNoteIds": [],
+      "createdAt": "2025-11-20T10:00:00.000Z",
+      "updatedAt": "2026-09-15T10:00:00.000Z"
+    }
+  ]
+}

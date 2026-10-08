@@ -369,11 +369,11 @@ function computeAnswer(
     return { text: lines.join("\n"), title: "Open dues" };
   }
 
-  if (/list.*belonging|my belonging|show.*belonging|inventory of belongings|where.*(kept|stored)/.test(q)) {
+  if (/list.*belonging|my belonging|show.*belonging|inventory of belongings|where.*(kept|stored)|\b(list|show|see|open|what'?s in|whats in)\b[^?]*\bkeep\b/.test(q)) {
     if (belongings.length === 0) {
       return {
-        text: "You have no belongings tracked yet. Add one from Belongings.",
-        title: "Your belongings",
+        text: "You have no items in Keep yet. Add one from Keep.",
+        title: "Keep",
       };
     }
     const lines = belongings.map((b) => {
@@ -385,7 +385,7 @@ function computeAnswer(
             : b.status;
       return `**${b.name}** · ${b.category} · ${b.location || "—"} · ${st}`;
     });
-    return { text: lines.join("\n"), title: "Your belongings" };
+    return { text: lines.join("\n"), title: "Keep" };
   }
 
   {
@@ -571,7 +571,7 @@ function computeAnswer(
         `**Subscriptions:** ${subscriptions.length}`,
         `**Recurrings:** ${recurrings.length}`,
         `**Finance txns:** ${finance.length} (${openLends} open lends · ${openDues} open dues)`,
-        `**Belongings:** ${belongings.length}`,
+        `**Keep:** ${belongings.length}`,
         `**Calendar:** ${calendarEvents.filter((e) => e.status !== "cancelled").length} (${upcomingAppts} upcoming)`,
         `**Jobs:** ${jobs.length} (${activeJobs} active)`,
         `**Skills:** ${skills.length} (${skillsHave} have · ${skillsLearn} to learn)`,
@@ -583,7 +583,7 @@ function computeAnswer(
   if (/hello|hi\b|hey|good morning|good evening/.test(q)) {
     return {
       title: "Hello",
-      text: `Hi ${store.profile.name.split(" ")[0]}. Ask me to list notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, subscriptions, recurrings, finance, belongings, calendar, jobs, skills, or library — or summarise your workspace.`,
+      text: `Hi ${store.profile.name.split(" ")[0]}. Ask me to list notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, subscriptions, recurrings, finance, keep, calendar, jobs, skills, or library — or summarise your workspace.`,
     };
   }
 
@@ -608,7 +608,7 @@ function computeAnswer(
         "- Finance summary",
         "- Outstanding lends",
         "- Outstanding dues",
-        "- List my belongings",
+        "- What's in my Keep",
         "- Where is my passport",
         "- Upcoming appointments",
         "- Job applications",
@@ -698,7 +698,7 @@ function computeAnswer(
   for (const b of belongings) {
     const hay = `${b.name} ${b.category} ${b.location} ${b.notes} ${b.tags.join(" ")} ${b.photoNote}`.toLowerCase();
     if (hay.includes(q)) {
-      hits.push(`Belonging · **${b.name}** · ${b.location || "—"}`);
+      hits.push(`Keep · **${b.name}** · ${b.location || "—"}`);
     }
   }
   for (const e of calendarEvents) {
@@ -732,7 +732,7 @@ function computeAnswer(
 
   return {
     title: "Thinking…",
-    text: `I searched your notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, subscriptions, recurrings, finance, belongings, calendar, jobs, skills, and library but did not find a match for “${query}”. Try “List my notes”, “List my assets”, or “At a glance”.`,
+    text: `I searched your notes, tasks, meetings, thoughts, memories, assets, secrets, projects, clients, subscriptions, recurrings, finance, keep, calendar, jobs, skills, and library but did not find a match for “${query}”. Try “List my notes”, “List my assets”, or “At a glance”.`,
   };
 }
 

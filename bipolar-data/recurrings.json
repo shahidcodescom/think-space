@@ -1,0 +1,72 @@
+{
+  "recurrings": [
+    {
+      "id": "rec-1",
+      "name": "Netflix",
+      "category": "Media",
+      "amount": 649,
+      "currency": "INR",
+      "billingPeriod": "monthly",
+      "nextDueDate": "2026-10-18",
+      "status": "active",
+      "paymentMethod": "UPI \u00b7 HDFC",
+      "url": "https://www.netflix.com",
+      "notes": "Premium plan, shared with family.",
+      "linkedSecretId": null,
+      "linkedProjectId": null,
+      "createdAt": "2025-06-01T10:00:00.000Z",
+      "updatedAt": "2026-09-18T10:00:00.000Z"
+    },
+    {
+      "id": "rec-2",
+      "name": "secondbrain.ai domain",
+      "category": "Domain",
+      "amount": 14,
+      "currency": "USD",
+      "billingPeriod": "yearly",
+      "nextDueDate": "2026-10-02",
+      "status": "active",
+      "paymentMethod": "Card \u00b7 Visa",
+      "url": "https://domains.google",
+      "notes": "Overdue \u2014 renew ASAP.",
+      "linkedSecretId": "secret-1",
+      "linkedProjectId": "project-1",
+      "createdAt": "2025-10-02T10:00:00.000Z",
+      "updatedAt": "2025-10-02T10:00:00.000Z"
+    },
+    {
+      "id": "rec-3",
+      "name": "GitHub Pro",
+      "category": "Software",
+      "amount": 4,
+      "currency": "USD",
+      "billingPeriod": "monthly",
+      "nextDueDate": "2026-10-22",
+      "status": "active",
+      "paymentMethod": "Card \u00b7 Visa",
+      "url": "https://github.com/settings/billing",
+      "notes": "Personal tooling.",
+      "linkedSecretId": null,
+      "linkedProjectId": "project-1",
+      "createdAt": "2026-01-10T10:00:00.000Z",
+      "updatedAt": "2026-09-22T10:00:00.000Z"
+    },
+    {
+      "id": "rec-4",
+      "name": "Notion Plus",
+      "category": "Software",
+      "amount": 10,
+      "currency": "USD",
+      "billingPeriod": "monthly",
+      "nextDueDate": "2026-11-15",
+      "status": "paused",
+      "paymentMethod": "Card \u00b7 Mastercard",
+      "url": "https://www.notion.so",
+      "notes": "Paused while evaluating Bi-Polar notes.",
+      "linkedSecretId": null,
+      "linkedProjectId": null,
+      "createdAt": "2025-08-01T10:00:00.000Z",
+      "updatedAt": "2026-09-01T10:00:00.000Z"
+    }
+  ]
+}

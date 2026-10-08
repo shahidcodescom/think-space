@@ -8,6 +8,8 @@ import {
 } from "@/lib/intents";
 import { IntentAction } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const intents = await listIntents();
   return NextResponse.json({ intents, actions: INTENT_ACTIONS });

@@ -222,7 +222,7 @@ export default function BelongingsPage() {
   }
 
   async function remove(b: Belonging) {
-    if (!(await confirm({ title: "Delete belonging?", message: `Delete “${b.name}”?`, confirmLabel: "Delete" }))) return;
+    if (!(await confirm({ title: "Delete item?", message: `Delete “${b.name}”?`, confirmLabel: "Delete" }))) return;
     await fetch(`/api/belongings/${b.id}`, { method: "DELETE" });
     if (selectedId === b.id) setSelectedId(null);
     setMobileDetail(false);
@@ -245,7 +245,7 @@ export default function BelongingsPage() {
           </div>
           <div>
             <h1 className="font-serif text-2xl text-forest md:text-3xl">
-              Belongings
+              Keep
             </h1>
             <p className="text-sm text-forest/60">
               Personal items &amp; where they are kept
@@ -315,7 +315,7 @@ export default function BelongingsPage() {
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pb-4">
             {filtered.length === 0 && (
               <p className="rounded-xl border border-dashed border-forest/15 bg-white p-6 text-center text-sm text-forest/50">
-                No belongings match. Add an item or clear filters.
+                No items match. Add an item or clear filters.
               </p>
             )}
             {groupByLoc
@@ -355,7 +355,7 @@ export default function BelongingsPage() {
           <div className="mb-3 lg:hidden">
             <MobileBackButton
               onClick={() => setMobileDetail(false)}
-              label="Belongings"
+              label="All items"
             />
           </div>
           {selected ? (
@@ -449,7 +449,7 @@ export default function BelongingsPage() {
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editing ? "Edit belonging" : "New belonging"}
+        title={editing ? "Edit item" : "New item"}
       >
         <form onSubmit={save} className="space-y-3">
           <label className="block text-sm">

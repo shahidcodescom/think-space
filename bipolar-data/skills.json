@@ -1,0 +1,64 @@
+{
+  "skills": [
+    {
+      "id": "sk-1",
+      "name": "TypeScript",
+      "category": "Engineering",
+      "status": "have",
+      "proficiency": "advanced",
+      "priority": null,
+      "notes": "Daily driver for Bi-Polar and client work.",
+      "targetDate": "",
+      "createdAt": "2025-01-10T10:00:00.000Z",
+      "updatedAt": "2026-09-01T10:00:00.000Z"
+    },
+    {
+      "id": "sk-2",
+      "name": "Next.js App Router",
+      "category": "Engineering",
+      "status": "have",
+      "proficiency": "advanced",
+      "priority": null,
+      "notes": "Comfortable with RSC, route handlers, and layouts.",
+      "targetDate": "",
+      "createdAt": "2025-06-01T10:00:00.000Z",
+      "updatedAt": "2026-08-15T10:00:00.000Z"
+    },
+    {
+      "id": "sk-3",
+      "name": "System design interviews",
+      "category": "Career",
+      "status": "learning",
+      "proficiency": "intermediate",
+      "priority": 1,
+      "notes": "Working through Grokking + mock rounds.",
+      "targetDate": "2026-11-30",
+      "createdAt": "2026-09-01T10:00:00.000Z",
+      "updatedAt": "2026-10-01T10:00:00.000Z"
+    },
+    {
+      "id": "sk-4",
+      "name": "Rust",
+      "category": "Engineering",
+      "status": "planned",
+      "proficiency": "intermediate",
+      "priority": 3,
+      "notes": "Want for tooling / CLI side projects.",
+      "targetDate": "2027-03-01",
+      "createdAt": "2026-08-01T10:00:00.000Z",
+      "updatedAt": "2026-10-06T16:19:25.090Z"
+    },
+    {
+      "id": "sk-5",
+      "name": "Product discovery",
+      "category": "Product",
+      "status": "have",
+      "proficiency": "intermediate",
+      "priority": null,
+      "notes": "Interviews, JTBD notes, light prototyping.",
+      "targetDate": "",
+      "createdAt": "2025-11-01T10:00:00.000Z",
+      "updatedAt": "2026-07-01T10:00:00.000Z"
+    }
+  ]
+}

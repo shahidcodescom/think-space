@@ -3,6 +3,8 @@ import { readCalendarFile, writeCalendarFile } from "@/lib/calendar-store";
 import { uid } from "@/lib/store";
 import { DateAvailabilityWindow, WeeklyAvailabilitySlot } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const file = await readCalendarFile();
   return NextResponse.json({

@@ -3,6 +3,8 @@ import { readCalendarFile, writeCalendarFile } from "@/lib/calendar-store";
 import { nowIso, uid } from "@/lib/store";
 import { randomBytes } from "crypto";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const file = await readCalendarFile();
   return NextResponse.json(file.tempLinks);

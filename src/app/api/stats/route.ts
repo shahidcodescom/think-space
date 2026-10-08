@@ -12,6 +12,8 @@ import { readProjectsFile } from "@/lib/projects-store";
 import { readSecretsFile } from "@/lib/secrets-store";
 import { readStore } from "@/lib/store";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const [store, assets, secrets, projects, billing, recurrings, finance, belongings, calendar, jobs, skills, library] = await Promise.all([
     readStore(),

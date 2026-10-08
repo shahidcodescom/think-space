@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
-import { buildCompactContext, callLlm, type LlmResolved } from "./llm";
+import {
+  buildCompactContext,
+  callLlm,
+  resolveLlmCore,
+  type LlmResolved,
+} from "./llm";
 import { DEFAULT_MODELS, LLM_PROVIDERS } from "./llm-defaults";
 import {
   migrateStaleModelId,
@@ -70,6 +75,7 @@ function baseConfig(over: Partial<LlmResolved> = {}): LlmResolved {
     ragChunkSize: 280,
     contextCharLimit: 12000,
     ragModules: ["notes", "tasks"],
+    chatMemoryTurns: 5,
     ...over,
   };
 }
@@ -102,6 +108,57 @@ async function main() {
     ),
     "gemini-2.5-flash"
   );
+
+  // Settings enabled → saved values win; env vars are ignored entirely.
+  const settingsWins = resolveLlmCore(
+    {
+      enabled: true,
+      provider: "ollama",
+      model: "gemma3:1b",
+      baseUrl: "http://192.168.220.220:11434",
+    },
+    {
+      LLM_ENABLED: "true",
+      LLM_PROVIDER: "gemini",
+      LLM_MODEL: "gemini-3.7-flash",
+      LLM_BASE_URL: "https://generativelanguage.googleapis.com",
+    }
+  );
+  assert.deepEqual(settingsWins, {
+    enabled: true,
+    provider: "ollama",
+    model: "gemma3:1b",
+    baseUrl: "http://192.168.220.220:11434",
+  });
+
+  // Settings disabled + LLM_ENABLED → env-managed config.
+  const envManaged = resolveLlmCore(
+    { enabled: false, provider: "openai", model: "", baseUrl: "" },
+    {
+      LLM_ENABLED: "true",
+      LLM_PROVIDER: "ollama",
+      LLM_MODEL: "llama3.2",
+      LLM_BASE_URL: "http://127.0.0.1:11434",
+    }
+  );
+  assert.deepEqual(envManaged, {
+    enabled: true,
+    provider: "ollama",
+    model: "llama3.2",
+    baseUrl: "http://127.0.0.1:11434",
+  });
+
+  // Settings disabled + no env force → disabled, defaults fill gaps.
+  const disabledCore = resolveLlmCore(
+    { enabled: false, provider: "openai", model: "", baseUrl: "" },
+    {}
+  );
+  assert.deepEqual(disabledCore, {
+    enabled: false,
+    provider: "openai",
+    model: "gpt-4o-mini",
+    baseUrl: "https://api.openai.com/v1",
+  });
 
   const ctx = buildCompactContext(emptyStore, {
     secrets: [

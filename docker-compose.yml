@@ -6,10 +6,8 @@ services:
       POSTGRES_USER: ${DATABASE_USER:-bipolar}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-bipolar}
       POSTGRES_DB: ${DATABASE_NAME:-bipolar}
-    ports:
-      - "${DATABASE_PUBLISH_PORT:-5432}:5432"
     volumes:
-      - bipolar-pg:/var/lib/postgresql/data
+      - ./bipolar-pg:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
@@ -25,6 +23,10 @@ services:
     container_name: bipolar-app
     ports:
       - "${PORT:-3000}:3000"
+    extra_hosts:
+      # Let the container reach services bound to the host (e.g. an SSH tunnel
+      # forwarding a LAN/VPN-only Ollama) via http://host.docker.internal:PORT
+      - "host.docker.internal:host-gateway"
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -50,7 +52,7 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
     volumes:
       # Uploads + vault key file only (app JSON lives in Postgres)
-      - bipolar-data:/app/data
+      - ./bipolar-data:/app/data
     depends_on:
       db:
         condition: service_healthy
@@ -64,15 +66,10 @@ services:
     ports:
       - "${REDIS_PUBLISH_PORT:-6379}:6379"
     volumes:
-      - bipolar-redis:/data
+      - ./bipolar-redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 10
     restart: unless-stopped
-
-volumes:
-  bipolar-data:
-  bipolar-pg:
-  bipolar-redis:

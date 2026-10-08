@@ -17,7 +17,7 @@ export const INTENT_ACTIONS: { value: IntentAction; label: string; query: string
   { value: "list_clients", label: "List clients", query: "list my clients" },
   { value: "list_recurrings", label: "List recurrings", query: "list my recurrings" },
   { value: "list_finance", label: "Finance summary", query: "finance summary" },
-  { value: "list_belongings", label: "List belongings", query: "list my belongings" },
+  { value: "list_belongings", label: "Show Keep", query: "what's in my keep" },
   { value: "list_calendar", label: "Upcoming appointments", query: "upcoming appointments" },
   { value: "list_jobs", label: "Job applications", query: "job applications" },
   { value: "list_skills", label: "List skills", query: "list my skills" },

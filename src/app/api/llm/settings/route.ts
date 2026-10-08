@@ -6,6 +6,8 @@ import {
 } from "@/lib/llm-store";
 import { LlmProvider } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const settings = await readLlmSettings();
   const pub = await toPublicSettings(settings);

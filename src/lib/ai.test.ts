@@ -563,15 +563,19 @@ assert(help.text.toLowerCase().includes("finance"), "help finance");
 
 
 const belongingsAns = answerQuery("List my belongings", sample, extras);
-assert(belongingsAns.title === "Your belongings", "belongings title");
+assert(belongingsAns.title === "Keep", "keep title");
 assert(belongingsAns.text.includes("Passport"), "belonging name");
+
+const keepAns = answerQuery("What's in my keep", sample, extras);
+assert(keepAns.title === "Keep", "keep title via keep query");
+assert(keepAns.text.includes("Passport"), "keep query name");
 
 const whereAns = answerQuery("Where is my passport", sample, extras);
 assert(whereAns.title === "Where it is", "where title");
 assert(whereAns.text.toLowerCase().includes("bedroom"), "where location");
 
-assert(glance.text.includes("Belongings:** 2"), "glance belongings");
-assert(help.text.toLowerCase().includes("belongings") || help.text.toLowerCase().includes("where is"), "help belongings");
+assert(glance.text.includes("Keep:** 2"), "glance keep");
+assert(help.text.toLowerCase().includes("keep") || help.text.toLowerCase().includes("where is"), "help keep");
 
 
 const apptAns = answerQuery("upcoming appointments", sample, extras);
@@ -626,7 +630,7 @@ assert(interviewsAns.text.includes("RuneRail"), "interview company");
 assert(help.text.toLowerCase().includes("thoughts"), "help thoughts");
 assert(help.text.toLowerCase().includes("subscriptions"), "help subscriptions");
 assert(help.text.toLowerCase().includes("interviews"), "help interviews");
-assert(help.text.toLowerCase().includes("belongings"), "help belongings full");
+assert(help.text.toLowerCase().includes("keep"), "help keep full");
 assert(help.text.toLowerCase().includes("library"), "help library full");
 assert(help.text.toLowerCase().includes("skills"), "help skills full");
 assert(help.text.toLowerCase().includes("never values") || help.text.toLowerCase().includes("names only"), "help secrets safety");
